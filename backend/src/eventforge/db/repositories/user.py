@@ -1,6 +1,7 @@
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from eventforge.db.models import User
 from eventforge.db.repositories.base import BaseRepository
@@ -25,5 +26,11 @@ class UserRepository(BaseRepository):
 
         user = User(clerk_id=MOCK_CLERK_ID, email=MOCK_USER_EMAIL)
         self.session.add(user)
-        await self.session.flush()
+        try:
+            await self.session.flush()
+        except IntegrityError:
+            await self.session.rollback()
+            user = await self.get_by_clerk_id(MOCK_CLERK_ID)
+            if user is None:
+                raise
         return user

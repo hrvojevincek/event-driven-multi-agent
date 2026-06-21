@@ -15,6 +15,8 @@ from eventforge.db.models import Job, JobStageName, ProcessedEvent
 from eventforge.db.repositories import JobRepository, ProcessedEventRepository
 from eventforge.db.session import reset_engine
 from eventforge.events.publisher import (
+    BOTO_CONNECT_TIMEOUT_SECONDS,
+    BOTO_READ_TIMEOUT_SECONDS,
     EVENT_SOURCE,
     PUBLISHER_WORKER_NAME,
     EventPublisher,
@@ -145,6 +147,17 @@ def test_publisher_put_events_payload() -> None:
     assert entry["EventBusName"] == settings.event_bus_name
     detail = json.loads(entry["Detail"])
     assert detail["payload"]["topic"] == "Publish test"
+
+
+def test_publisher_client_uses_boto_timeouts() -> None:
+    with patch("eventforge.events.publisher.boto3.client") as mock_boto_client:
+        publisher = EventPublisher(settings)
+        _ = publisher.client
+
+    mock_boto_client.assert_called_once()
+    config = mock_boto_client.call_args.kwargs["config"]
+    assert config.connect_timeout == BOTO_CONNECT_TIMEOUT_SECONDS
+    assert config.read_timeout == BOTO_READ_TIMEOUT_SECONDS
 
 
 @pytest.mark.integration

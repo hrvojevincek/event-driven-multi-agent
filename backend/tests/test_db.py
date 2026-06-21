@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from eventforge.core.config import get_settings
 from eventforge.db.models import Job, JobStatus, ProcessedEvent, User
 from eventforge.db.repositories import JobRepository, ProcessedEventRepository, UserRepository
+from eventforge.db.repositories.user import MOCK_CLERK_ID
 from eventforge.db.session import reset_engine
 
 settings = get_settings()
@@ -12,7 +13,8 @@ settings = get_settings()
 @pytest.fixture
 async def db_session() -> AsyncSession:
     reset_engine()
-    engine = create_async_engine(settings.async_database_url, pool_pre_ping=True)
+    engine = create_async_engine(
+        settings.async_database_url, pool_pre_ping=True)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     async with session_factory() as session:
         yield session
@@ -67,3 +69,18 @@ async def test_processed_event_repository(db_session: AsyncSession) -> None:
     event = await repo.get_by_event_id("evt-001")
     assert event is not None
     assert event.worker_name == "ingestion"
+
+
+@pytest.mark.asyncio
+async def test_get_or_create_mock_user_is_idempotent(
+        db_session: AsyncSession) -> None:
+    repo = UserRepository(db_session)
+
+    first = await repo.get_or_create_mock_user()
+    second = await repo.get_or_create_mock_user()
+
+    assert first.id == second.id
+    assert first.clerk_id == MOCK_CLERK_ID
+    fetched = await repo.get_by_clerk_id(MOCK_CLERK_ID)
+    assert fetched is not None
+    assert fetched.id == first.id

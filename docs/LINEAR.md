@@ -57,6 +57,7 @@ save_issue(id: "KRE-122", state: "Done")
 |----|--------|-------|----------|------------|
 | EF-013 | [KRE-129](https://linear.app/kreativbiro/issue/KRE-129) | Query API + EventBridge publisher + idempotency | 3 | KRE-122 |
 | EF-014 | [KRE-130](https://linear.app/kreativbiro/issue/KRE-130) | SQS consumer base + ingestion stub worker | 3 | KRE-129 |
+| EF-015 | [KRE-131](https://linear.app/kreativbiro/issue/KRE-131) | Harden pipeline idempotency (atomic claim + API keys) | 2 | KRE-130 |
 
 > Remaining Phase 2 work (embedding → synthesis workers, orchestration, DLQ) stays in `docs/TASKS.md` until split into Linear issues. **Stage event schemas are added incrementally with each worker** — not upfront in KRE-122.
 
@@ -68,6 +69,7 @@ Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125
 Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129
 
 Next:   KRE-130 (SQS base + ingestion worker + ingestion.completed schema)
+Circle: KRE-131 (idempotency hardening — after KRE-130)
 
 Parallel (optional): KRE-127 backend ruff job only
 

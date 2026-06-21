@@ -3,6 +3,7 @@ import logging
 from typing import Any
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from eventforge.core.config import Settings, get_settings
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 EVENT_SOURCE = "eventforge.api"
 PUBLISHER_WORKER_NAME = "api"
+BOTO_CONNECT_TIMEOUT_SECONDS = 5
+BOTO_READ_TIMEOUT_SECONDS = 10
 
 
 class EventPublishError(Exception):
@@ -30,6 +33,10 @@ class EventPublisher:
                 "region_name": self._settings.aws_region,
                 "aws_access_key_id": self._settings.aws_access_key_id,
                 "aws_secret_access_key": self._settings.aws_secret_access_key,
+                "config": Config(
+                    connect_timeout=BOTO_CONNECT_TIMEOUT_SECONDS,
+                    read_timeout=BOTO_READ_TIMEOUT_SECONDS,
+                ),
             }
             if self._settings.aws_endpoint_url:
                 kwargs["endpoint_url"] = self._settings.aws_endpoint_url

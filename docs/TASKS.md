@@ -90,10 +90,11 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 2.0 Vertical slices (Linear)
 
-→ [KRE-129](https://linear.app/kreativbiro/issue/KRE-129) · [KRE-130](https://linear.app/kreativbiro/issue/KRE-130)
+→ [KRE-129](https://linear.app/kreativbiro/issue/KRE-129) · [KRE-130](https://linear.app/kreativbiro/issue/KRE-130) · [KRE-131](https://linear.app/kreativbiro/issue/KRE-131)
 
 - [x] `POST /api/v1/queries` + EventBridge publisher + idempotency — KRE-129
 - [ ] SQS consumer base + ingestion stub worker (+ `ingestion.completed` schema) — KRE-130
+- [ ] Harden idempotency: atomic `try_claim`, worker base, optional API `Idempotency-Key` — KRE-131 (after KRE-130)
 
 ### 2.1 API & Data Layer
 
