@@ -1,11 +1,11 @@
-import asyncpg
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from eventforge.core.config import Settings
+from eventforge.db.session import get_engine
 
 
 async def check_postgres(settings: Settings) -> None:
-    conn = await asyncpg.connect(settings.database_url, timeout=5.0)
-    try:
-        await conn.execute("SELECT 1")
-    finally:
-        await conn.close()
+    engine: AsyncEngine = get_engine(settings)
+    async with engine.connect() as conn:
+        await conn.execute(text("SELECT 1"))

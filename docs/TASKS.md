@@ -48,8 +48,8 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] Initialize `backend/` with `pyproject.toml` (uv) — KRE-118
 - [x] Create `src/eventforge/` package structure — KRE-118
 - [x] FastAPI app with `/health` and `/health/ready` endpoints — KRE-120
-- [ ] SQLAlchemy 2.0 + Alembic setup — KRE-123
-- [ ] Core models: `User`, `Job`, `JobStage`, `ProcessedEvent` — KRE-123
+- [x] SQLAlchemy 2.0 + Alembic setup — KRE-123
+- [x] Core models: `User`, `Job`, `JobStage`, `ProcessedEvent` — KRE-123
 - [ ] Config via `pydantic-settings` from `.env` — KRE-125
 - [ ] Structured logging (JSON in prod, pretty in local) — KRE-125
 - [ ] Dockerfile for backend — KRE-125

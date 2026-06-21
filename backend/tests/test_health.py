@@ -1,9 +1,8 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from httpx import ASGITransport, AsyncClient
-
 from eventforge.main import app
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
