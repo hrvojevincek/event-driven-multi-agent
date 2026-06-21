@@ -1,17 +1,31 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from eventforge import __version__
 from eventforge.api.routes import health, v1
 from eventforge.core.config import get_settings
+from eventforge.core.logging import setup_logging
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    setup_logging(settings)
+    logger.info("EventForge API starting (environment=%s)", settings.environment)
+    yield
+
 
 app = FastAPI(
     title="EventForge API",
     version=__version__,
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

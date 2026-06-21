@@ -22,6 +22,16 @@ make hooks   # from repo root
 uv run uvicorn eventforge.main:app --reload --port 8000
 ```
 
+Via Docker Compose (from repo root, with infra + backend):
+
+```bash
+make dev
+curl http://localhost:8000/health
+curl http://localhost:8000/health/ready
+```
+
+Logging uses pretty text in `ENVIRONMENT=local` and JSON elsewhere.
+
 ## Migrations
 
 ```bash

@@ -30,19 +30,19 @@ services:
       - localstack_data:/var/lib/localstack
       - ./infra/docker/localstack/init:/etc/localstack/init/ready.d
 
-  # Uncomment when backend is scaffolded (Phase 1)
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "8000:8000"
-  #   env_file: .env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     localstack:
-  #       condition: service_started
-  #   volumes:
-  #     - ./backend:/app
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      AWS_ENDPOINT_URL: http://localstack:4566
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
 
   # Uncomment when frontend is scaffolded (Phase 1)
   # frontend:

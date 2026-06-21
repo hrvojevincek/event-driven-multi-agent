@@ -50,10 +50,10 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] FastAPI app with `/health` and `/health/ready` endpoints — KRE-120
 - [x] SQLAlchemy 2.0 + Alembic setup — KRE-123
 - [x] Core models: `User`, `Job`, `JobStage`, `ProcessedEvent` — KRE-123
-- [ ] Config via `pydantic-settings` from `.env` — KRE-125
-- [ ] Structured logging (JSON in prod, pretty in local) — KRE-125
-- [ ] Dockerfile for backend — KRE-125
-- [ ] Uncomment backend service in `docker-compose.yml` — KRE-125
+- [x] Config via `pydantic-settings` from `.env` — KRE-125
+- [x] Structured logging (JSON in prod, pretty in local) — KRE-125
+- [x] Dockerfile for backend — KRE-125
+- [x] Uncomment backend service in `docker-compose.yml` — KRE-125
 
 ### 1.2 Frontend Scaffold
 
