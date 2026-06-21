@@ -1,5 +1,6 @@
 from eventforge.events.publisher import (
-    EVENT_SOURCE,
+    EVENT_SOURCE_API,
+    EVENT_SOURCE_INGESTION,
     PUBLISHER_WORKER_NAME,
     EventPublisher,
     EventPublishError,
@@ -16,7 +17,8 @@ from eventforge.events.schemas import (
 
 __all__ = [
     "DETAIL_TYPE_QUERY_SUBMITTED",
-    "EVENT_SOURCE",
+    "EVENT_SOURCE_API",
+    "EVENT_SOURCE_INGESTION",
     "PUBLISHER_WORKER_NAME",
     "EventPublishError",
     "EventPublisher",

@@ -5,6 +5,7 @@ from eventforge.db.models.base import (
     JobStageName,
     JobStatus,
     ProcessedEvent,
+    Source,
     StageStatus,
     User,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "JobStageName",
     "JobStatus",
     "ProcessedEvent",
+    "Source",
     "StageStatus",
     "User",
 ]

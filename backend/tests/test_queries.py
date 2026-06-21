@@ -10,14 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from eventforge.api.deps import get_db
 from eventforge.api.routes.queries import get_publisher
+from eventforge.core.aws import BOTO_CONNECT_TIMEOUT_SECONDS, BOTO_READ_TIMEOUT_SECONDS
 from eventforge.core.config import get_settings
 from eventforge.db.models import Job, JobStageName, ProcessedEvent
 from eventforge.db.repositories import JobRepository, ProcessedEventRepository
 from eventforge.db.session import reset_engine
 from eventforge.events.publisher import (
-    BOTO_CONNECT_TIMEOUT_SECONDS,
-    BOTO_READ_TIMEOUT_SECONDS,
-    EVENT_SOURCE,
+    EVENT_SOURCE_API,
     PUBLISHER_WORKER_NAME,
     EventPublisher,
     EventPublishError,
@@ -138,11 +137,11 @@ def test_publisher_put_events_payload() -> None:
 
     publisher = EventPublisher(settings)
     publisher._client = mock_client
-    publisher._publish_query_submitted_sync(event)
+    publisher._publish_sync(event, EVENT_SOURCE_API)
 
     mock_client.put_events.assert_called_once()
     entry = mock_client.put_events.call_args.kwargs["Entries"][0]
-    assert entry["Source"] == EVENT_SOURCE
+    assert entry["Source"] == EVENT_SOURCE_API
     assert entry["DetailType"] == "eventforge.query.submitted"
     assert entry["EventBusName"] == settings.event_bus_name
     detail = json.loads(entry["Detail"])
@@ -150,7 +149,7 @@ def test_publisher_put_events_payload() -> None:
 
 
 def test_publisher_client_uses_boto_timeouts() -> None:
-    with patch("eventforge.events.publisher.boto3.client") as mock_boto_client:
+    with patch("eventforge.core.aws.boto3.client") as mock_boto_client:
         publisher = EventPublisher(settings)
         _ = publisher.client
 

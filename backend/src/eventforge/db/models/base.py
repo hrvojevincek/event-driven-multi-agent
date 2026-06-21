@@ -78,6 +78,9 @@ class Job(Base):
     stages: Mapped[list["JobStage"]] = relationship(
         back_populates="job", cascade="all, delete-orphan"
     )
+    sources: Mapped[list["Source"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
+    )
 
 
 class JobStage(Base):
@@ -107,6 +110,23 @@ class JobStage(Base):
     )
 
     job: Mapped["Job"] = relationship(back_populates="stages")
+
+
+class Source(Base):
+    __tablename__ = "sources"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    title: Mapped[str] = mapped_column(String(512), nullable=False)
+    snippet: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    job: Mapped["Job"] = relationship(back_populates="sources")
 
 
 class ProcessedEvent(Base):

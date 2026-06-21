@@ -66,10 +66,9 @@ save_issue(id: "KRE-122", state: "Done")
 ```
 Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125
 
-Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129
+Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129 → KRE-130
 
-Next:   KRE-130 (SQS base + ingestion worker + ingestion.completed schema)
-Circle: KRE-131 (idempotency hardening — after KRE-130)
+Next:   KRE-131 (idempotency hardening — atomic claim + API keys)
 
 Parallel (optional): KRE-127 backend ruff job only
 

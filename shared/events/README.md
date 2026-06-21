@@ -26,7 +26,7 @@ Define schemas **when the producer is implemented**, not all upfront:
 |------|--------|----------|----------|
 | `envelope.schema.json` | Done (KRE-122) | All | All |
 | `query.submitted.schema.json` | Done (KRE-122) | API | Ingestion worker |
-| `ingestion.completed.schema.json` | Planned (KRE-130) | Ingestion | Embedding worker |
+| `ingestion.completed.schema.json` | Done (KRE-130) | Ingestion | Embedding worker |
 | `embedding.completed.schema.json` | Phase 2 | Embedding | Knowledge worker |
 | `knowledge.mined.schema.json` | Phase 2 | Knowledge | Research orchestrator |
 | `research.task.dispatched.schema.json` | Phase 2 | Orchestrator | Research workers |

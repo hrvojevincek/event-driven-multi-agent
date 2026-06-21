@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     aws_access_key_id: str = "test"
     aws_secret_access_key: str = "test"
     event_bus_name: str = "eventforge-bus"
+    sqs_queue_prefix: str = "eventforge"
+    sqs_wait_time_seconds: int = 20
+    sqs_max_messages: int = 10
+
+    @property
+    def ingestion_queue_name(self) -> str:
+        return f"{self.sqs_queue_prefix}-ingestion"
 
     @property
     def database_url(self) -> str:

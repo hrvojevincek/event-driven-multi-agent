@@ -75,7 +75,7 @@ def test_round_trip_through_pydantic() -> None:
 
 @pytest.mark.parametrize(
     "filename",
-    ["envelope.schema.json", "query.submitted.schema.json"],
+    ["envelope.schema.json", "query.submitted.schema.json", "ingestion.completed.schema.json"],
 )
 def test_json_schema_files_are_valid_json(filename: str) -> None:
     path = SHARED_EVENTS / filename

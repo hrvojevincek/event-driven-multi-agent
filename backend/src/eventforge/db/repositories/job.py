@@ -1,9 +1,10 @@
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from eventforge.db.models import Job, JobStage
+from eventforge.db.models import Job, JobStage, StageStatus
 from eventforge.db.repositories.base import BaseRepository
 
 
@@ -35,3 +36,19 @@ class JobStageRepository(BaseRepository):
             select(JobStage).where(JobStage.job_id == job_id, JobStage.stage == stage)
         )
         return result.scalar_one_or_none()
+
+    async def mark_running(self, job_stage: JobStage) -> JobStage:
+        now = datetime.now(tz=UTC)
+        job_stage.status = StageStatus.RUNNING.value
+        job_stage.started_at = now
+        await self.session.flush()
+        return job_stage
+
+    async def mark_completed(self, job_stage: JobStage) -> JobStage:
+        now = datetime.now(tz=UTC)
+        job_stage.status = StageStatus.COMPLETED.value
+        job_stage.completed_at = now
+        if job_stage.started_at is not None:
+            job_stage.duration_ms = int((now - job_stage.started_at).total_seconds() * 1000)
+        await self.session.flush()
+        return job_stage

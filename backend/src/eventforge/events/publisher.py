@@ -1,24 +1,28 @@
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Protocol
 
-import boto3
-from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
+from eventforge.core.aws import boto_client
 from eventforge.core.config import Settings, get_settings
-from eventforge.events.schemas import QuerySubmittedEvent
 
 logger = logging.getLogger(__name__)
 
-EVENT_SOURCE = "eventforge.api"
+EVENT_SOURCE_API = "eventforge.api"
+EVENT_SOURCE_INGESTION = "eventforge.workers.ingestion"
 PUBLISHER_WORKER_NAME = "api"
-BOTO_CONNECT_TIMEOUT_SECONDS = 5
-BOTO_READ_TIMEOUT_SECONDS = 10
 
 
 class EventPublishError(Exception):
     """Raised when EventBridge PutEvents fails."""
+
+
+class PublishableEvent(Protocol):
+    @property
+    def detail_type(self) -> str: ...
+
+    def model_dump_json(self) -> str: ...
 
 
 class EventPublisher:
@@ -29,29 +33,21 @@ class EventPublisher:
     @property
     def client(self) -> Any:
         if self._client is None:
-            kwargs: dict[str, Any] = {
-                "region_name": self._settings.aws_region,
-                "aws_access_key_id": self._settings.aws_access_key_id,
-                "aws_secret_access_key": self._settings.aws_secret_access_key,
-                "config": Config(
-                    connect_timeout=BOTO_CONNECT_TIMEOUT_SECONDS,
-                    read_timeout=BOTO_READ_TIMEOUT_SECONDS,
-                ),
-            }
-            if self._settings.aws_endpoint_url:
-                kwargs["endpoint_url"] = self._settings.aws_endpoint_url
-            self._client = boto3.client("events", **kwargs)
+            self._client = boto_client("events", self._settings)
         return self._client
 
-    async def publish_query_submitted(self, event: QuerySubmittedEvent) -> None:
-        await asyncio.to_thread(self._publish_query_submitted_sync, event)
+    async def publish_query_submitted(self, event: PublishableEvent) -> None:
+        await self.publish(event, source=EVENT_SOURCE_API)
 
-    def _publish_query_submitted_sync(self, event: QuerySubmittedEvent) -> None:
+    async def publish(self, event: PublishableEvent, *, source: str) -> None:
+        await asyncio.to_thread(self._publish_sync, event, source)
+
+    def _publish_sync(self, event: PublishableEvent, source: str) -> None:
         try:
             response = self.client.put_events(
                 Entries=[
                     {
-                        "Source": EVENT_SOURCE,
+                        "Source": source,
                         "DetailType": event.detail_type,
                         "Detail": event.model_dump_json(),
                         "EventBusName": self._settings.event_bus_name,
@@ -61,7 +57,7 @@ class EventPublisher:
         except (BotoCoreError, ClientError) as exc:
             logger.exception(
                 "EventBridge publish failed",
-                extra={"event_id": str(event.event_id), "job_id": str(event.job_id)},
+                extra={"detail_type": event.detail_type},
             )
             raise EventPublishError(str(exc)) from exc
 
@@ -73,10 +69,6 @@ class EventPublisher:
             raise EventPublishError(f"{error_code}: {error_message}")
 
         logger.info(
-            "Published query.submitted",
-            extra={
-                "event_id": str(event.event_id),
-                "correlation_id": event.correlation_id,
-                "job_id": str(event.job_id),
-            },
+            "Published event",
+            extra={"detail_type": event.detail_type, "source": source},
         )
