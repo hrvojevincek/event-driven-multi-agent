@@ -1,1 +1,3 @@
-"""FastAPI dependencies (auth, DB sessions). Implemented in Phase 1."""
+from eventforge.core.config import Settings, get_settings
+
+__all__ = ["Settings", "get_settings"]
