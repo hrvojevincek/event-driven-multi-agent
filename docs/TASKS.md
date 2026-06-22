@@ -98,7 +98,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 2.1 API & Data Layer
 
-- [ ] `GET /api/v1/queries/{id}` — job detail with stages
+- [x] `GET /api/v1/queries/{id}` — job detail with stages
 - [ ] `GET /api/v1/queries` — list user queries (mock user for now)
 
 ### 2.2 Workers (Stub Agents)

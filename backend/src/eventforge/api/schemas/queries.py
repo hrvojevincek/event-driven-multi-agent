@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -14,3 +15,24 @@ class SubmitQueryRequest(BaseModel):
 class SubmitQueryResponse(BaseModel):
     job_id: UUID
     correlation_id: str
+
+
+class JobStageResponse(BaseModel):
+    stage: str
+    status: str
+    started_at: datetime | None
+    completed_at: datetime | None
+    duration_ms: int | None
+    error_detail: str | None
+
+
+class QueryDetailResponse(BaseModel):
+    job_id: UUID
+    correlation_id: str
+    topic: str
+    depth: str
+    status: str
+    max_sources: int | None
+    created_at: datetime
+    updated_at: datetime
+    stages: list[JobStageResponse]

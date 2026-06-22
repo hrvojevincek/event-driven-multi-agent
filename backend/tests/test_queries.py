@@ -182,6 +182,34 @@ async def test_publisher_reaches_localstack_when_available() -> None:
     assert mock_client is not None
 
 
+async def test_get_query_returns_job_with_stages(client: AsyncClient) -> None:
+    create_response = await client.post(
+        "/api/v1/queries",
+        json={"topic": "GET detail test", "depth": "standard"},
+    )
+    assert create_response.status_code == 201
+    job_id = create_response.json()["job_id"]
+
+    response = await client.get(f"/api/v1/queries/{job_id}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["job_id"] == job_id
+    assert body["topic"] == "GET detail test"
+    assert body["depth"] == "standard"
+    assert body["status"] == "pending"
+    assert body["correlation_id"] == create_response.json()["correlation_id"]
+    assert len(body["stages"]) == len(JobStageName)
+    assert [stage["stage"] for stage in body["stages"]] == [name.value for name in JobStageName]
+    assert all(stage["status"] == "pending" for stage in body["stages"])
+
+
+async def test_get_query_returns_404_for_unknown_job(client: AsyncClient) -> None:
+    response = await client.get(f"/api/v1/queries/{uuid.uuid4()}")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Job not found"
+
+
 async def test_submit_query_returns_502_when_publish_fails(
     db_session: AsyncSession,
 ) -> None:
