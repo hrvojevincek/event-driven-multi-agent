@@ -2,9 +2,12 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from eventforge.events.schemas.constants import MOCK_EMBEDDING_DIMENSION
 
 
 class Base(DeclarativeBase):
@@ -87,6 +90,9 @@ class Job(Base):
     sources: Mapped[list["Source"]] = relationship(
         back_populates="job", cascade="all, delete-orphan"
     )
+    document_chunks: Mapped[list["DocumentChunk"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
+    )
 
 
 class JobStage(Base):
@@ -138,6 +144,41 @@ class Source(Base):
     )
 
     job: Mapped["Job"] = relationship(back_populates="sources")
+    document_chunks: Mapped[list["DocumentChunk"]] = relationship(
+        back_populates="source", cascade="all, delete-orphan"
+    )
+
+
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+    __table_args__ = (
+        UniqueConstraint(
+            "source_id",
+            "chunk_index",
+            name="uq_document_chunks_source_id_chunk_index",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sources.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(
+        Vector(MOCK_EMBEDDING_DIMENSION), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    job: Mapped["Job"] = relationship(back_populates="document_chunks")
+    source: Mapped["Source"] = relationship(back_populates="document_chunks")
 
 
 class ProcessedEvent(Base):

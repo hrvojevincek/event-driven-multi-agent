@@ -4,4 +4,12 @@ QUERY_SUBMITTED_SCHEMA_VERSION = "1.0"
 DETAIL_TYPE_INGESTION_COMPLETED = "eventforge.ingestion.completed"
 INGESTION_COMPLETED_SCHEMA_VERSION = "1.0"
 
+DETAIL_TYPE_EMBEDDING_COMPLETED = "eventforge.embedding.completed"
+EMBEDDING_COMPLETED_SCHEMA_VERSION = "1.0"
+
 WORKER_NAME_INGESTION = "ingestion"
+WORKER_NAME_EMBEDDING = "embedding"
+
+# Mock embedding dimension for Phase 2 stub (OpenAI text-embedding-3-small uses 1536 in prod).
+MOCK_EMBEDDING_DIMENSION = 8
+MOCK_CHUNKS_PER_SOURCE = 2

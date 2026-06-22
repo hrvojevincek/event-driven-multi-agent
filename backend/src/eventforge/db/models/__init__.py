@@ -1,5 +1,6 @@
 from eventforge.db.models.base import (
     Base,
+    DocumentChunk,
     Job,
     JobStage,
     JobStageName,
@@ -12,6 +13,7 @@ from eventforge.db.models.base import (
 
 __all__ = [
     "Base",
+    "DocumentChunk",
     "Job",
     "JobStage",
     "JobStageName",

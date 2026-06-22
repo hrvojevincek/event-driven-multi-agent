@@ -103,7 +103,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 2.2 Workers (Stub Agents)
 
-- [ ] Embedding worker (mock: store fake chunks in Postgres via pgvector) + `embedding.completed` schema
+- [x] Embedding worker (mock: store fake chunks in Postgres via pgvector) + `embedding.completed` schema
 - [ ] Knowledge mining worker (mock: extract fake entities) + `knowledge.mined` schema
 - [ ] Research worker (mock: generate fake research notes) + `research.task.*` schemas
 - [ ] Synthesis worker (mock: combine into markdown report) + `synthesis.completed` schema
@@ -230,6 +230,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [ ] Cost dashboard panel in UI
 - [ ] Export synthesis as Markdown download
 - [ ] Demo seed script with impressive sample query
+- [ ] Automated RAG eval (faithfulness, citation accuracy, RAGAS-style metrics) → [KRE-133](https://linear.app/kreativbiro/issue/KRE-133)
 
 ---
 
@@ -278,8 +279,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** [KRE-131](https://linear.app/kreativbiro/issue/KRE-131) (idempotency hardening) is next.
+**Backend-first track:** Knowledge mining worker (Phase 2.2) or [KRE-132](https://linear.app/kreativbiro/issue/KRE-132) review cleanup.
 
 Frontend + Phase 1 exit ([KRE-128](https://linear.app/kreativbiro/issue/KRE-128)) deferred until pipeline slices work via API/curl.
-
-Say: _"Implement KRE-122"_ to start mini-122 schemas.

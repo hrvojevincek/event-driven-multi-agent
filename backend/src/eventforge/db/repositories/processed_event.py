@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from eventforge.db.models import ProcessedEvent
@@ -21,6 +21,16 @@ class ProcessedEventRepository(BaseRepository):
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none() is not None
+
+    async def release_claim(self, event_id: str, worker_name: str) -> None:
+        """Remove a claim so a failed post-commit publish can be retried."""
+        await self.session.execute(
+            delete(ProcessedEvent).where(
+                ProcessedEvent.event_id == event_id,
+                ProcessedEvent.worker_name == worker_name,
+            )
+        )
+        await self.session.flush()
 
     async def exists(self, event_id: str) -> bool:
         result = await self.session.execute(

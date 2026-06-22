@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 EVENT_SOURCE_API = "eventforge.api"
 EVENT_SOURCE_INGESTION = "eventforge.workers.ingestion"
+EVENT_SOURCE_EMBEDDING = "eventforge.workers.embedding"
 PUBLISHER_WORKER_NAME = "api"
 
 

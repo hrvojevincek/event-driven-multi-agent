@@ -1,9 +1,19 @@
 from eventforge.events.schemas.constants import (
+    DETAIL_TYPE_EMBEDDING_COMPLETED,
     DETAIL_TYPE_INGESTION_COMPLETED,
     DETAIL_TYPE_QUERY_SUBMITTED,
+    EMBEDDING_COMPLETED_SCHEMA_VERSION,
     INGESTION_COMPLETED_SCHEMA_VERSION,
+    MOCK_CHUNKS_PER_SOURCE,
+    MOCK_EMBEDDING_DIMENSION,
     QUERY_SUBMITTED_SCHEMA_VERSION,
+    WORKER_NAME_EMBEDDING,
     WORKER_NAME_INGESTION,
+)
+from eventforge.events.schemas.embedding_completed import (
+    EmbeddingCompletedEvent,
+    EmbeddingCompletedPayload,
+    build_embedding_completed_event,
 )
 from eventforge.events.schemas.envelope import EventEnvelope
 from eventforge.events.schemas.ingestion_completed import (
@@ -19,17 +29,25 @@ from eventforge.events.schemas.query_submitted import (
 )
 
 __all__ = [
+    "DETAIL_TYPE_EMBEDDING_COMPLETED",
     "DETAIL_TYPE_INGESTION_COMPLETED",
     "DETAIL_TYPE_QUERY_SUBMITTED",
+    "EMBEDDING_COMPLETED_SCHEMA_VERSION",
     "INGESTION_COMPLETED_SCHEMA_VERSION",
+    "MOCK_CHUNKS_PER_SOURCE",
+    "MOCK_EMBEDDING_DIMENSION",
     "QUERY_SUBMITTED_SCHEMA_VERSION",
+    "WORKER_NAME_EMBEDDING",
     "WORKER_NAME_INGESTION",
+    "EmbeddingCompletedEvent",
+    "EmbeddingCompletedPayload",
     "EventEnvelope",
     "IngestionCompletedEvent",
     "IngestionCompletedPayload",
     "QueryDepth",
     "QuerySubmittedEvent",
     "QuerySubmittedPayload",
+    "build_embedding_completed_event",
     "build_ingestion_completed_event",
     "build_query_submitted_event",
 ]

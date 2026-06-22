@@ -1,9 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from eventforge.db.models import Job, JobStageName, JobStatus, Source
-from eventforge.db.repositories import JobRepository, JobStageRepository, ProcessedEventRepository
+from eventforge.db.models import Job, JobStageName, JobStatus, Source, StageStatus
+from eventforge.db.repositories import (
+    JobRepository,
+    JobStageRepository,
+    ProcessedEventRepository,
+    SourceRepository,
+)
+from eventforge.events.deterministic import deterministic_event_id
 from eventforge.events.publisher import EVENT_SOURCE_INGESTION, EventPublisher, EventPublishError
 from eventforge.events.schemas import (
+    DETAIL_TYPE_INGESTION_COMPLETED,
     WORKER_NAME_INGESTION,
     IngestionCompletedEvent,
     QuerySubmittedEvent,
@@ -28,6 +35,21 @@ def _mock_sources(job: Job, count: int) -> list[Source]:
     return sources
 
 
+async def _load_or_create_sources(session: AsyncSession, job: Job) -> list[Source]:
+    source_repo = SourceRepository(session)
+    existing = await source_repo.list_by_job_id(job.id)
+    if existing:
+        return existing
+
+    source_count = (
+        job.max_sources if job.max_sources is not None else DEFAULT_MOCK_SOURCE_COUNT
+    )
+    sources = _mock_sources(job, source_count)
+    session.add_all(sources)
+    await session.flush()
+    return sources
+
+
 async def process_query_submitted(
     session: AsyncSession,
     publisher: EventPublisher,
@@ -37,8 +59,6 @@ async def process_query_submitted(
     processed_repo = ProcessedEventRepository(session)
     event_id = str(event.event_id)
 
-    # Atomic claim: if another delivery already claimed this event for the
-    # ingestion worker, skip without re-processing (SQS at-least-once delivery).
     if not await processed_repo.try_claim(event_id, WORKER_NAME_INGESTION):
         return None
 
@@ -56,27 +76,27 @@ async def process_query_submitted(
         raise ValueError(msg)
 
     job.status = JobStatus.RUNNING.value
-    await stage_repo.mark_running(ingestion_stage)
+    if ingestion_stage.status != StageStatus.COMPLETED.value:
+        await stage_repo.mark_running(ingestion_stage)
 
-    source_count = job.max_sources or DEFAULT_MOCK_SOURCE_COUNT
-    sources = _mock_sources(job, source_count)
-    session.add_all(sources)
-    await session.flush()
+    sources = await _load_or_create_sources(session, job)
 
     completed_event = build_ingestion_completed_event(
         job_id=job.id,
         correlation_id=event.correlation_id,
         source_ids=[source.id for source in sources],
+        event_id=deterministic_event_id(job.id, DETAIL_TYPE_INGESTION_COMPLETED),
     )
+
+    await stage_repo.mark_completed(ingestion_stage)
+    await session.commit()
 
     try:
         await publisher.publish(completed_event, source=EVENT_SOURCE_INGESTION)
     except EventPublishError:
-        await session.rollback()
+        await processed_repo.release_claim(event_id, WORKER_NAME_INGESTION)
+        await session.commit()
         raise
-
-    await stage_repo.mark_completed(ingestion_stage)
-    await session.commit()
 
     return completed_event
 
