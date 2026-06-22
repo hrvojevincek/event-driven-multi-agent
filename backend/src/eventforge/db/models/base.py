@@ -183,7 +183,7 @@ class DocumentChunk(Base):
     job: Mapped["Job"] = relationship(back_populates="document_chunks")
     source: Mapped["Source"] = relationship(back_populates="document_chunks")
     knowledge_entities: Mapped[list["KnowledgeEntity"]] = relationship(
-        back_populates="chunk", cascade="all, delete-orphan"
+        back_populates="chunk"
     )
 
 
