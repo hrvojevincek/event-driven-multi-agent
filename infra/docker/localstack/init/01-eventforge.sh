@@ -46,5 +46,24 @@ awslocal events put-targets \
   --targets "Id=embedding-queue,Arn=${EMBEDDING_QUEUE_ARN}" \
   || true
 
+KNOWLEDGE_QUEUE_URL="$(awslocal sqs get-queue-url --queue-name eventforge-knowledge-mining --query 'QueueUrl' --output text)"
+KNOWLEDGE_QUEUE_ARN="$(awslocal sqs get-queue-attributes \
+  --queue-url "${KNOWLEDGE_QUEUE_URL}" \
+  --attribute-names QueueArn \
+  --query 'Attributes.QueueArn' \
+  --output text)"
+
+awslocal events put-rule \
+  --name eventforge-embedding-completed-to-knowledge \
+  --event-bus-name eventforge-bus \
+  --event-pattern '{"detail-type":["eventforge.embedding.completed"]}' \
+  || true
+
+awslocal events put-targets \
+  --rule eventforge-embedding-completed-to-knowledge \
+  --event-bus-name eventforge-bus \
+  --targets "Id=knowledge-queue,Arn=${KNOWLEDGE_QUEUE_ARN}" \
+  || true
+
 # Wire DLQ redrive policy (configure in Phase 2)
 echo "EventForge LocalStack resources initialized."

@@ -40,6 +40,10 @@ class Settings(BaseSettings):
         return f"{self.sqs_queue_prefix}-embedding"
 
     @property
+    def knowledge_mining_queue_name(self) -> str:
+        return f"{self.sqs_queue_prefix}-knowledge-mining"
+
+    @property
     def database_url(self) -> str:
         return (
             f"postgresql://{self.postgres_user}:{self.postgres_password}"

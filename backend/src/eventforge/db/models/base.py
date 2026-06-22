@@ -93,6 +93,9 @@ class Job(Base):
     document_chunks: Mapped[list["DocumentChunk"]] = relationship(
         back_populates="job", cascade="all, delete-orphan"
     )
+    knowledge_entities: Mapped[list["KnowledgeEntity"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
+    )
 
 
 class JobStage(Base):
@@ -179,6 +182,34 @@ class DocumentChunk(Base):
 
     job: Mapped["Job"] = relationship(back_populates="document_chunks")
     source: Mapped["Source"] = relationship(back_populates="document_chunks")
+    knowledge_entities: Mapped[list["KnowledgeEntity"]] = relationship(
+        back_populates="chunk", cascade="all, delete-orphan"
+    )
+
+
+class KnowledgeEntity(Base):
+    __tablename__ = "knowledge_entities"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    chunk_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("document_chunks.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(String(512), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    job: Mapped["Job"] = relationship(back_populates="knowledge_entities")
+    chunk: Mapped["DocumentChunk | None"] = relationship(back_populates="knowledge_entities")
 
 
 class ProcessedEvent(Base):

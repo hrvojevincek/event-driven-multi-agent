@@ -104,7 +104,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 ### 2.2 Workers (Stub Agents)
 
 - [x] Embedding worker (mock: store fake chunks in Postgres via pgvector) + `embedding.completed` schema
-- [ ] Knowledge mining worker (mock: extract fake entities) + `knowledge.mined` schema
+- [x] Knowledge mining worker (mock: extract fake entities) + `knowledge.mined` schema
 - [ ] Research worker (mock: generate fake research notes) + `research.task.*` schemas
 - [ ] Synthesis worker (mock: combine into markdown report) + `synthesis.completed` schema
 - [ ] Wire EventBridge rules → SQS queues (LocalStack)

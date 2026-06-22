@@ -14,26 +14,27 @@ Canonical event contracts shared between backend publishers, workers, and Step F
 
 Define schemas **when the producer is implemented**, not all upfront:
 
-| When | Schema |
-|------|--------|
-| KRE-122 | Shared envelope + `query.submitted` |
-| KRE-130 | `ingestion.completed` |
-| Phase 2.2 | `embedding.completed` |
+| When              | Schema                                                             |
+| ----------------- | ------------------------------------------------------------------ |
+| KRE-122           | Shared envelope + `query.submitted`                                |
+| KRE-130           | `ingestion.completed`                                              |
+| Phase 2.2         | `embedding.completed`                                              |
+| Phase 2.2         | `knowledge.mined`                                                  |
 | Each later worker | That stage's output event (+ `pipeline.failed` with orchestration) |
 
 ## Schema index
 
-| File | Status | Producer | Consumer |
-|------|--------|----------|----------|
-| `envelope.schema.json` | Done (KRE-122) | All | All |
-| `query.submitted.schema.json` | Done (KRE-122) | API | Ingestion worker |
-| `ingestion.completed.schema.json` | Done (KRE-130) | Ingestion | Embedding worker |
-| `embedding.completed.schema.json` | Done (Phase 2.2) | Embedding | Knowledge worker |
-| `knowledge.mined.schema.json` | Phase 2 | Knowledge | Research orchestrator |
-| `research.task.dispatched.schema.json` | Phase 2 | Orchestrator | Research workers |
-| `research.task.completed.schema.json` | Phase 2 | Research | Synthesis |
-| `synthesis.completed.schema.json` | Phase 2 | Synthesis | API / SSE |
-| `pipeline.failed.schema.json` | Phase 2 | Any stage | DLQ + alerting |
+| File                                   | Status           | Producer     | Consumer              |
+| -------------------------------------- | ---------------- | ------------ | --------------------- |
+| `envelope.schema.json`                 | Done (KRE-122)   | All          | All                   |
+| `query.submitted.schema.json`          | Done (KRE-122)   | API          | Ingestion worker      |
+| `ingestion.completed.schema.json`      | Done (KRE-130)   | Ingestion    | Embedding worker      |
+| `embedding.completed.schema.json`      | Done (Phase 2.2) | Embedding    | Knowledge worker      |
+| `knowledge.mined.schema.json`          | Done (Phase 2.2) | Knowledge    | Research orchestrator |
+| `research.task.dispatched.schema.json` | Phase 2          | Orchestrator | Research workers      |
+| `research.task.completed.schema.json`  | Phase 2          | Research     | Synthesis             |
+| `synthesis.completed.schema.json`      | Phase 2          | Synthesis    | API / SSE             |
+| `pipeline.failed.schema.json`          | Phase 2          | Any stage    | DLQ + alerting        |
 
 ## Planned pipeline (reference)
 
