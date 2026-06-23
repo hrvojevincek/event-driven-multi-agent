@@ -16,11 +16,15 @@ RESEARCH_TASK_DISPATCHED_SCHEMA_VERSION = "1.0"
 DETAIL_TYPE_RESEARCH_TASK_COMPLETED = "eventforge.research.task.completed"
 RESEARCH_TASK_COMPLETED_SCHEMA_VERSION = "1.0"
 
+DETAIL_TYPE_SYNTHESIS_COMPLETED = "eventforge.synthesis.completed"
+SYNTHESIS_COMPLETED_SCHEMA_VERSION = "1.0"
+
 WORKER_NAME_INGESTION = "ingestion"
 WORKER_NAME_EMBEDDING = "embedding"
 WORKER_NAME_KNOWLEDGE = "knowledge"
 WORKER_NAME_RESEARCH = "research"
 WORKER_NAME_RESEARCH_ORCHESTRATOR = "research-orchestrator"
+WORKER_NAME_SYNTHESIS = "synthesis"
 
 # Mock embedding dimension for Phase 2 stub (OpenAI text-embedding-3-small uses 1536 in prod).
 MOCK_EMBEDDING_DIMENSION = 8

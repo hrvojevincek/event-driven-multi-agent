@@ -4,6 +4,7 @@ from eventforge.db.repositories.knowledge_entity import KnowledgeEntityRepositor
 from eventforge.db.repositories.processed_event import ProcessedEventRepository
 from eventforge.db.repositories.research_note import ResearchNoteRepository
 from eventforge.db.repositories.source import SourceRepository
+from eventforge.db.repositories.synthesis_report import SynthesisReportRepository
 from eventforge.db.repositories.user import UserRepository
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "ProcessedEventRepository",
     "ResearchNoteRepository",
     "SourceRepository",
+    "SynthesisReportRepository",
     "UserRepository",
 ]

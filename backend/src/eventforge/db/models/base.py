@@ -99,6 +99,9 @@ class Job(Base):
     research_notes: Mapped[list["ResearchNote"]] = relationship(
         back_populates="job", cascade="all, delete-orphan"
     )
+    synthesis_report: Mapped["SynthesisReport | None"] = relationship(
+        back_populates="job", cascade="all, delete-orphan", uselist=False
+    )
 
 
 class JobStage(Base):
@@ -237,6 +240,27 @@ class ResearchNote(Base):
     )
 
     job: Mapped["Job"] = relationship(back_populates="research_notes")
+
+
+class SynthesisReport(Base):
+    __tablename__ = "synthesis_reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    job: Mapped["Job"] = relationship(back_populates="synthesis_report")
 
 
 class ProcessedEvent(Base):

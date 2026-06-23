@@ -5,6 +5,7 @@ from eventforge.events.schemas.constants import (
     DETAIL_TYPE_QUERY_SUBMITTED,
     DETAIL_TYPE_RESEARCH_TASK_COMPLETED,
     DETAIL_TYPE_RESEARCH_TASK_DISPATCHED,
+    DETAIL_TYPE_SYNTHESIS_COMPLETED,
     EMBEDDING_COMPLETED_SCHEMA_VERSION,
     INGESTION_COMPLETED_SCHEMA_VERSION,
     KNOWLEDGE_MINED_SCHEMA_VERSION,
@@ -14,11 +15,13 @@ from eventforge.events.schemas.constants import (
     QUERY_SUBMITTED_SCHEMA_VERSION,
     RESEARCH_TASK_COMPLETED_SCHEMA_VERSION,
     RESEARCH_TASK_DISPATCHED_SCHEMA_VERSION,
+    SYNTHESIS_COMPLETED_SCHEMA_VERSION,
     WORKER_NAME_EMBEDDING,
     WORKER_NAME_INGESTION,
     WORKER_NAME_KNOWLEDGE,
     WORKER_NAME_RESEARCH,
     WORKER_NAME_RESEARCH_ORCHESTRATOR,
+    WORKER_NAME_SYNTHESIS,
 )
 from eventforge.events.schemas.embedding_completed import (
     EmbeddingCompletedEvent,
@@ -52,6 +55,11 @@ from eventforge.events.schemas.research_task_dispatched import (
     ResearchTaskDispatchedPayload,
     build_research_task_dispatched_event,
 )
+from eventforge.events.schemas.synthesis_completed import (
+    SynthesisCompletedEvent,
+    SynthesisCompletedPayload,
+    build_synthesis_completed_event,
+)
 
 __all__ = [
     "DETAIL_TYPE_EMBEDDING_COMPLETED",
@@ -60,6 +68,7 @@ __all__ = [
     "DETAIL_TYPE_QUERY_SUBMITTED",
     "DETAIL_TYPE_RESEARCH_TASK_COMPLETED",
     "DETAIL_TYPE_RESEARCH_TASK_DISPATCHED",
+    "DETAIL_TYPE_SYNTHESIS_COMPLETED",
     "EMBEDDING_COMPLETED_SCHEMA_VERSION",
     "INGESTION_COMPLETED_SCHEMA_VERSION",
     "KNOWLEDGE_MINED_SCHEMA_VERSION",
@@ -69,11 +78,13 @@ __all__ = [
     "QUERY_SUBMITTED_SCHEMA_VERSION",
     "RESEARCH_TASK_COMPLETED_SCHEMA_VERSION",
     "RESEARCH_TASK_DISPATCHED_SCHEMA_VERSION",
+    "SYNTHESIS_COMPLETED_SCHEMA_VERSION",
     "WORKER_NAME_EMBEDDING",
     "WORKER_NAME_INGESTION",
     "WORKER_NAME_KNOWLEDGE",
     "WORKER_NAME_RESEARCH",
     "WORKER_NAME_RESEARCH_ORCHESTRATOR",
+    "WORKER_NAME_SYNTHESIS",
     "EmbeddingCompletedEvent",
     "EmbeddingCompletedPayload",
     "EventEnvelope",
@@ -88,10 +99,13 @@ __all__ = [
     "ResearchTaskCompletedPayload",
     "ResearchTaskDispatchedEvent",
     "ResearchTaskDispatchedPayload",
+    "SynthesisCompletedEvent",
+    "SynthesisCompletedPayload",
     "build_embedding_completed_event",
     "build_ingestion_completed_event",
     "build_knowledge_mined_event",
     "build_query_submitted_event",
     "build_research_task_completed_event",
     "build_research_task_dispatched_event",
+    "build_synthesis_completed_event",
 ]

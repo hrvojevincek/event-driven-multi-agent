@@ -10,6 +10,7 @@ from eventforge.db.models.base import (
     ResearchNote,
     Source,
     StageStatus,
+    SynthesisReport,
     User,
 )
 
@@ -25,5 +26,6 @@ __all__ = [
     "ResearchNote",
     "Source",
     "StageStatus",
+    "SynthesisReport",
     "User",
 ]
