@@ -115,13 +115,13 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 3.1 LLM Integration
 
-- [ ] LLM client abstraction (OpenAI + Anthropic)
+- [x] LLM client abstraction (OpenAI + Anthropic)
 - [ ] Ingestion: Tavily web search
 - [ ] Embedding: chunk real content + OpenAI `text-embedding-3-small`
 - [ ] Knowledge mining: RAG retrieval + entity extraction
 - [ ] Research: parallel focused sub-queries with LLM
 - [ ] Synthesis: structured report generation with citations
-- [ ] Cost tracking (`llm_usage` table + API endpoint)
+- [ ] Cost tracking (`llm_usage` table + API endpoint) — table + repository done; API endpoint pending
 
 ### 3.2 Authentication (backend)
 

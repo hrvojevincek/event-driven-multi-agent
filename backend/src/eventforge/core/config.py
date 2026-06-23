@@ -1,7 +1,13 @@
+from decimal import Decimal
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from eventforge.core.llm_pricing import DEFAULT_MODEL_PRICING, ModelPricing, compute_cost_usd
+
+LLMProviderName = Literal["openai", "anthropic"]
 
 
 class Settings(BaseSettings):
@@ -32,6 +38,14 @@ class Settings(BaseSettings):
     sqs_wait_time_seconds: int = 20
     sqs_max_messages: int = 10
     sqs_max_receive_count: int = 3
+
+    openai_api_key: str = ""
+    anthropic_api_key: str = ""
+    tavily_api_key: str = ""
+    llm_default_model: str = "gpt-4o-mini"
+    llm_model_pricing: dict[str, ModelPricing] = Field(
+        default_factory=lambda: DEFAULT_MODEL_PRICING.copy()
+    )
 
     @property
     def ingestion_queue_name(self) -> str:
@@ -69,6 +83,28 @@ class Settings(BaseSettings):
         return (
             f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+
+    def resolve_llm_provider(self, model: str) -> LLMProviderName:
+        normalized = model.lower()
+        if normalized.startswith("claude"):
+            return "anthropic"
+        if normalized.startswith(("gpt-", "o1", "o3", "text-embedding")):
+            return "openai"
+        msg = f"Cannot resolve LLM provider for model: {model}"
+        raise ValueError(msg)
+
+    def total_cost_for_tokens(
+        self,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+    ) -> Decimal:
+        return compute_cost_usd(
+            model,
+            input_tokens,
+            output_tokens,
+            self.llm_model_pricing,
         )
 
 

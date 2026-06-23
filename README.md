@@ -29,7 +29,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 | **0** | Docs, Docker, LocalStack, Postgres + pgvector | ✅ Done |
 | **1** | FastAPI backend, health checks, SQLAlchemy, Alembic | ✅ Done |
 | **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done |
-| **3** | **Real AI** — Tavily search, chunking, OpenAI embeddings, LLM agents, backend auth | 🚧 **Current** |
+| **3** | **Real AI** — Tavily search, chunking, OpenAI embeddings, LLM agents, backend auth | 🚧 **In progress** (LLM client + cost tracking done) |
 | **4** | Next.js UI, SSE live updates, React Flow visualization, Clerk | Planned |
 | **5** | AWS deploy (Terraform, ECS, Step Functions fan-out) | Planned |
 | **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard | Planned |
@@ -53,7 +53,10 @@ POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GE
 | Idempotent processing (`processed_events`) | ✅ |
 | SQS redrive → DLQ after 3 failures | ✅ |
 | `pipeline.failed` terminal failure events | ✅ |
-| Real web search, embeddings, LLM synthesis | ⬜ Phase 3 |
+| LLM client (OpenAI + Anthropic, config-driven pricing) | ✅ Phase 3 |
+| Per-call cost logging (`llm_usage` table) | ✅ Phase 3 |
+| Real web search, embeddings, LLM agents | ⬜ Phase 3 |
+| Backend JWT auth (Clerk) | ⬜ Phase 3 |
 | Dashboard / React Flow | ⬜ Phase 4 |
 
 **Smoke test:** `./scripts/verify-pipeline-e2e.sh` (requires API + all workers running — see [Local dev](#local-dev))
@@ -97,6 +100,7 @@ Full diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | **Workers** | Async SQS consumers, one module per pipeline stage |
 | **Events** | AWS EventBridge + SQS (+ Step Functions for research fan-out in prod) |
 | **Data** | Postgres 16 + pgvector |
+| **LLM** *(Phase 3)* | OpenAI + Anthropic via unified client; Tavily for search (next) |
 | **Frontend** *(Phase 4)* | Next.js 15, Tailwind, shadcn/ui, React Flow |
 | **Auth** *(Phase 3–4)* | Clerk JWT → FastAPI |
 | **IaC** *(Phase 5)* | Terraform |
@@ -114,6 +118,15 @@ cp .env.example .env
 make dev                    # Postgres + LocalStack + backend
 
 cd backend && uv run alembic upgrade head   # migrations
+```
+
+**Phase 3 API keys** (in `.env` — required once real agents are wired):
+
+```bash
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...   # optional second provider
+TAVILY_API_KEY=tvly-...        # web search (ingestion, next up)
+LLM_DEFAULT_MODEL=gpt-4o-mini
 ```
 
 **Hybrid (hot reload):** run infra in Docker, API natively:
@@ -159,6 +172,7 @@ Full guide: [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md)
 ```
 event-driven/
 ├── backend/src/eventforge/   # API, agents, workers, events, db
+│   └── services/llm/         # LLM client + OpenAI/Anthropic providers (Phase 3)
 ├── shared/events/            # JSON Schema contracts (source of truth)
 ├── infra/                    # Terraform, LocalStack init, Docker
 ├── docs/                     # PRD, architecture, ADRs, roadmap
