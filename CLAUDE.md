@@ -45,7 +45,7 @@ Phase 1+: `uv run uvicorn eventforge.main:app --reload` | `npm run dev`
 
 ## Current phase
 
-**Phase 0** — almost done. Next: [KRE-117](https://linear.app/kreativbiro/issue/KRE-117). Index: `docs/LINEAR.md`
+**Phase 2** complete. **Next:** Phase 3 — real AI agents. Frontend: Phase 4. Index: `docs/LINEAR.md`
 
 ## User shortcuts
 

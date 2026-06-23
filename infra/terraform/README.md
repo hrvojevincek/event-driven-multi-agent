@@ -19,4 +19,4 @@ terraform/
     └── observability/
 ```
 
-Bootstrap in Phase 4. See `docs/TECH_DECISIONS.md` ADR-006.
+Bootstrap in Phase 5. See `docs/TECH_DECISIONS.md` ADR-006.

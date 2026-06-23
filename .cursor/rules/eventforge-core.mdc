@@ -73,6 +73,6 @@ Phase 1+: `uv run uvicorn eventforge.main:app --reload` (backend), `npm run dev`
 - **Project:** [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) on team `Kreativbiro`
 - **Active work:** Linear MCP (`list_issues`, `get_issue`) — not just markdown
 - **Mirror:** `docs/TASKS.md` + `docs/LINEAR.md` issue index
-- **Next issue:** [KRE-117](https://linear.app/kreativbiro/issue/KRE-117) (Close Phase 0)
+- **Next issue:** Phase 3 — real AI agents (see `docs/TASKS.md`). Frontend: Phase 4 ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119)).
 
-**Phase status:** Phase 0 almost done. Start with KRE-117, then parallel KRE-118 + KRE-119.
+**Phase status:** Phase 2 complete (stub pipeline). **Next:** Phase 3 — real AI agents. Frontend deferred to Phase 4.

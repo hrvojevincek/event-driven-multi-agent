@@ -172,7 +172,7 @@ Instrument all services with **OpenTelemetry** SDK; export via OTLP to collector
 ### Implementation Notes
 
 - Python: `opentelemetry-instrumentation-fastapi`, custom spans in agents
-- Next.js: `@opentelemetry/sdk` (Phase 3)
+- Next.js: `@opentelemetry/sdk` (Phase 4)
 - Collector → Grafana Cloud free tier or AWS X-Ray
 
 ---

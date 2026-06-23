@@ -26,9 +26,7 @@
 
 ## Current status
 
-**Phase 0** — almost done. **Next:** [KRE-117](https://linear.app/kreativbiro/issue/KRE-117) (git init + docker verify).
-
-Linear project: [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) · Index: `docs/LINEAR.md`
+**Phase 2** complete (stub pipeline). **Next:** Phase 3 — real AI agents. Frontend deferred to Phase 4 ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119)). Index: `docs/LINEAR.md`
 
 ## Commands
 
@@ -52,7 +50,8 @@ make down                              # stop
 |----------|------------|
 | "What's next in EventForge?" | Linear MCP → suggest unblocked `KRE-xxx` |
 | "Implement KRE-118" | `get_issue` → implement acceptance criteria |
-| "Implement Phase 1" | Follow Phase 1 issues in `docs/LINEAR.md` |
+| "Implement Phase 3" | Follow Phase 3 — real AI agents in `docs/TASKS.md` |
+| "Implement Phase 4" | Follow Phase 4 — frontend + SSE in `docs/LINEAR.md` |
 | "Mark KRE-117 done" | Close in Linear + update `docs/TASKS.md` |
 
 ## Cursor rules map

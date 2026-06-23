@@ -40,4 +40,4 @@ alwaysApply: false
 
 ## Phase exit criteria
 
-Don't start Phase 2 until KRE-128 (Phase 1 smoke test) is Done.
+Don't start Phase 2 until backend Phase 1 scaffold is Done (KRE-125). Frontend (KRE-128) is Phase 4, not a blocker for Phases 2–3.

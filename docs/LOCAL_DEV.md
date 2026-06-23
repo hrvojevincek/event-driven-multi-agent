@@ -200,7 +200,7 @@ docker compose exec postgres psql -U eventforge -d eventforge -c "SELECT extname
 
 ---
 
-## Observability (Phase 3+)
+## Observability (Phase 4+)
 
 When OTEL collector is added to docker-compose:
 
@@ -308,8 +308,9 @@ make lint         # Run linters (Phase 1+)
 
 After infrastructure is verified:
 
-1. **Phase 1:** Scaffold FastAPI backend and Next.js frontend
-2. **Phase 2:** Wire event pipeline with stub agents
+1. **Phase 1–2:** Backend API + stub pipeline (test via Postman)
+2. **Phase 3:** Real AI agents (Tavily, embeddings, LLM)
+3. **Phase 4:** Next.js frontend + SSE + React Flow
 3. See `docs/TASKS.md` for full roadmap
 
-Say: *"Implement Phase 1"* to begin application scaffolding.
+Say: *"Implement Phase 3"* to begin real AI agents.

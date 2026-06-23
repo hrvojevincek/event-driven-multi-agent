@@ -56,7 +56,7 @@ services:
   #     - ./frontend:/app
   #     - /app/node_modules
 
-  # Uncomment when OTEL collector is configured (Phase 3)
+  # Uncomment when OTEL collector is configured (Phase 4)
   # otel-collector:
   #   image: otel/opentelemetry-collector-contrib:0.114.0
   #   ports:

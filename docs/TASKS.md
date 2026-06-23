@@ -39,7 +39,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ## Phase 1: Application Scaffolding
 
-**Goal:** Runnable Next.js frontend and FastAPI backend with health checks and DB connection.
+**Goal:** Runnable FastAPI backend with health checks and DB connection. Frontend deferred to Phase 4 (backend-first).
 
 ### 1.1 Backend Scaffold
 
@@ -55,30 +55,17 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] Dockerfile for backend — KRE-125
 - [x] Uncomment backend service in `docker-compose.yml` — KRE-125
 
-### 1.2 Frontend Scaffold
-
-→ [KRE-119](https://linear.app/kreativbiro/issue/KRE-119) · [KRE-121](https://linear.app/kreativbiro/issue/KRE-121) · [KRE-124](https://linear.app/kreativbiro/issue/KRE-124)
-
-- [ ] Initialize Next.js 15 with TypeScript, Tailwind, App Router — KRE-119
-- [ ] Install and configure shadcn/ui — KRE-119
-- [ ] Basic layout: header, sidebar, main content area — KRE-121
-- [ ] Placeholder pages: `/` (home), `/queries/new`, `/queries/[id]` — KRE-121
-- [ ] API client setup with env-based `NEXT_PUBLIC_API_URL` — KRE-124
-- [ ] Dockerfile for frontend — KRE-124
-- [ ] Uncomment frontend service in `docker-compose.yml` — KRE-124
-
-### 1.3 Shared Contracts
+### 1.2 Shared Contracts
 
 → [KRE-126](https://linear.app/kreativbiro/issue/KRE-126) · [KRE-122](https://linear.app/kreativbiro/issue/KRE-122) · [KRE-127](https://linear.app/kreativbiro/issue/KRE-127) · [KRE-128](https://linear.app/kreativbiro/issue/KRE-128)
 
-- [ ] OpenAPI spec generation from FastAPI — KRE-126
-- [ ] `openapi-typescript` codegen in frontend — KRE-126
+- [ ] OpenAPI spec generation from FastAPI — KRE-126 (frontend codegen deferred to Phase 4)
 - [x] Event envelope + `query.submitted` JSON schemas (mini-122) — KRE-122
 - [x] CI lint workflow (ruff; eslint when frontend exists) — KRE-127
 
-**Phase 1 exit criteria:** `make dev` runs full stack; health endpoints return 200; frontend renders placeholder UI. → [KRE-128](https://linear.app/kreativbiro/issue/KRE-128)
+**Phase 1 exit criteria (backend):** `make dev` runs infra + backend; `/health` and `/health/ready` return 200; migrations apply cleanly.
 
-> **Backend-first:** Phase 2 vertical slices (KRE-129, KRE-130) may start after mini-122 without waiting for Phase 1 frontend or KRE-128.
+> **Backend-first:** Phase 2+ does not wait for frontend. Full-stack smoke test → [KRE-128](https://linear.app/kreativbiro/issue/KRE-128) moves to Phase 4.
 
 ---
 
@@ -122,69 +109,86 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ---
 
-## Phase 3: Frontend Experience & Real-Time
+## Phase 3: Real AI Agents & Auth
 
-**Goal:** Interactive dashboard with live React Flow pipeline visualization.
+**Goal:** Replace stub agents with real LLM calls, web search, embeddings, and backend authentication. Test via Postman/curl before any UI.
 
-### 3.1 Real-Time Streaming
+### 3.1 LLM Integration
+
+- [ ] LLM client abstraction (OpenAI + Anthropic)
+- [ ] Ingestion: Tavily web search
+- [ ] Embedding: chunk real content + OpenAI `text-embedding-3-small`
+- [ ] Knowledge mining: RAG retrieval + entity extraction
+- [ ] Research: parallel focused sub-queries with LLM
+- [ ] Synthesis: structured report generation with citations
+- [ ] Cost tracking (`llm_usage` table + API endpoint)
+
+### 3.2 Authentication (backend)
+
+- [ ] JWT validation middleware in FastAPI (Clerk JWKS)
+- [ ] User-scoped job queries
+- [ ] Replace mock user with authenticated `user_id` on all job records
+
+### 3.3 Resilience Hardening
+
+- [ ] LLM retry with exponential backoff
+- [ ] Circuit breaker per provider
+- [ ] Per-query cost cap enforcement
+
+**Phase 3 exit criteria:** Real research query via API produces cited synthesis; backend auth enforced; LLM costs tracked. Verified via Postman + `./scripts/verify-pipeline-e2e.sh`.
+
+---
+
+## Phase 4: Frontend Experience & Real-Time
+
+**Goal:** Interactive dashboard with live React Flow pipeline visualization (after backend + real agents are solid).
+
+### 4.0 Frontend Scaffold
+
+→ [KRE-119](https://linear.app/kreativbiro/issue/KRE-119) · [KRE-121](https://linear.app/kreativbiro/issue/KRE-121) · [KRE-124](https://linear.app/kreativbiro/issue/KRE-124) · [KRE-126](https://linear.app/kreativbiro/issue/KRE-126) · [KRE-128](https://linear.app/kreativbiro/issue/KRE-128)
+
+- [ ] Initialize Next.js 15 with TypeScript, Tailwind, App Router — KRE-119
+- [ ] Install and configure shadcn/ui — KRE-119
+- [ ] Basic layout: header, sidebar, main content area — KRE-121
+- [ ] Placeholder pages: `/` (home), `/queries/new`, `/queries/[id]` — KRE-121
+- [ ] API client setup with env-based `NEXT_PUBLIC_API_URL` — KRE-124
+- [ ] `openapi-typescript` codegen from backend OpenAPI — KRE-126
+- [ ] Dockerfile for frontend — KRE-124
+- [ ] Uncomment frontend service in `docker-compose.yml` — KRE-124
+- [ ] Phase 4 full-stack integration smoke test — KRE-128
+
+### 4.1 Real-Time Streaming
 
 - [ ] SSE endpoint: `GET /api/v1/queries/{id}/stream`
 - [ ] Publish stage events to SSE subscribers
 - [ ] Frontend `useJobStream` hook
 
-### 3.2 React Flow Visualization
+### 4.2 React Flow Visualization
 
 - [ ] Pipeline node components (pending, running, completed, failed)
 - [ ] Animated edges on active stage
 - [ ] Auto-layout pipeline graph
 - [ ] Stage detail panel on node click (duration, agent name)
 
-### 3.3 Dashboard UI
+### 4.3 Dashboard UI
 
 - [ ] Query submission form (topic, depth, max_sources)
 - [ ] Results viewer (markdown rendering)
 - [ ] Source list with expandable snippets
 - [ ] Job history page
 
-### 3.3 Observability (Local)
+### 4.4 Authentication (Clerk UI)
+
+- [ ] Clerk integration in Next.js
+- [ ] Pass JWT to API client; protected routes via Clerk middleware
+
+### 4.5 Observability (Local)
 
 - [ ] OTEL SDK in FastAPI + workers
 - [ ] OTEL collector in docker-compose
 - [ ] Verify traces in local Jaeger or Grafana
 
-**Phase 3 exit criteria:** Submit query in UI → watch React Flow update live → view synthesis result.
-
----
-
-## Phase 4: Real AI Agents & Auth
-
-**Goal:** Replace mocks with real LLM calls, web search, and user authentication.
-
-### 4.1 LLM Integration
-
-- [ ] LLM client abstraction (OpenAI + Anthropic)
-- [ ] Ingestion: Tavily web search
-- [ ] Embedding: OpenAI `text-embedding-3-small`
-- [ ] Knowledge mining: RAG retrieval + entity extraction
-- [ ] Research: parallel focused sub-queries with LLM
-- [ ] Synthesis: structured report generation with citations
-- [ ] Cost tracking (`llm_usage` table + API endpoint)
-
-### 4.2 Authentication
-
-- [ ] Clerk integration in Next.js
-- [ ] JWT validation middleware in FastAPI
-- [ ] User-scoped job queries
-- [ ] `user_id` on all job records
-
-### 4.3 Resilience Hardening
-
-- [ ] LLM retry with exponential backoff
-- [ ] Circuit breaker per provider
-- [ ] Per-query cost cap enforcement
-- [ ] SQS redrive policies to DLQ
-
-**Phase 4 exit criteria:** Real research query produces cited synthesis; auth enforced; costs tracked.
+**Phase 4 exit criteria:** Submit query in UI → watch React Flow update live → view real synthesis result. → [KRE-128](https://linear.app/kreativbiro/issue/KRE-128)
 
 ---
 
@@ -271,8 +275,8 @@ Project: EventForge
 ├── Milestone: Phase 0 — Foundation
 ├── Milestone: Phase 1 — Scaffolding
 ├── Milestone: Phase 2 — Core Pipeline
-├── Milestone: Phase 3 — Frontend & Real-Time
-├── Milestone: Phase 4 — Real AI & Auth
+├── Milestone: Phase 3 — Real AI & Auth
+├── Milestone: Phase 4 — Frontend & Real-Time
 ├── Milestone: Phase 5 — AWS Deployment
 └── Milestone: Phase 6 — Polish
 ```
@@ -281,6 +285,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2 core pipeline complete (E2E + DLQ + `pipeline.failed`). Phase 2.1 API polish done (list + synthesis on detail). Next: Phase 3 SSE/React Flow, or Phase 1 frontend ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119)).
+**Backend-first track:** Phase 2 core pipeline complete (E2E + DLQ + `pipeline.failed`). **Next: Phase 3** — real AI agents (Tavily, embeddings, LLM). Frontend + SSE/React Flow deferred to **Phase 4** ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119) onward).
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

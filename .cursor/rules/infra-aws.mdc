@@ -32,6 +32,6 @@ environments/{dev,prod}
 
 Step Functions Map state is limited locally. Use simplified research fan-out in Phase 2; real SF in Phase 5.
 
-## OTEL (Phase 3+)
+## OTEL (Phase 4+)
 
 Collector config in `infra/docker/otel/`. Export via OTLP gRPC `:4317`.

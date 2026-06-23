@@ -31,8 +31,10 @@ save_issue(id: "KRE-122", state: "Done")
 | Milestone               | Status                                        |
 | ----------------------- | --------------------------------------------- |
 | Phase 0 — Foundation    | Complete                                      |
-| Phase 1 — Scaffolding   | In progress (backend done; frontend deferred) |
-| Phase 2 — Core Pipeline | Active (backend-first vertical slices)        |
+| Phase 1 — Scaffolding   | Backend complete; frontend → Phase 4          |
+| Phase 2 — Core Pipeline | Complete (stub agents + E2E)                |
+| Phase 3 — Real AI       | **Next** (backend-first)                      |
+| Phase 4 — Frontend      | Deferred (after Phase 3)                      |
 
 ## Issue index (Phase 0 + 1)
 
@@ -59,7 +61,7 @@ save_issue(id: "KRE-122", state: "Done")
 | EF-014 | [KRE-130](https://linear.app/kreativbiro/issue/KRE-130) | SQS consumer base + ingestion stub worker             | 3        | KRE-129    |
 | EF-015 | [KRE-131](https://linear.app/kreativbiro/issue/KRE-131) | Harden pipeline idempotency (atomic claim + API keys) | 2        | KRE-130    |
 | EF-016 | [KRE-132](https://linear.app/kreativbiro/issue/KRE-132) | Re-verify deferred ingestion/worker review findings   | —        | KRE-131    |
-| EF-017 | [KRE-133](https://linear.app/kreativbiro/issue/KRE-133) | Automated RAG eval (faithfulness, citations, RAGAS)   | 3        | Phase 4    |
+| EF-017 | [KRE-133](https://linear.app/kreativbiro/issue/KRE-133) | Automated RAG eval (faithfulness, citations, RAGAS)   | 3        | Phase 3    |
 | EF-018 | [KRE-134](https://linear.app/kreativbiro/issue/KRE-134) | SQS DLQ redrive policies (LocalStack)                 | 1        | E2E done   |
 | EF-019 | [KRE-135](https://linear.app/kreativbiro/issue/KRE-135) | pipeline.failed schema + DLQ terminal failure         | 2        | KRE-134    |
 
@@ -67,9 +69,9 @@ save_issue(id: "KRE-122", state: "Done")
 
 | ID     | Linear                                                  | Title                                      | Priority | When      |
 | ------ | ------------------------------------------------------- | ------------------------------------------ | -------- | --------- |
-| EF-020 | [KRE-136](https://linear.app/kreativbiro/issue/KRE-136) | Transactional outbox for event publishing  | Medium   | Phase 4/5 |
+| EF-020 | [KRE-136](https://linear.app/kreativbiro/issue/KRE-136) | Transactional outbox for event publishing  | Medium   | Phase 3/5 |
 | EF-021 | [KRE-137](https://linear.app/kreativbiro/issue/KRE-137) | LocalStack full `SQS_QUEUE_PREFIX` support | Low      | Pre-AWS   |
-| EF-022 | [KRE-138](https://linear.app/kreativbiro/issue/KRE-138) | DLQ poison-pill observability + archive    | Low      | Phase 3/6 |
+| EF-022 | [KRE-138](https://linear.app/kreativbiro/issue/KRE-138) | DLQ poison-pill observability + archive    | Low      | Phase 4/6 |
 
 > Remaining Phase 2 polish (`GET /queries` list) stays in `docs/TASKS.md`. **Stage event schemas are added incrementally with each worker** — not upfront in KRE-122.
 
@@ -79,11 +81,11 @@ save_issue(id: "KRE-122", state: "Done")
 Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129 → KRE-130 → KRE-131 → KRE-132
         + all stub workers + E2E smoke test + KRE-134 (DLQ redrive) + KRE-135 (pipeline.failed)
 
-Next:   Phase 3 SSE/React Flow — or Phase 1 frontend (KRE-119)
+Next:   Phase 3 — real AI agents (Tavily, embeddings, LLM, backend auth)
+
+Defer:  Phase 4 frontend — KRE-119 → KRE-121 → KRE-124 → KRE-126 → KRE-128 (SSE, React Flow, Clerk UI)
 
 Parallel (optional): pytest in CI (commented in ci.yml)
-
-Defer:  KRE-119 → KRE-121 → KRE-124 → KRE-126 → KRE-128 (Phase 1 full-stack exit)
 ```
 
 ## Parallel tracks (original Phase 1)
@@ -121,4 +123,9 @@ Finish: KRE-128
 - **Mini-122:** KRE-122 scoped to envelope + `query.submitted` only (1 pt)
 - **Backend-first:** Phase 2 vertical slices (KRE-129, KRE-130) may start before Phase 1 frontend exit
 - **Incremental schemas:** remaining pipeline events defined when each worker is built
-- Phase 1 exit (KRE-128) still requires frontend — do not block pipeline work on it
+- Phase 1 exit (KRE-128) moved to Phase 4 — do not block pipeline work on frontend
+
+## Plan revision (2026-06-23)
+
+- **Phase 3 ↔ Phase 4 swap:** Real AI agents + backend auth now Phase 3; frontend + SSE/React Flow now Phase 4
+- **Frontend deferred:** KRE-119 through KRE-128 move to Phase 4 milestone; test backend via Postman until then
