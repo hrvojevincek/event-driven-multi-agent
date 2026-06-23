@@ -117,7 +117,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 - [x] LLM client abstraction (OpenAI + Anthropic) — [KRE-139](https://linear.app/kreativbiro/issue/KRE-139)
 - [x] Ingestion: Tavily web search — [KRE-140](https://linear.app/kreativbiro/issue/KRE-140)
-- [ ] Embedding: chunk real content + OpenAI `text-embedding-3-small` — [KRE-141](https://linear.app/kreativbiro/issue/KRE-141)
+- [x] Embedding: chunk real content + OpenAI `text-embedding-3-small` — [KRE-141](https://linear.app/kreativbiro/issue/KRE-141)
 - [ ] Knowledge mining: RAG retrieval + entity extraction — [KRE-143](https://linear.app/kreativbiro/issue/KRE-143)
 - [ ] Research: parallel focused sub-queries with LLM — [KRE-142](https://linear.app/kreativbiro/issue/KRE-142)
 - [ ] Synthesis: structured report generation with citations — [KRE-144](https://linear.app/kreativbiro/issue/KRE-144)
@@ -285,6 +285,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2 complete. **Phase 3 in progress** — [KRE-139](https://linear.app/kreativbiro/issue/KRE-139) + [KRE-140](https://linear.app/kreativbiro/issue/KRE-140) done; **next: [KRE-141](https://linear.app/kreativbiro/issue/KRE-141)** (real embeddings). Frontend + SSE/React Flow deferred to **Phase 4** ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119) onward).
+**Backend-first track:** Phase 2 complete. **Phase 3 in progress** — KRE-139–141 done; **next: [KRE-143](https://linear.app/kreativbiro/issue/KRE-143)** (knowledge mining / RAG). Frontend deferred to **Phase 4** ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119) onward).
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

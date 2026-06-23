@@ -27,14 +27,25 @@ from eventforge.db.session import reset_engine
 from eventforge.events.parser import parse_eventbridge_sqs_body
 from eventforge.events.publisher import EventPublisher
 from eventforge.events.schemas import (
-    MOCK_CHUNKS_PER_SOURCE,
+    EMBEDDING_DIMENSION,
     WORKER_NAME_EMBEDDING,
     build_embedding_completed_event,
     build_ingestion_completed_event,
 )
+from eventforge.services.embedding import EmbeddingClient
 from eventforge.workers.embedding import EmbeddingWorker
 
 settings = get_settings()
+
+
+def _mock_embedding_client() -> EmbeddingClient:
+    client = AsyncMock(spec=EmbeddingClient)
+
+    async def _embed(texts: list[str], **kwargs: object) -> list[list[float]]:
+        return [[0.1] * EMBEDDING_DIMENSION for _ in texts]
+
+    client.embed_texts = AsyncMock(side_effect=_embed)
+    return client
 
 
 @pytest.fixture
@@ -109,10 +120,15 @@ async def test_process_ingestion_completed_writes_chunks_and_updates_stage(
         source_ids=[source.id for source in sources],
     )
 
-    result = await process_ingestion_completed(db_session, mock_publisher, inbound)
+    result = await process_ingestion_completed(
+        db_session,
+        mock_publisher,
+        inbound,
+        embed_client=_mock_embedding_client(),
+    )
 
     assert result is not None
-    assert result.payload.chunk_count == len(sources) * MOCK_CHUNKS_PER_SOURCE
+    assert result.payload.chunk_count == len(sources)
     mock_publisher.publish.assert_awaited_once()
 
     await db_session.refresh(stage)
@@ -122,7 +138,7 @@ async def test_process_ingestion_completed_writes_chunks_and_updates_stage(
     chunk_count = await db_session.scalar(
         select(func.count()).select_from(DocumentChunk).where(DocumentChunk.job_id == job.id)
     )
-    assert chunk_count == len(sources) * MOCK_CHUNKS_PER_SOURCE
+    assert chunk_count == len(sources)
 
     processed = ProcessedEventRepository(db_session)
     record = await processed.get_by_event_id(str(inbound.event_id))
@@ -139,17 +155,27 @@ async def test_process_ingestion_completed_skips_duplicate_event(db_session: Asy
         source_ids=[source.id for source in sources],
     )
 
-    await process_ingestion_completed(db_session, mock_publisher, inbound)
+    await process_ingestion_completed(
+        db_session,
+        mock_publisher,
+        inbound,
+        embed_client=_mock_embedding_client(),
+    )
     mock_publisher.reset_mock()
 
-    duplicate_result = await process_ingestion_completed(db_session, mock_publisher, inbound)
+    duplicate_result = await process_ingestion_completed(
+        db_session,
+        mock_publisher,
+        inbound,
+        embed_client=_mock_embedding_client(),
+    )
     assert duplicate_result is None
     mock_publisher.publish.assert_not_awaited()
 
     chunk_count = await db_session.scalar(
         select(func.count()).select_from(DocumentChunk).where(DocumentChunk.job_id == job.id)
     )
-    assert chunk_count == len(sources) * MOCK_CHUNKS_PER_SOURCE
+    assert chunk_count == len(sources)
 
 
 async def test_embedding_worker_deletes_message_on_success() -> None:

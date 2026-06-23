@@ -28,8 +28,7 @@ from eventforge.db.session import reset_engine
 from eventforge.events.parser import parse_eventbridge_sqs_body
 from eventforge.events.publisher import EventPublisher
 from eventforge.events.schemas import (
-    MOCK_CHUNKS_PER_SOURCE,
-    MOCK_EMBEDDING_DIMENSION,
+    EMBEDDING_DIMENSION,
     WORKER_NAME_KNOWLEDGE,
     build_embedding_completed_event,
 )
@@ -91,9 +90,9 @@ async def _seed_job_with_chunks(
             source_id=source.id,
             chunk_index=index,
             content=f"Entity-rich content chunk {index + 1} about graphs.",
-            embedding=[0.1] * MOCK_EMBEDDING_DIMENSION,
+            embedding=[0.1] * EMBEDDING_DIMENSION,
         )
-        for index in range(MOCK_CHUNKS_PER_SOURCE)
+        for index in range(2)
     ]
     db_session.add_all(chunks)
     await db_session.flush()

@@ -30,7 +30,7 @@ WORKER_NAME_RESEARCH_ORCHESTRATOR = "research-orchestrator"
 WORKER_NAME_SYNTHESIS = "synthesis"
 WORKER_NAME_DLQ = "dlq"
 
-# Mock embedding dimension for Phase 2 stub (OpenAI text-embedding-3-small uses 1536 in prod).
-MOCK_EMBEDDING_DIMENSION = 8
-MOCK_CHUNKS_PER_SOURCE = 2
+EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_DIMENSION = 1536
+
 MOCK_RESEARCH_TASK_COUNT = 3

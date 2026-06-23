@@ -1,9 +1,9 @@
-import hashlib
 import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from eventforge.core.config import get_settings
 from eventforge.db.models import DocumentChunk, JobStageName, Source
 from eventforge.db.repositories import (
     JobRepository,
@@ -15,40 +15,73 @@ from eventforge.events.deterministic import deterministic_event_id
 from eventforge.events.publisher import EVENT_SOURCE_EMBEDDING, EventPublisher, EventPublishError
 from eventforge.events.schemas import (
     DETAIL_TYPE_EMBEDDING_COMPLETED,
-    MOCK_CHUNKS_PER_SOURCE,
-    MOCK_EMBEDDING_DIMENSION,
     WORKER_NAME_EMBEDDING,
     EmbeddingCompletedEvent,
     IngestionCompletedEvent,
     build_embedding_completed_event,
 )
 from eventforge.events.schemas.constants import DETAIL_TYPE_INGESTION_COMPLETED
+from eventforge.services.embedding import (
+    EmbeddingClient,
+    build_source_text,
+    chunk_text,
+    get_embedding_client,
+)
 
 
-def _mock_embedding(source_id: uuid.UUID, chunk_index: int) -> list[float]:
-    digest = hashlib.sha256(f"{source_id}:{chunk_index}".encode()).digest()
+def _chunk_source_text(source: Source, *, chunk_size: int, overlap: int) -> list[str]:
+    text = build_source_text(title=source.title, snippet=source.snippet)
+    chunks = chunk_text(text, chunk_size=chunk_size, overlap=overlap)
+    if chunks:
+        return chunks
+    fallback = source.snippet.strip() or source.title.strip()
+    return [fallback] if fallback else []
+
+
+async def _build_chunks_for_sources(
+    sources: list[Source],
+    embed_client: EmbeddingClient,
+    *,
+    chunk_size: int,
+    overlap: int,
+) -> list[DocumentChunk]:
+    pending: list[tuple[Source, int, str]] = []
+    for source in sources:
+        texts = _chunk_source_text(source, chunk_size=chunk_size, overlap=overlap)
+        for chunk_index, content in enumerate(texts):
+            pending.append((source, chunk_index, content))
+
+    if not pending:
+        msg = "No embeddable content found in sources"
+        raise ValueError(msg)
+
+    job_id = sources[0].job_id
+    vectors = await embed_client.embed_texts(
+        [content for _, _, content in pending],
+        job_id=job_id,
+        agent_name=WORKER_NAME_EMBEDDING,
+    )
+
     return [
-        (digest[index % len(digest)] / 255.0) * 2 - 1 for index in range(MOCK_EMBEDDING_DIMENSION)
+        DocumentChunk(
+            job_id=source.job_id,
+            source_id=source.id,
+            chunk_index=chunk_index,
+            content=content,
+            embedding=vector,
+        )
+        for (source, chunk_index, content), vector in zip(pending, vectors, strict=True)
     ]
 
 
-def _mock_chunks_for_source(source: Source) -> list[DocumentChunk]:
-    chunks: list[DocumentChunk] = []
-    for chunk_index in range(MOCK_CHUNKS_PER_SOURCE):
-        chunks.append(
-            DocumentChunk(
-                job_id=source.job_id,
-                source_id=source.id,
-                chunk_index=chunk_index,
-                content=f"{source.snippet} (chunk {chunk_index + 1})",
-                embedding=_mock_embedding(source.id, chunk_index),
-            )
-        )
-    return chunks
-
-
 async def _load_or_create_chunks(
-    session: AsyncSession, job_id: uuid.UUID, sources: list[Source]
+    session: AsyncSession,
+    job_id: uuid.UUID,
+    sources: list[Source],
+    embed_client: EmbeddingClient | None = None,
+    *,
+    chunk_size: int,
+    overlap: int,
 ) -> list[DocumentChunk]:
     result = await session.execute(
         select(DocumentChunk)
@@ -59,9 +92,13 @@ async def _load_or_create_chunks(
     if existing:
         return existing
 
-    chunks: list[DocumentChunk] = []
-    for source in sources:
-        chunks.extend(_mock_chunks_for_source(source))
+    client = embed_client or get_embedding_client(session=session)
+    chunks = await _build_chunks_for_sources(
+        sources,
+        client,
+        chunk_size=chunk_size,
+        overlap=overlap,
+    )
     session.add_all(chunks)
     await session.flush()
     return chunks
@@ -71,6 +108,8 @@ async def process_ingestion_completed(
     session: AsyncSession,
     publisher: EventPublisher,
     event: IngestionCompletedEvent,
+    *,
+    embed_client: EmbeddingClient | None = None,
 ) -> EmbeddingCompletedEvent | None:
     """Run embedding for one ingestion.completed event. Returns None if already processed."""
     processed_repo = ProcessedEventRepository(session)
@@ -98,8 +137,16 @@ async def process_ingestion_completed(
         msg = f"Sources missing for embedding job: {event.job_id}"
         raise ValueError(msg)
 
+    settings = get_settings()
     await stage_repo.mark_running(embedding_stage)
-    chunks = await _load_or_create_chunks(session, job.id, sources)
+    chunks = await _load_or_create_chunks(
+        session,
+        job.id,
+        sources,
+        embed_client,
+        chunk_size=settings.embedding_chunk_size_tokens,
+        overlap=settings.embedding_chunk_overlap_tokens,
+    )
 
     completed_event = build_embedding_completed_event(
         job_id=job.id,

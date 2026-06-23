@@ -8,7 +8,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, Uni
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from eventforge.events.schemas.constants import MOCK_EMBEDDING_DIMENSION
+from eventforge.events.schemas.constants import EMBEDDING_DIMENSION
 
 
 class Base(DeclarativeBase):
@@ -220,7 +220,7 @@ class DocumentChunk(Base):
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     embedding: Mapped[list[float]] = mapped_column(
-        Vector(MOCK_EMBEDDING_DIMENSION), nullable=False
+        Vector(EMBEDDING_DIMENSION), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

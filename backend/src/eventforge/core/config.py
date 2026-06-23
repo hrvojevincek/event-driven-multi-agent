@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""
     llm_default_model: str = "gpt-4o-mini"
     llm_max_output_tokens: int = 4096
+    embedding_model: str = "text-embedding-3-small"
+    embedding_chunk_size_tokens: int = 512
+    embedding_chunk_overlap_tokens: int = 50
     llm_model_pricing: dict[str, ModelPricing] = Field(
         default_factory=lambda: DEFAULT_MODEL_PRICING.copy()
     )
