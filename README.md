@@ -29,7 +29,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 | **0** | Docs, Docker, LocalStack, Postgres + pgvector | ✅ Done |
 | **1** | FastAPI backend, health checks, SQLAlchemy, Alembic | ✅ Done |
 | **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done |
-| **3** | **Real AI** — Tavily search, chunking, OpenAI embeddings, LLM agents, backend auth | 🚧 **In progress** (LLM client + cost tracking done) |
+| **3** | **Real AI** — Tavily, embeddings, RAG knowledge mining; research + synthesis + auth next | 🚧 **In progress** (KRE-139–141, KRE-143 done) |
 | **4** | Next.js UI, SSE live updates, React Flow visualization, Clerk | Planned |
 | **5** | AWS deploy (Terraform, ECS, Step Functions fan-out) | Planned |
 | **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard | Planned |
@@ -40,7 +40,7 @@ Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/
 
 ## What works today
 
-The **full event pipeline runs locally** with mock agents — useful for validating architecture before plugging in real LLMs.
+The **full event pipeline runs locally**. Ingestion through knowledge mining use **real AI**; research and synthesis still use Phase 2 stubs until [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / [KRE-144](https://linear.app/kreativbiro/issue/KRE-144).
 
 ```
 POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GET /api/v1/queries/{id}
@@ -53,10 +53,14 @@ POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GE
 | Idempotent processing (`processed_events`) | ✅ |
 | SQS redrive → DLQ after 3 failures | ✅ |
 | `pipeline.failed` terminal failure events | ✅ |
-| LLM client (OpenAI + Anthropic, config-driven pricing) | ✅ Phase 3 |
-| Per-call cost logging (`llm_usage` table) | ✅ Phase 3 |
-| Real web search, embeddings, LLM agents | ⬜ Phase 3 |
-| Backend JWT auth (Clerk) | ⬜ Phase 3 |
+| LLM client (OpenAI + Anthropic, config-driven pricing) | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139) |
+| Per-call cost logging (`llm_usage` table) | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139) |
+| Tavily web search ingestion | ✅ [KRE-140](https://linear.app/kreativbiro/issue/KRE-140) |
+| Real chunking + OpenAI `text-embedding-3-small` → pgvector | ✅ [KRE-141](https://linear.app/kreativbiro/issue/KRE-141) |
+| RAG knowledge mining (vector retrieval + LLM entity extraction) | ✅ [KRE-143](https://linear.app/kreativbiro/issue/KRE-143) |
+| Real LLM research notes + cited synthesis | ⬜ [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / [KRE-144](https://linear.app/kreativbiro/issue/KRE-144) |
+| LLM cost API endpoint | ⬜ [KRE-145](https://linear.app/kreativbiro/issue/KRE-145) |
+| Backend JWT auth (Clerk) | ⬜ [KRE-146](https://linear.app/kreativbiro/issue/KRE-146) |
 | Dashboard / React Flow | ⬜ Phase 4 |
 
 **Smoke test:** `./scripts/verify-pipeline-e2e.sh` (requires API + all workers running — see [Local dev](#local-dev))
@@ -100,7 +104,7 @@ Full diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | **Workers** | Async SQS consumers, one module per pipeline stage |
 | **Events** | AWS EventBridge + SQS (+ Step Functions for research fan-out in prod) |
 | **Data** | Postgres 16 + pgvector |
-| **LLM** *(Phase 3)* | OpenAI + Anthropic via unified client; Tavily for search (next) |
+| **LLM** *(Phase 3)* | OpenAI + Anthropic client; Tavily search; OpenAI embeddings; RAG entity extraction |
 | **Frontend** *(Phase 4)* | Next.js 15, Tailwind, shadcn/ui, React Flow |
 | **Auth** *(Phase 3–4)* | Clerk JWT → FastAPI |
 | **IaC** *(Phase 5)* | Terraform |
@@ -120,13 +124,14 @@ make dev                    # Postgres + LocalStack + backend
 cd backend && uv run alembic upgrade head   # migrations
 ```
 
-**Phase 3 API keys** (in `.env` — required once real agents are wired):
+**Phase 3 API keys** (in `.env` — required for real ingestion → knowledge path):
 
 ```bash
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...   # optional second provider
-TAVILY_API_KEY=tvly-...        # web search (ingestion, next up)
+TAVILY_API_KEY=tvly-...        # web search (ingestion)
 LLM_DEFAULT_MODEL=gpt-4o-mini
+KNOWLEDGE_RAG_TOP_K=10         # optional — RAG retrieval limit
 ```
 
 **Hybrid (hot reload):** run infra in Docker, API natively:
@@ -172,7 +177,10 @@ Full guide: [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md)
 ```
 event-driven/
 ├── backend/src/eventforge/   # API, agents, workers, events, db
-│   └── services/llm/         # LLM client + OpenAI/Anthropic providers (Phase 3)
+│   ├── services/llm/         # LLM client + OpenAI/Anthropic providers
+│   ├── services/embedding/   # Chunking + OpenAI embeddings
+│   ├── services/knowledge/   # RAG retrieval + entity extraction
+│   └── services/search/      # Tavily client
 ├── shared/events/            # JSON Schema contracts (source of truth)
 ├── infra/                    # Terraform, LocalStack init, Docker
 ├── docs/                     # PRD, architecture, ADRs, roadmap

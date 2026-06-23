@@ -9,7 +9,20 @@
 | ------- | ---------------------------------------------------------------------------- |
 | Team    | `Kreativbiro` (key: `KRE`)                                                   |
 | Project | [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) |
-| Target  | Phase 1 by 2026-07-15                                                        |
+| Target  | Phase 3 real AI agents (backend-first)                                        |
+
+## Latest progress (2026-06-23)
+
+**[Project status update](https://linear.app/kreativbiro/project/eventforge-f35070f0931e/activity)** — on track.
+
+| Done (Phase 3) | Next |
+| --- | --- |
+| KRE-139 LLM client + `llm_usage` | KRE-142 real research agents |
+| KRE-140 Tavily ingestion | KRE-144 cited synthesis |
+| KRE-141 real embeddings | Parallel: KRE-145 cost API, KRE-146 Clerk, KRE-147 resilience |
+| KRE-143 RAG + entity extraction | Phase 4 frontend deferred |
+
+Phases 0–2 complete (stub pipeline + E2E). Research/synthesis still use Phase 2 mocks until KRE-142/144.
 
 ## Agent workflow (Cursor + Linear MCP)
 
@@ -33,7 +46,7 @@ save_issue(id: "KRE-122", state: "Done")
 | Phase 0 — Foundation    | Complete                             |
 | Phase 1 — Scaffolding   | Backend complete; frontend → Phase 4 |
 | Phase 2 — Core Pipeline | Complete (stub agents + E2E)         |
-| Phase 3 — Real AI       | **In progress** (KRE-139 done)       |
+| Phase 3 — Real AI       | **In progress** (KRE-139–141, KRE-143 done; next KRE-142) |
 | Phase 4 — Frontend      | Deferred (after Phase 3)             |
 
 ## Issue index (Phase 0 + 1)
@@ -93,12 +106,12 @@ save_issue(id: "KRE-122", state: "Done")
 
 > Pick up **after KRE-144** (real pipeline working). Umbrella: [KRE-150](https://linear.app/kreativbiro/issue/KRE-150).
 
-| ID     | Linear                                                  | Title                                                  | Priority | Blocked by |
-| ------ | ------------------------------------------------------- | ------------------------------------------------------ | -------- | ---------- |
-| EF-032 | [KRE-148](https://linear.app/kreativbiro/issue/KRE-148) | Revisit chunking — semantic / structure-aware RAG        | Low      | KRE-144    |
-| EF-033 | [KRE-149](https://linear.app/kreativbiro/issue/KRE-149) | Ingestion — Tavily raw content / Extract               | Low      | KRE-144    |
-| EF-034 | [KRE-150](https://linear.app/kreativbiro/issue/KRE-150) | Post-Phase 3 quality pass (agents, API, resilience)    | Medium   | KRE-144    |
-| EF-017 | [KRE-133](https://linear.app/kreativbiro/issue/KRE-133) | Automated RAG eval (faithfulness, citations, RAGAS)    | Low      | KRE-144    |
+| ID     | Linear                                                  | Title                                               | Priority | Blocked by |
+| ------ | ------------------------------------------------------- | --------------------------------------------------- | -------- | ---------- |
+| EF-032 | [KRE-148](https://linear.app/kreativbiro/issue/KRE-148) | Revisit chunking — semantic / structure-aware RAG   | Low      | KRE-144    |
+| EF-033 | [KRE-149](https://linear.app/kreativbiro/issue/KRE-149) | Ingestion — Tavily raw content / Extract            | Low      | KRE-144    |
+| EF-034 | [KRE-150](https://linear.app/kreativbiro/issue/KRE-150) | Post-Phase 3 quality pass (agents, API, resilience) | Medium   | KRE-144    |
+| EF-017 | [KRE-133](https://linear.app/kreativbiro/issue/KRE-133) | Automated RAG eval (faithfulness, citations, RAGAS) | Low      | KRE-144    |
 
 Also see deferred infra/reliability: KRE-136 (outbox), KRE-137, KRE-138, KRE-145, KRE-147.
 
@@ -108,12 +121,13 @@ Also see deferred infra/reliability: KRE-136 (outbox), KRE-137, KRE-138, KRE-145
 Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129 → KRE-130 → KRE-131 → KRE-132
         + all stub workers + E2E smoke test + KRE-134 (DLQ redrive) + KRE-135 (pipeline.failed)
 
-Next:   KRE-143 (knowledge mining / RAG) → KRE-142 → KRE-144
+Next:   KRE-142 (research) → KRE-144
         Parallel: KRE-145 (cost API), KRE-146 (Clerk auth), KRE-147 (resilience)
 
 Done:   KRE-139 (LLM client + cost tracking foundation)
         KRE-140 (Tavily web search ingestion)
         KRE-141 (real embeddings — chunking + OpenAI)
+        KRE-143 (knowledge mining — RAG + entity extraction)
 
 Defer:  Phase 4 frontend — KRE-119 → KRE-121 → KRE-124 → KRE-126 → KRE-128 (SSE, React Flow, Clerk UI)
 

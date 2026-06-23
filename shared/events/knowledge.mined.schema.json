@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://eventforge.dev/schemas/knowledge.mined.schema.json",
   "title": "KnowledgeMinedPayload",
-  "description": "Payload for eventforge.knowledge.mined — mock entities extracted and stored for the job.",
+  "description": "Payload for eventforge.knowledge.mined — entities extracted via RAG + LLM.",
   "type": "object",
   "required": ["entity_ids", "entity_count"],
   "properties": {
