@@ -40,6 +40,25 @@ class SynthesisReportResponse(BaseModel):
     created_at: datetime
 
 
+class LLMUsageCallResponse(BaseModel):
+    """One logged LLM call for a job."""
+
+    id: UUID
+    agent_name: str
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    created_at: datetime
+
+
+class LLMUsageSummaryResponse(BaseModel):
+    """Aggregated LLM cost and per-call breakdown for a job."""
+
+    total_cost_usd: float
+    calls: list[LLMUsageCallResponse]
+
+
 class QuerySummaryResponse(BaseModel):
     """Lightweight job summary for list endpoints."""
 
@@ -66,3 +85,4 @@ class QueryDetailResponse(BaseModel):
     updated_at: datetime
     stages: list[JobStageResponse]
     synthesis_report: SynthesisReportResponse | None = None
+    llm_usage: LLMUsageSummaryResponse

@@ -1,17 +1,25 @@
 import logging
 import uuid
 from dataclasses import dataclass
+from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from eventforge.api.schemas.queries import (
     JobStageResponse,
+    LLMUsageCallResponse,
+    LLMUsageSummaryResponse,
     QueryDetailResponse,
     QuerySummaryResponse,
     SynthesisReportResponse,
 )
-from eventforge.db.models import Job, JobStage, JobStageName, JobStatus, StageStatus
-from eventforge.db.repositories import JobRepository, ProcessedEventRepository, UserRepository
+from eventforge.db.models import Job, JobStage, JobStageName, JobStatus, LLMUsage, StageStatus
+from eventforge.db.repositories import (
+    JobRepository,
+    LLMUsageRepository,
+    ProcessedEventRepository,
+    UserRepository,
+)
 from eventforge.events.publisher import PUBLISHER_WORKER_NAME, EventPublisher
 from eventforge.events.schemas import QueryDepth, build_query_submitted_event
 
@@ -101,8 +109,35 @@ def _job_to_summary_response(job: Job) -> QuerySummaryResponse:
     )
 
 
-def _job_to_detail_response(job: Job) -> QueryDetailResponse:
-    stages = sorted(job.stages, key=lambda stage: _STAGE_ORDER.get(stage.stage, len(_STAGE_ORDER)))
+def _build_llm_usage_summary(
+    records: list[LLMUsage],
+    total_cost_usd: Decimal,
+) -> LLMUsageSummaryResponse:
+    return LLMUsageSummaryResponse(
+        total_cost_usd=float(total_cost_usd),
+        calls=[
+            LLMUsageCallResponse(
+                id=record.id,
+                agent_name=record.agent_name,
+                model=record.model,
+                input_tokens=record.input_tokens,
+                output_tokens=record.output_tokens,
+                cost_usd=float(record.cost_usd),
+                created_at=record.created_at,
+            )
+            for record in records
+        ],
+    )
+
+
+def _job_to_detail_response(
+    job: Job,
+    *,
+    llm_usage: LLMUsageSummaryResponse,
+) -> QueryDetailResponse:
+    stages = sorted(
+        job.stages, key=lambda stage: _STAGE_ORDER.get(
+            stage.stage, len(_STAGE_ORDER)))
     synthesis_report = None
     if job.synthesis_report is not None:
         synthesis_report = SynthesisReportResponse(
@@ -131,6 +166,7 @@ def _job_to_detail_response(job: Job) -> QueryDetailResponse:
             for stage in stages
         ],
         synthesis_report=synthesis_report,
+        llm_usage=llm_usage,
     )
 
 
@@ -140,8 +176,15 @@ async def list_queries(session: AsyncSession) -> list[QuerySummaryResponse]:
     return [_job_to_summary_response(job) for job in jobs]
 
 
-async def get_query_detail(session: AsyncSession, job_id: uuid.UUID) -> QueryDetailResponse | None:
+async def get_query_detail(
+        session: AsyncSession, job_id: uuid.UUID) -> QueryDetailResponse | None:
     job = await JobRepository(session).get_by_id(job_id)
     if job is None:
         return None
-    return _job_to_detail_response(job)
+
+    usage_repo = LLMUsageRepository(session)
+    records = await usage_repo.list_by_job_id(job_id)
+    total_cost = await usage_repo.total_cost_by_job_id(job_id)
+    llm_usage = _build_llm_usage_summary(records, total_cost)
+
+    return _job_to_detail_response(job, llm_usage=llm_usage)

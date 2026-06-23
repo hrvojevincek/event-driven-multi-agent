@@ -202,6 +202,8 @@ async def test_get_query_returns_job_with_stages(client: AsyncClient) -> None:
     assert len(body["stages"]) == len(JobStageName)
     assert [stage["stage"] for stage in body["stages"]] == [name.value for name in JobStageName]
     assert all(stage["status"] == "pending" for stage in body["stages"])
+    assert body["llm_usage"]["total_cost_usd"] == 0.0
+    assert body["llm_usage"]["calls"] == []
 
 
 async def test_get_query_returns_404_for_unknown_job(client: AsyncClient) -> None:
@@ -283,6 +285,51 @@ async def test_get_query_synthesis_report_null_when_absent(client: AsyncClient) 
 
     assert response.status_code == 200
     assert response.json()["synthesis_report"] is None
+
+
+async def test_get_query_includes_llm_usage_summary(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    from decimal import Decimal
+
+    from eventforge.db.repositories import LLMUsageRepository
+
+    create_response = await client.post(
+        "/api/v1/queries",
+        json={"topic": "LLM cost detail test", "depth": "standard"},
+    )
+    job_id = UUID(create_response.json()["job_id"])
+
+    usage_repo = LLMUsageRepository(db_session)
+    await usage_repo.log(
+        job_id=job_id,
+        agent_name="research",
+        model="gpt-4o-mini",
+        input_tokens=100,
+        output_tokens=200,
+        cost_usd=Decimal("0.000045"),
+    )
+    await usage_repo.log(
+        job_id=job_id,
+        agent_name="synthesis",
+        model="gpt-4o-mini",
+        input_tokens=500,
+        output_tokens=800,
+        cost_usd=Decimal("0.000510"),
+    )
+    await db_session.flush()
+
+    response = await client.get(f"/api/v1/queries/{job_id}")
+
+    assert response.status_code == 200
+    usage = response.json()["llm_usage"]
+    assert usage["total_cost_usd"] == pytest.approx(0.000555)
+    assert len(usage["calls"]) == 2
+    assert usage["calls"][0]["agent_name"] == "research"
+    assert usage["calls"][0]["input_tokens"] == 100
+    assert usage["calls"][1]["agent_name"] == "synthesis"
+    assert usage["calls"][1]["output_tokens"] == 800
 
 
 async def test_submit_query_returns_502_when_publish_fails(

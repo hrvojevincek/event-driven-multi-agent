@@ -59,7 +59,7 @@ POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GE
 | Real chunking + OpenAI `text-embedding-3-small` → pgvector      | ✅ [KRE-141](https://linear.app/kreativbiro/issue/KRE-141)                                                              |
 | RAG knowledge mining (vector retrieval + LLM entity extraction) | ✅ [KRE-143](https://linear.app/kreativbiro/issue/KRE-143)                                                              |
 | Real LLM research notes + cited synthesis                       | ✅ [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / ✅ [KRE-144](https://linear.app/kreativbiro/issue/KRE-144) |
-| LLM cost API endpoint                                           | ⬜ [KRE-145](https://linear.app/kreativbiro/issue/KRE-145)                                                              |
+| LLM cost API endpoint                                           | ✅ [KRE-145](https://linear.app/kreativbiro/issue/KRE-145)                                                              |
 | Backend JWT auth (Clerk)                                        | ⬜ [KRE-146](https://linear.app/kreativbiro/issue/KRE-146)                                                              |
 | Dashboard / React Flow                                          | ⬜ Phase 4                                                                                                              |
 
