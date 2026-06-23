@@ -7,6 +7,7 @@ from eventforge.db.repositories import (
     KnowledgeEntityRepository,
     ProcessedEventRepository,
     ResearchNoteRepository,
+    SourceRepository,
     SynthesisReportRepository,
 )
 from eventforge.events.deterministic import deterministic_event_id
@@ -20,36 +21,28 @@ from eventforge.events.schemas import (
 )
 from eventforge.events.schemas.constants import DETAIL_TYPE_RESEARCH_TASK_COMPLETED
 from eventforge.services.knowledge import expected_research_task_count
-
-
-def _mock_report_content(job: Job, notes: list[ResearchNote]) -> str:
-    sections = [f"# Research Synthesis: {job.topic}", ""]
-    for note in notes:
-        sections.extend(
-            [
-                f"## Sub-query {note.task_index + 1}",
-                "",
-                f"**Question:** {note.sub_query}",
-                "",
-                note.content,
-                "",
-            ]
-        )
-    sections.append("_Mock synthesis report for Phase 2 pipeline validation._")
-    return "\n".join(sections)
+from eventforge.services.llm.client import LLMClient, get_llm_client
+from eventforge.services.synthesis import generate_synthesis_report
 
 
 async def _load_or_create_report(
-    session: AsyncSession, job: Job, notes: list[ResearchNote]
+    session: AsyncSession,
+    job: Job,
+    notes: list[ResearchNote],
+    *,
+    llm_client: LLMClient,
 ) -> SynthesisReport:
     report_repo = SynthesisReportRepository(session)
     existing = await report_repo.get_by_job_id(job.id)
     if existing is not None:
         return existing
 
+    sources = await SourceRepository(session).list_by_job_id(job.id)
+    content = await generate_synthesis_report(llm_client, job, notes, sources)
+
     report = SynthesisReport(
         job_id=job.id,
-        content=_mock_report_content(job, notes),
+        content=content,
     )
     session.add(report)
     await session.flush()
@@ -60,6 +53,8 @@ async def process_research_task_completed(
     session: AsyncSession,
     publisher: EventPublisher,
     event: ResearchTaskCompletedEvent,
+    *,
+    llm_client: LLMClient | None = None,
 ) -> SynthesisCompletedEvent | None:
     """Synthesize when all research notes exist. Returns None if skipped or already processed."""
     processed_repo = ProcessedEventRepository(session)
@@ -72,6 +67,7 @@ async def process_research_task_completed(
     stage_repo = JobStageRepository(session)
     note_repo = ResearchNoteRepository(session)
     entity_repo = KnowledgeEntityRepository(session)
+    llm_client = llm_client or get_llm_client(session=session)
 
     job = await job_repo.get_by_id(event.job_id)
     if job is None:
@@ -98,7 +94,7 @@ async def process_research_task_completed(
 
     notes = await note_repo.list_by_job_id(job.id)
     await stage_repo.mark_running(synthesis_stage)
-    report = await _load_or_create_report(session, job, notes)
+    report = await _load_or_create_report(session, job, notes, llm_client=llm_client)
 
     completed_event = build_synthesis_completed_event(
         job_id=job.id,

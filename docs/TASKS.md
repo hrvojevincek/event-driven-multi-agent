@@ -120,7 +120,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] Embedding: chunk real content + OpenAI `text-embedding-3-small` — [KRE-141](https://linear.app/kreativbiro/issue/KRE-141)
 - [x] Knowledge mining: RAG retrieval + entity extraction — [KRE-143](https://linear.app/kreativbiro/issue/KRE-143)
 - [x] Research: parallel focused sub-queries with LLM — [KRE-142](https://linear.app/kreativbiro/issue/KRE-142)
-- [ ] Synthesis: structured report generation with citations — [KRE-144](https://linear.app/kreativbiro/issue/KRE-144)
+- [x] Synthesis: structured report generation with citations — [KRE-144](https://linear.app/kreativbiro/issue/KRE-144)
 - [ ] Cost tracking (`llm_usage` table + API endpoint) — table + repo done ([KRE-139](https://linear.app/kreativbiro/issue/KRE-139)); API → [KRE-145](https://linear.app/kreativbiro/issue/KRE-145)
 
 ### 3.2 Authentication (backend)
@@ -285,6 +285,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2 complete. **Phase 3 in progress** — KRE-139–143, KRE-142 done; **next: [KRE-144](https://linear.app/kreativbiro/issue/KRE-144)** (cited synthesis). Frontend deferred to **Phase 4** ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119) onward).
+**Backend-first track:** Phase 2 complete. **Phase 3 in progress** — KRE-139–144 done (real AI pipeline); **next:** KRE-145 (cost API), KRE-146 (Clerk auth), KRE-147 (resilience). Frontend deferred to **Phase 4** ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119) onward).
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

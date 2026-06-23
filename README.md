@@ -8,12 +8,12 @@ Built as a **portfolio-grade** full-stack project: production patterns (idempote
 
 ## End goal
 
-Turn open-ended research questions into **cited, multi-source syntheses** you can trust — and show *how* the answer was built, not just the answer.
+Turn open-ended research questions into **cited, multi-source syntheses** you can trust — and show _how_ the answer was built, not just the answer.
 
-| For | EventForge delivers |
-|-----|---------------------|
-| **Researchers** | Deep investigation across web sources, chunked + embedded for RAG, parallel sub-queries, merged report |
-| **Hiring managers** | Evidence of distributed systems, event-driven design, observability, and cloud-native ops |
+| For                 | EventForge delivers                                                                                         |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Researchers**     | Deep investigation across web sources, chunked + embedded for RAG, parallel sub-queries, merged report      |
+| **Hiring managers** | Evidence of distributed systems, event-driven design, observability, and cloud-native ops                   |
 | **Developers (me)** | A demo-ready piece spanning FastAPI, EventBridge/SQS, pgvector, LLM agents, and a live React Flow dashboard |
 
 **MVP done when:** A user submits a query → real agents run end-to-end → synthesis lands in the DB with citations → UI shows live pipeline progress and cost.
@@ -24,15 +24,15 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 
 **Strategy:** Backend-first. API + workers are testable via Postman/curl today; the Next.js dashboard comes after real AI agents work.
 
-| Phase | Focus | Status |
-|-------|--------|--------|
-| **0** | Docs, Docker, LocalStack, Postgres + pgvector | ✅ Done |
-| **1** | FastAPI backend, health checks, SQLAlchemy, Alembic | ✅ Done |
-| **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done |
-| **3** | **Real AI** — Tavily, embeddings, RAG knowledge mining; research + synthesis + auth next | 🚧 **In progress** (KRE-139–141, KRE-143 done) |
-| **4** | Next.js UI, SSE live updates, React Flow visualization, Clerk | Planned |
-| **5** | AWS deploy (Terraform, ECS, Step Functions fan-out) | Planned |
-| **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard | Planned |
+| Phase | Focus                                                                         | Status                                                      |
+| ----- | ----------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **0** | Docs, Docker, LocalStack, Postgres + pgvector                                 | ✅ Done                                                     |
+| **1** | FastAPI backend, health checks, SQLAlchemy, Alembic                           | ✅ Done                                                     |
+| **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done                                                     |
+| **3** | **Real AI** — full agent pipeline + auth/resilience                           | 🚧 **In progress** (KRE-139–144 done; auth/resilience next) |
+| **4** | Next.js UI, SSE live updates, React Flow visualization, Clerk                 | Planned                                                     |
+| **5** | AWS deploy (Terraform, ECS, Step Functions fan-out)                           | Planned                                                     |
+| **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard                        | Planned                                                     |
 
 Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/LINEAR.md)
 
@@ -40,28 +40,28 @@ Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/
 
 ## What works today
 
-The **full event pipeline runs locally**. Ingestion through research use **real AI**; synthesis still uses a Phase 2 stub until [KRE-144](https://linear.app/kreativbiro/issue/KRE-144).
+The **full event pipeline runs locally** with **real AI** end-to-end (ingestion → synthesis).
 
 ```
 POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GET /api/v1/queries/{id}
 ```
 
-| Capability | Status |
-|------------|--------|
-| Submit query, list jobs, job detail + stages | ✅ REST API |
-| EventBridge → SQS → 5 stage workers + DLQ handler | ✅ LocalStack |
-| Idempotent processing (`processed_events`) | ✅ |
-| SQS redrive → DLQ after 3 failures | ✅ |
-| `pipeline.failed` terminal failure events | ✅ |
-| LLM client (OpenAI + Anthropic, config-driven pricing) | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139) |
-| Per-call cost logging (`llm_usage` table) | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139) |
-| Tavily web search ingestion | ✅ [KRE-140](https://linear.app/kreativbiro/issue/KRE-140) |
-| Real chunking + OpenAI `text-embedding-3-small` → pgvector | ✅ [KRE-141](https://linear.app/kreativbiro/issue/KRE-141) |
-| RAG knowledge mining (vector retrieval + LLM entity extraction) | ✅ [KRE-143](https://linear.app/kreativbiro/issue/KRE-143) |
-| Real LLM research notes + cited synthesis | ✅ [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / ⬜ [KRE-144](https://linear.app/kreativbiro/issue/KRE-144) |
-| LLM cost API endpoint | ⬜ [KRE-145](https://linear.app/kreativbiro/issue/KRE-145) |
-| Backend JWT auth (Clerk) | ⬜ [KRE-146](https://linear.app/kreativbiro/issue/KRE-146) |
-| Dashboard / React Flow | ⬜ Phase 4 |
+| Capability                                                      | Status                                                                                                                  |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Submit query, list jobs, job detail + stages                    | ✅ REST API                                                                                                             |
+| EventBridge → SQS → 5 stage workers + DLQ handler               | ✅ LocalStack                                                                                                           |
+| Idempotent processing (`processed_events`)                      | ✅                                                                                                                      |
+| SQS redrive → DLQ after 3 failures                              | ✅                                                                                                                      |
+| `pipeline.failed` terminal failure events                       | ✅                                                                                                                      |
+| LLM client (OpenAI + Anthropic, config-driven pricing)          | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139)                                                              |
+| Per-call cost logging (`llm_usage` table)                       | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139)                                                              |
+| Tavily web search ingestion                                     | ✅ [KRE-140](https://linear.app/kreativbiro/issue/KRE-140)                                                              |
+| Real chunking + OpenAI `text-embedding-3-small` → pgvector      | ✅ [KRE-141](https://linear.app/kreativbiro/issue/KRE-141)                                                              |
+| RAG knowledge mining (vector retrieval + LLM entity extraction) | ✅ [KRE-143](https://linear.app/kreativbiro/issue/KRE-143)                                                              |
+| Real LLM research notes + cited synthesis                       | ✅ [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / ✅ [KRE-144](https://linear.app/kreativbiro/issue/KRE-144) |
+| LLM cost API endpoint                                           | ⬜ [KRE-145](https://linear.app/kreativbiro/issue/KRE-145)                                                              |
+| Backend JWT auth (Clerk)                                        | ⬜ [KRE-146](https://linear.app/kreativbiro/issue/KRE-146)                                                              |
+| Dashboard / React Flow                                          | ⬜ Phase 4                                                                                                              |
 
 **Smoke test:** `./scripts/verify-pipeline-e2e.sh` (requires API + all workers running — see [Local dev](#local-dev))
 
@@ -98,17 +98,17 @@ Full diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 
 ## Stack
 
-| Layer | Tech |
-|-------|------|
-| **API** | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy 2.0, uv |
-| **Workers** | Async SQS consumers, one module per pipeline stage |
-| **Events** | AWS EventBridge + SQS (+ Step Functions for research fan-out in prod) |
-| **Data** | Postgres 16 + pgvector |
-| **LLM** *(Phase 3)* | OpenAI + Anthropic client; Tavily search; OpenAI embeddings; RAG entity extraction |
-| **Frontend** *(Phase 4)* | Next.js 15, Tailwind, shadcn/ui, React Flow |
-| **Auth** *(Phase 3–4)* | Clerk JWT → FastAPI |
-| **IaC** *(Phase 5)* | Terraform |
-| **Local** | Docker Compose + LocalStack |
+| Layer                    | Tech                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| **API**                  | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy 2.0, uv                             |
+| **Workers**              | Async SQS consumers, one module per pipeline stage                                 |
+| **Events**               | AWS EventBridge + SQS (+ Step Functions for research fan-out in prod)              |
+| **Data**                 | Postgres 16 + pgvector                                                             |
+| **LLM** _(Phase 3)_      | OpenAI + Anthropic client; Tavily search; OpenAI embeddings; RAG entity extraction |
+| **Frontend** _(Phase 4)_ | Next.js 15, Tailwind, shadcn/ui, React Flow                                        |
+| **Auth** _(Phase 3–4)_   | Clerk JWT → FastAPI                                                                |
+| **IaC** _(Phase 5)_      | Terraform                                                                          |
+| **Local**                | Docker Compose + LocalStack                                                        |
 
 ---
 
@@ -192,13 +192,13 @@ event-driven/
 
 ## Documentation
 
-| Doc | Purpose |
-|-----|---------|
-| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | System design, event flows, diagrams |
-| [`docs/PRD.md`](./docs/PRD.md) | Product vision and user stories |
-| [`docs/TASKS.md`](./docs/TASKS.md) | Phase roadmap and checkboxes |
-| [`docs/TECH_DECISIONS.md`](./docs/TECH_DECISIONS.md) | ADRs (Tavily, pgvector, SSE, etc.) |
-| [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md) | Troubleshooting and worker setup |
+| Doc                                                  | Purpose                              |
+| ---------------------------------------------------- | ------------------------------------ |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)     | System design, event flows, diagrams |
+| [`docs/PRD.md`](./docs/PRD.md)                       | Product vision and user stories      |
+| [`docs/TASKS.md`](./docs/TASKS.md)                   | Phase roadmap and checkboxes         |
+| [`docs/TECH_DECISIONS.md`](./docs/TECH_DECISIONS.md) | ADRs (Tavily, pgvector, SSE, etc.)   |
+| [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md)           | Troubleshooting and worker setup     |
 
 For Cursor agents: [AGENTS.md](./AGENTS.md) · [`.cursor/rules/`](./.cursor/rules/)
 

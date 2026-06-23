@@ -1,5 +1,6 @@
 import json
 import uuid
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
@@ -19,6 +20,7 @@ from eventforge.db.models import (
     JobStatus,
     KnowledgeEntity,
     ResearchNote,
+    Source,
     StageStatus,
     SynthesisReport,
     User,
@@ -33,15 +35,38 @@ from eventforge.events.schemas import (
     build_research_task_completed_event,
 )
 from eventforge.services.knowledge import expected_research_task_count
+from eventforge.services.llm.client import LLMClient
+from eventforge.services.llm.types import LLMCompletionResult
 from eventforge.workers.synthesis import SynthesisWorker
 
 settings = get_settings()
+
+_SYNTHESIS_REPORT = (
+    "# Executive summary\n\n"
+    "Event-driven patterns improve scalability [SRC-0].\n\n"
+    "## References\n\n- [SRC-0] Example source"
+)
+
+
+def _mock_llm_client() -> LLMClient:
+    client = AsyncMock(spec=LLMClient)
+    client.complete = AsyncMock(
+        return_value=LLMCompletionResult(
+            content=_SYNTHESIS_REPORT,
+            model="gpt-4o-mini",
+            input_tokens=200,
+            output_tokens=400,
+            cost_usd=Decimal("0.004"),
+        )
+    )
+    return client
 
 
 @pytest.fixture
 async def db_session() -> AsyncSession:
     reset_engine()
-    engine = create_async_engine(settings.async_database_url, pool_pre_ping=True)
+    engine = create_async_engine(
+        settings.async_database_url, pool_pre_ping=True)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     async with session_factory() as session:
         yield session
@@ -55,9 +80,11 @@ async def _seed_job_with_notes(
     *,
     note_count: int | None = None,
     concept_count: int = 1,
+    with_sources: bool = False,
 ) -> tuple[Job, JobStage, list[ResearchNote]]:
     suffix = uuid.uuid4().hex[:8]
-    user = User(email=f"synthesis-{suffix}@example.com", clerk_id=f"synthesis-user-{suffix}")
+    user = User(email=f"synthesis-{suffix}@example.com",
+                clerk_id=f"synthesis-user-{suffix}")
     db_session.add(user)
     await db_session.flush()
 
@@ -99,9 +126,21 @@ async def _seed_job_with_notes(
     db_session.add_all(entities)
     await db_session.flush()
 
-    resolved_note_count = (
-        note_count if note_count is not None else expected_research_task_count(entities)
-    )
+    if with_sources:
+        db_session.add(
+            Source(
+                job_id=job.id,
+                url="https://example.com/synthesis",
+                title="Synthesis patterns guide",
+                snippet="Combine parallel research into a cited report.",
+            )
+        )
+        await db_session.flush()
+
+    resolved_note_count = (note_count
+                           if note_count is
+                           not None else
+                           expected_research_task_count(entities))
     notes = [
         ResearchNote(
             job_id=job.id,
@@ -119,7 +158,8 @@ async def _seed_job_with_notes(
 
 def test_parse_research_task_completed_event_rejects_wrong_type() -> None:
     with pytest.raises(ValueError, match="Unexpected detail_type"):
-        parse_research_task_completed_event({"detail_type": "eventforge.query.submitted"})
+        parse_research_task_completed_event(
+            {"detail_type": "eventforge.query.submitted"})
 
 
 async def test_process_research_task_completed_waits_for_all_notes(
@@ -136,7 +176,9 @@ async def test_process_research_task_completed_waits_for_all_notes(
         task_index=notes[0].task_index,
     )
 
-    result = await process_research_task_completed(db_session, mock_publisher, inbound)
+    result = await process_research_task_completed(
+        db_session, mock_publisher, inbound, llm_client=_mock_llm_client()
+    )
 
     assert result is None
     mock_publisher.publish.assert_not_awaited()
@@ -148,7 +190,7 @@ async def test_process_research_task_completed_waits_for_all_notes(
 async def test_process_research_task_completed_writes_report_and_completes_job(
     db_session: AsyncSession,
 ) -> None:
-    job, stage, notes = await _seed_job_with_notes(db_session)
+    job, stage, notes = await _seed_job_with_notes(db_session, with_sources=True)
     mock_publisher = AsyncMock(spec=EventPublisher)
 
     inbound = build_research_task_completed_event(
@@ -159,7 +201,9 @@ async def test_process_research_task_completed_writes_report_and_completes_job(
         task_index=notes[-1].task_index,
     )
 
-    result = await process_research_task_completed(db_session, mock_publisher, inbound)
+    result = await process_research_task_completed(
+        db_session, mock_publisher, inbound, llm_client=_mock_llm_client()
+    )
 
     assert result is not None
     assert result.payload.note_count == 1
@@ -176,7 +220,8 @@ async def test_process_research_task_completed_writes_report_and_completes_job(
         select(SynthesisReport).where(SynthesisReport.job_id == job.id)
     )
     assert report is not None
-    assert job.topic in report.content
+    assert report.content == _SYNTHESIS_REPORT
+    assert "Mock synthesis" not in report.content
 
     processed = ProcessedEventRepository(db_session)
     record = await processed.get_by_event_id(str(inbound.event_id))
@@ -205,10 +250,14 @@ async def test_process_research_task_completed_skips_duplicate_trigger(
         task_index=notes[1].task_index,
     )
 
-    await process_research_task_completed(db_session, mock_publisher, first)
+    await process_research_task_completed(
+        db_session, mock_publisher, first, llm_client=_mock_llm_client()
+    )
     mock_publisher.reset_mock()
 
-    duplicate_result = await process_research_task_completed(db_session, mock_publisher, second)
+    duplicate_result = await process_research_task_completed(
+        db_session, mock_publisher, second, llm_client=_mock_llm_client()
+    )
     assert duplicate_result is None
     mock_publisher.publish.assert_not_awaited()
 
@@ -226,10 +275,15 @@ async def test_process_research_task_completed_is_idempotent_for_same_event(
         task_index=notes[-1].task_index,
     )
 
-    await process_research_task_completed(db_session, mock_publisher, inbound)
+    llm_client = _mock_llm_client()
+    await process_research_task_completed(
+        db_session, mock_publisher, inbound, llm_client=llm_client
+    )
     mock_publisher.reset_mock()
 
-    duplicate_result = await process_research_task_completed(db_session, mock_publisher, inbound)
+    duplicate_result = await process_research_task_completed(
+        db_session, mock_publisher, inbound, llm_client=llm_client
+    )
     assert duplicate_result is None
     mock_publisher.publish.assert_not_awaited()
 
@@ -247,9 +301,8 @@ async def test_synthesis_worker_deletes_message_on_success() -> None:
         task_index=0,
     )
     body = json.dumps({"detail": json.loads(event.model_dump_json())})
-    mock_client.receive_message.return_value = {
-        "Messages": [{"ReceiptHandle": "rh-1", "Body": body, "MessageId": "m-1"}]
-    }
+    mock_client.receive_message.return_value = {"Messages": [
+        {"ReceiptHandle": "rh-1", "Body": body, "MessageId": "m-1"}]}
     worker._client = mock_client
     worker._queue_url = "http://localstack/000000000000/eventforge-synthesis"
 
