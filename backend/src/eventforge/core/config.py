@@ -51,6 +51,12 @@ class Settings(BaseSettings):
     knowledge_max_entities: int = 15
     research_rag_top_k: int = 8
     research_tavily_max_results: int = 3
+    llm_max_retries: int = 3
+    llm_retry_base_delay_seconds: float = 1.0
+    llm_retry_max_delay_seconds: float = 30.0
+    circuit_breaker_failure_threshold: int = 5
+    circuit_breaker_recovery_timeout_seconds: float = 60.0
+    job_max_cost_usd: Decimal | None = None
     llm_model_pricing: dict[str, ModelPricing] = Field(
         default_factory=lambda: DEFAULT_MODEL_PRICING.copy()
     )

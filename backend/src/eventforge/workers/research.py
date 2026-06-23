@@ -18,6 +18,7 @@ from eventforge.events.schemas.constants import (
     DETAIL_TYPE_RESEARCH_TASK_DISPATCHED,
 )
 from eventforge.workers.base import SqsConsumer
+from eventforge.workers.cost_cap import run_with_cost_cap_handling
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +50,16 @@ class ResearchWorker(SqsConsumer):
     async def _handle_knowledge_mined(self, detail: dict[str, Any]) -> None:
         event = parse_knowledge_mined_event(detail)
 
-        async with self._session_factory() as session:
-            result = await process_knowledge_mined(session, self._publisher, event)
+        async def _process():
+            async with self._session_factory() as session:
+                return await process_knowledge_mined(session, self._publisher, event)
+
+        result = await run_with_cost_cap_handling(
+            self._session_factory,
+            self._publisher,
+            detail,
+            _process,
+        )
 
         if result is None:
             logger.info(
@@ -73,11 +82,20 @@ class ResearchWorker(SqsConsumer):
             },
         )
 
-    async def _handle_research_task_dispatched(self, detail: dict[str, Any]) -> None:
+    async def _handle_research_task_dispatched(
+            self, detail: dict[str, Any]) -> None:
         event = parse_research_task_dispatched_event(detail)
 
-        async with self._session_factory() as session:
-            result = await process_research_task_dispatched(session, self._publisher, event)
+        async def _process():
+            async with self._session_factory() as session:
+                return await process_research_task_dispatched(session, self._publisher, event)
+
+        result = await run_with_cost_cap_handling(
+            self._session_factory,
+            self._publisher,
+            detail,
+            _process,
+        )
 
         if result is None:
             logger.info(

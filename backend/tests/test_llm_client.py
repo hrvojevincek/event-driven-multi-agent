@@ -77,6 +77,10 @@ async def test_llm_usage_repository_log_and_total(db_session: AsyncSession) -> N
     assert await repo.total_cost_by_job_id(job.id) == Decimal("0.000135")
 
 
+async def _await_operation(_key: str, operation, **_kwargs):
+    return await operation()
+
+
 @pytest.mark.asyncio
 async def test_llm_client_logs_usage_when_session_bound(
     db_session: AsyncSession,
@@ -109,6 +113,9 @@ async def test_llm_client_logs_usage_when_session_bound(
         client,
         "_get_provider",
         return_value=AsyncMock(complete=AsyncMock(return_value=mock_result)),
+    ), patch(
+        "eventforge.services.llm.client.call_with_resilience",
+        side_effect=_await_operation,
     ):
         result = await client.complete(
             [LLMMessage(role="user", content="Hi")],
@@ -145,6 +152,9 @@ async def test_llm_client_returns_result_when_logging_fails(
         LLMUsageRepository,
         "log",
         new=AsyncMock(side_effect=RuntimeError("db unavailable")),
+    ), patch(
+        "eventforge.services.llm.client.call_with_resilience",
+        side_effect=_await_operation,
     ):
         result = await client.complete(
             [LLMMessage(role="user", content="Hi")],
@@ -167,7 +177,10 @@ async def test_llm_client_routes_to_anthropic_model(llm_settings: Settings) -> N
     provider = AsyncMock(complete=AsyncMock(return_value=mock_result))
 
     client = LLMClient(settings=llm_settings)
-    with patch.object(client, "_get_provider", return_value=provider) as get_provider:
+    with patch.object(client, "_get_provider", return_value=provider) as get_provider, patch(
+        "eventforge.services.llm.client.call_with_resilience",
+        side_effect=_await_operation,
+    ):
         result = await client.complete(
             [LLMMessage(role="user", content="Hi")],
             job_id=uuid.uuid4(),

@@ -7,6 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from eventforge.core.config import Settings, get_settings
 from eventforge.db.repositories.llm_usage import LLMUsageRepository
 from eventforge.events.schemas.constants import EMBEDDING_DIMENSION
+from eventforge.services.resilience.cost_cap import assert_job_under_cost_cap
+from eventforge.services.resilience.errors import is_retryable_openai_error
+from eventforge.services.resilience.external_call import call_with_resilience
 
 logger = logging.getLogger(__name__)
 
@@ -36,55 +39,69 @@ class EmbeddingClient:
         if not texts:
             return []
 
-        model = self._settings.embedding_model
-        response = await self._client.embeddings.create(model=model, input=texts)
-        ordered = sorted(response.data, key=lambda item: item.index)
-        embeddings = [item.embedding for item in ordered]
-
-        for vector in embeddings:
-            if len(vector) != EMBEDDING_DIMENSION:
-                msg = f"Expected {EMBEDDING_DIMENSION}-dim embedding, got {len(vector)}"
-                raise ValueError(msg)
-
-        total_tokens = response.usage.total_tokens if response.usage else 0
-        resolved_model = response.model or model
-        cost_usd = self._settings.total_cost_for_tokens(
-            resolved_model,
-            total_tokens,
-            0,
-        )
-
         if self._session is not None:
-            try:
-                await LLMUsageRepository(self._session).log(
-                    job_id=job_id,
-                    agent_name=agent_name,
-                    model=resolved_model,
-                    input_tokens=total_tokens,
-                    output_tokens=0,
-                    cost_usd=cost_usd,
-                )
-            except Exception:
-                logger.exception(
-                    "Failed to log embedding usage",
-                    extra={
-                        "job_id": str(job_id),
-                        "agent_name": agent_name,
-                        "model": resolved_model,
-                    },
-                )
+            await assert_job_under_cost_cap(self._session, job_id, self._settings)
 
-        logger.info(
-            "Embeddings created",
-            extra={
-                "job_id": str(job_id),
-                "agent_name": agent_name,
-                "model": resolved_model,
-                "text_count": len(texts),
-                "total_tokens": total_tokens,
-            },
+        model = self._settings.embedding_model
+
+        async def _embed() -> list[list[float]]:
+            response = await self._client.embeddings.create(model=model, input=texts)
+            ordered = sorted(response.data, key=lambda item: item.index)
+            embeddings = [item.embedding for item in ordered]
+
+            for vector in embeddings:
+                if len(vector) != EMBEDDING_DIMENSION:
+                    msg = f"Expected {EMBEDDING_DIMENSION}-dim embedding, got {len(vector)}"
+                    raise ValueError(msg)
+
+            total_tokens = response.usage.total_tokens if response.usage else 0
+            resolved_model = response.model or model
+            cost_usd = self._settings.total_cost_for_tokens(
+                resolved_model,
+                total_tokens,
+                0,
+            )
+
+            if self._session is not None:
+                try:
+                    await LLMUsageRepository(self._session).log(
+                        job_id=job_id,
+                        agent_name=agent_name,
+                        model=resolved_model,
+                        input_tokens=total_tokens,
+                        output_tokens=0,
+                        cost_usd=cost_usd,
+                    )
+                except Exception:
+                    logger.exception(
+                        "Failed to log embedding usage",
+                        extra={
+                            "job_id": str(job_id),
+                            "agent_name": agent_name,
+                            "model": resolved_model,
+                        },
+                    )
+                else:
+                    await assert_job_under_cost_cap(self._session, job_id, self._settings)
+
+            logger.info(
+                "Embeddings created",
+                extra={
+                    "job_id": str(job_id),
+                    "agent_name": agent_name,
+                    "model": resolved_model,
+                    "text_count": len(texts),
+                    "total_tokens": total_tokens,
+                },
+            )
+            return embeddings
+
+        return await call_with_resilience(
+            "openai",
+            _embed,
+            settings=self._settings,
+            is_retryable=is_retryable_openai_error,
         )
-        return embeddings
 
 
 def get_embedding_client(session: AsyncSession | None = None) -> EmbeddingClient:

@@ -41,7 +41,8 @@ async def test_embedding_client_raises_when_api_key_missing() -> None:
 
 @pytest.mark.asyncio
 async def test_embedding_client_returns_vectors_and_logs_usage() -> None:
-    settings = Settings(openai_api_key="test-openai", embedding_model="text-embedding-3-small")
+    settings = Settings(openai_api_key="test-openai",
+                        embedding_model="text-embedding-3-small")
     session = AsyncMock()
     client = EmbeddingClient(settings, session=session)
 
@@ -57,9 +58,15 @@ async def test_embedding_client_returns_vectors_and_logs_usage() -> None:
     mock_openai.embeddings.create = AsyncMock(return_value=response)
     client._client = mock_openai
 
+    async def _await_operation(_key, operation, **_kwargs):
+        return await operation()
+
     with patch(
         "eventforge.services.embedding.client.LLMUsageRepository",
-    ) as mock_repo_cls:
+    ) as mock_repo_cls, patch(
+        "eventforge.services.embedding.client.call_with_resilience",
+        side_effect=_await_operation,
+    ):
         mock_repo = AsyncMock()
         mock_repo_cls.return_value = mock_repo
         vectors = await client.embed_texts(

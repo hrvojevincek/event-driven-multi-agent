@@ -131,9 +131,9 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 3.3 Resilience Hardening
 
-- [ ] LLM retry with exponential backoff — [KRE-147](https://linear.app/kreativbiro/issue/KRE-147)
-- [ ] Circuit breaker per provider — [KRE-147](https://linear.app/kreativbiro/issue/KRE-147)
-- [ ] Per-query cost cap enforcement — [KRE-147](https://linear.app/kreativbiro/issue/KRE-147)
+- [x] LLM retry with exponential backoff — [KRE-147](https://linear.app/kreativbiro/issue/KRE-147)
+- [x] Circuit breaker per provider — [KRE-147](https://linear.app/kreativbiro/issue/KRE-147)
+- [x] Per-query cost cap enforcement — [KRE-147](https://linear.app/kreativbiro/issue/KRE-147)
 
 **Phase 3 exit criteria:** Real research query via API produces cited synthesis; backend auth enforced; LLM costs tracked. Verified via Postman + `./scripts/verify-pipeline-e2e.sh`.
 
@@ -285,6 +285,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2 complete. **Phase 3 in progress** — KRE-139–145 done (real AI pipeline + cost API); **next:** KRE-146 (Clerk auth), KRE-147 (resilience). Frontend deferred to **Phase 4** ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119) onward).
+**Backend-first track:** Phase 2 complete. **Phase 3 in progress** — KRE-139–145, KRE-147 done; **next:** KRE-146 (Clerk auth). Frontend deferred to **Phase 4** ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119) onward).
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

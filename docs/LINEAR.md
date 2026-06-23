@@ -18,12 +18,13 @@
 | Done (Phase 3) | Next |
 | --- | --- |
 | KRE-139 LLM client + `llm_usage` | KRE-146 Clerk auth |
-| KRE-140 Tavily ingestion | KRE-147 resilience |
-| KRE-141 real embeddings | Phase 4 frontend deferred |
+| KRE-140 Tavily ingestion | Phase 4 frontend deferred |
+| KRE-141 real embeddings | |
 | KRE-143 RAG + entity extraction | |
 | KRE-142 LLM research sub-queries | |
 | KRE-144 cited synthesis | |
 | KRE-145 LLM cost API | |
+| KRE-147 LLM resilience | |
 
 Phases 0–2 complete (stub pipeline + E2E). Full pipeline uses real AI through synthesis.
 
@@ -49,7 +50,7 @@ save_issue(id: "KRE-122", state: "Done")
 | Phase 0 — Foundation    | Complete                             |
 | Phase 1 — Scaffolding   | Backend complete; frontend → Phase 4 |
 | Phase 2 — Core Pipeline | Complete (stub agents + E2E)         |
-| Phase 3 — Real AI       | **In progress** (KRE-139–145 done; next KRE-146/147) |
+| Phase 3 — Real AI       | **In progress** (KRE-139–145, KRE-147 done; next KRE-146) |
 | Phase 4 — Frontend      | Deferred (after Phase 3)             |
 
 ## Issue index (Phase 0 + 1)
@@ -124,7 +125,7 @@ Also see deferred infra/reliability: KRE-136 (outbox), KRE-137, KRE-138, KRE-145
 Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129 → KRE-130 → KRE-131 → KRE-132
         + all stub workers + E2E smoke test + KRE-134 (DLQ redrive) + KRE-135 (pipeline.failed)
 
-Next:   KRE-146 (Clerk auth), KRE-147 (resilience)
+Next:   KRE-146 (Clerk auth)
 
 Done:   KRE-139 (LLM client + cost tracking foundation)
         KRE-140 (Tavily web search ingestion)
@@ -133,6 +134,7 @@ Done:   KRE-139 (LLM client + cost tracking foundation)
         KRE-142 (research — LLM parallel sub-queries)
         KRE-144 (synthesis — cited report generation)
         KRE-145 (LLM cost tracking API)
+        KRE-147 (LLM resilience — retry, circuit breaker, cost cap)
 
 Defer:  Phase 4 frontend — KRE-119 → KRE-121 → KRE-124 → KRE-126 → KRE-128 (SSE, React Flow, Clerk UI)
 

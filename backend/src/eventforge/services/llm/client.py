@@ -9,6 +9,12 @@ from eventforge.services.llm.providers.anthropic import AnthropicProvider
 from eventforge.services.llm.providers.base import LLMProvider
 from eventforge.services.llm.providers.openai import OpenAIProvider
 from eventforge.services.llm.types import LLMCompletionResult, LLMMessage
+from eventforge.services.resilience.cost_cap import assert_job_under_cost_cap
+from eventforge.services.resilience.errors import (
+    is_retryable_anthropic_error,
+    is_retryable_openai_error,
+)
+from eventforge.services.resilience.external_call import call_with_resilience
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +43,28 @@ class LLMClient:
         resolved_model = model or self._settings.llm_default_model
         provider_name = self._settings.resolve_llm_provider(resolved_model)
         provider = self._get_provider(provider_name)
-        result = await provider.complete(
-            messages,
-            model=resolved_model,
-            max_tokens=max_tokens,
+
+        if self._session is not None:
+            await assert_job_under_cost_cap(self._session, job_id, self._settings)
+
+        is_retryable = (
+            is_retryable_openai_error
+            if provider_name == "openai"
+            else is_retryable_anthropic_error
+        )
+
+        async def _complete() -> LLMCompletionResult:
+            return await provider.complete(
+                messages,
+                model=resolved_model,
+                max_tokens=max_tokens,
+            )
+
+        result = await call_with_resilience(
+            provider_name,
+            _complete,
+            settings=self._settings,
+            is_retryable=is_retryable,
         )
 
         if self._session is not None:
@@ -62,6 +86,8 @@ class LLMClient:
                         "model": result.model,
                     },
                 )
+            else:
+                await assert_job_under_cost_cap(self._session, job_id, self._settings)
 
         return result
 

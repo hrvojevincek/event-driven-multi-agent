@@ -4,6 +4,8 @@ import httpx
 
 from eventforge.core.config import Settings, get_settings
 from eventforge.events.schemas import QueryDepth
+from eventforge.services.resilience.errors import is_retryable_httpx_error
+from eventforge.services.resilience.external_call import call_with_resilience
 from eventforge.services.search.types import WebSearchResult
 
 logger = logging.getLogger(__name__)
@@ -65,25 +67,34 @@ class TavilyClient:
             "Authorization": f"Bearer {self._settings.tavily_api_key}",
         }
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(TAVILY_SEARCH_URL, json=payload, headers=headers)
-            response.raise_for_status()
-            data = response.json()
+        async def _search() -> list[WebSearchResult]:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(TAVILY_SEARCH_URL, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
 
-        results: list[WebSearchResult] = []
-        for item in data.get("results", []):
-            url = (item.get("url") or "").strip()
-            if not url:
-                continue
-            title = (item.get("title") or url or "Untitled").strip()
-            content = (item.get("content") or "").strip()
-            results.append(
-                WebSearchResult(
-                    url=url[:MAX_URL_LENGTH],
-                    title=title[:MAX_TITLE_LENGTH],
-                    snippet=(content or title)[:MAX_SNIPPET_LENGTH],
+            results: list[WebSearchResult] = []
+            for item in data.get("results", []):
+                url = (item.get("url") or "").strip()
+                if not url:
+                    continue
+                title = (item.get("title") or url or "Untitled").strip()
+                content = (item.get("content") or "").strip()
+                results.append(
+                    WebSearchResult(
+                        url=url[:MAX_URL_LENGTH],
+                        title=title[:MAX_TITLE_LENGTH],
+                        snippet=(content or title)[:MAX_SNIPPET_LENGTH],
+                    )
                 )
-            )
+            return results
+
+        results = await call_with_resilience(
+            "tavily",
+            _search,
+            settings=self._settings,
+            is_retryable=is_retryable_httpx_error,
+        )
 
         logger.info(
             "Tavily search completed",
