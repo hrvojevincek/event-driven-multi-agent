@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     sqs_queue_prefix: str = "eventforge"
     sqs_wait_time_seconds: int = 20
     sqs_max_messages: int = 10
+    sqs_max_receive_count: int = 3
 
     @property
     def ingestion_queue_name(self) -> str:
@@ -50,6 +51,10 @@ class Settings(BaseSettings):
     @property
     def synthesis_queue_name(self) -> str:
         return f"{self.sqs_queue_prefix}-synthesis"
+
+    @property
+    def dlq_queue_name(self) -> str:
+        return f"{self.sqs_queue_prefix}-dlq"
 
     @property
     def database_url(self) -> str:

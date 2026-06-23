@@ -1,4 +1,4 @@
-.PHONY: help dev down logs seed test lint hooks lint-backend lint-backend-fix verify-e2e
+.PHONY: help dev down logs seed test lint hooks lint-backend lint-backend-fix verify-e2e verify-dlq
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -17,6 +17,9 @@ seed: ## Seed local database with sample data
 
 verify-e2e: ## Run full pipeline E2E smoke test (requires all workers running)
 	./scripts/verify-pipeline-e2e.sh
+
+verify-dlq: ## Verify SQS redrive policies on worker queues (requires LocalStack)
+	./scripts/verify-dlq-redrive.sh
 
 test: ## Run backend + frontend tests
 	docker compose exec backend pytest

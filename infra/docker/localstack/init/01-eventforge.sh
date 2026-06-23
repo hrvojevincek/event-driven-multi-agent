@@ -2,10 +2,45 @@
 # Bootstrap EventForge AWS resources in LocalStack
 set -euo pipefail
 
+MAX_RECEIVE_COUNT="${SQS_MAX_RECEIVE_COUNT:-3}"
+WORKER_QUEUES=(ingestion embedding knowledge-mining research synthesis)
+
+configure_redrive_policy() {
+  local queue_name="$1"
+  local queue_url attributes_json
+
+  awslocal sqs create-queue --queue-name "${queue_name}" >/dev/null 2>&1 || true
+
+  queue_url="$(awslocal sqs get-queue-url --queue-name "${queue_name}" --query 'QueueUrl' --output text)"
+
+  attributes_json="$(DLQ_ARN="${DLQ_ARN}" MAX_RECEIVE_COUNT="${MAX_RECEIVE_COUNT}" python3 -c '
+import json, os
+
+redrive = {
+    "deadLetterTargetArn": os.environ["DLQ_ARN"],
+    "maxReceiveCount": int(os.environ["MAX_RECEIVE_COUNT"]),
+}
+print(json.dumps({"RedrivePolicy": json.dumps(redrive)}))
+')"
+
+  awslocal sqs set-queue-attributes \
+    --queue-url "${queue_url}" \
+    --attributes "${attributes_json}"
+}
+
 awslocal events create-event-bus --name eventforge-bus || true
 
-for queue in ingestion embedding knowledge-mining research synthesis dlq; do
-  awslocal sqs create-queue --queue-name "eventforge-${queue}" || true
+awslocal sqs create-queue --queue-name eventforge-dlq >/dev/null 2>&1 || true
+
+DLQ_QUEUE_URL="$(awslocal sqs get-queue-url --queue-name eventforge-dlq --query 'QueueUrl' --output text)"
+DLQ_ARN="$(awslocal sqs get-queue-attributes \
+  --queue-url "${DLQ_QUEUE_URL}" \
+  --attribute-names QueueArn \
+  --query 'Attributes.QueueArn' \
+  --output text)"
+
+for queue in "${WORKER_QUEUES[@]}"; do
+  configure_redrive_policy "eventforge-${queue}"
 done
 
 INGESTION_QUEUE_URL="$(awslocal sqs get-queue-url --queue-name eventforge-ingestion --query 'QueueUrl' --output text)"
@@ -115,5 +150,4 @@ awslocal events put-targets \
   --targets "Id=synthesis-queue,Arn=${SYNTHESIS_QUEUE_ARN}" \
   || true
 
-# Wire DLQ redrive policy (configure in Phase 2)
-echo "EventForge LocalStack resources initialized."
+echo "EventForge LocalStack resources initialized (DLQ redrive maxReceiveCount=${MAX_RECEIVE_COUNT})."

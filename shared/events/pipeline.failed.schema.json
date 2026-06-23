@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eventforge.dev/schemas/pipeline.failed.schema.json",
+  "title": "PipelineFailedPayload",
+  "description": "Payload for eventforge.pipeline.failed — terminal failure after retries exhausted or DLQ delivery.",
+  "type": "object",
+  "required": ["stage", "failed_event_id", "failed_detail_type", "error_message"],
+  "properties": {
+    "stage": {
+      "type": "string",
+      "description": "Pipeline stage that failed (JobStageName value, e.g. ingestion, embedding)."
+    },
+    "failed_event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "event_id of the inbound event that could not be processed."
+    },
+    "failed_detail_type": {
+      "type": "string",
+      "pattern": "^eventforge\\.",
+      "description": "detail_type of the inbound event that failed."
+    },
+    "error_message": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable failure reason."
+    },
+    "source_queue": {
+      "type": "string",
+      "description": "Worker queue the message was redriven from, if known."
+    },
+    "receive_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Approximate SQS receive count when failure was recorded, if available."
+    }
+  },
+  "additionalProperties": false
+}

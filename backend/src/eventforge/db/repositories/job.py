@@ -52,3 +52,13 @@ class JobStageRepository(BaseRepository):
             job_stage.duration_ms = int((now - job_stage.started_at).total_seconds() * 1000)
         await self.session.flush()
         return job_stage
+
+    async def mark_failed(self, job_stage: JobStage, error_detail: str) -> JobStage:
+        now = datetime.now(tz=UTC)
+        job_stage.status = StageStatus.FAILED.value
+        job_stage.error_detail = error_detail
+        job_stage.completed_at = now
+        if job_stage.started_at is not None:
+            job_stage.duration_ms = int((now - job_stage.started_at).total_seconds() * 1000)
+        await self.session.flush()
+        return job_stage

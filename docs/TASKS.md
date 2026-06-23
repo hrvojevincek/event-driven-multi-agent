@@ -113,7 +113,8 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 - [x] Sequential event chaining (ingestion → embedding → knowledge → research → synthesis)
 - [x] Research fan-out: dispatch N tasks (simplified local — skip Step Functions initially)
-- [ ] DLQ handling + `pipeline.failed` event + schema
+- [x] SQS redrive policies → `eventforge-dlq` (LocalStack, maxReceiveCount: 3) — [KRE-134](https://linear.app/kreativbiro/issue/KRE-134)
+- [x] `pipeline.failed` event + schema + terminal failure handling — [KRE-135](https://linear.app/kreativbiro/issue/KRE-135)
 - [x] Update `JobStage` status in Postgres at each step
 
 **Phase 2 exit criteria:** Submit query via API → all stages complete → result in DB (mocked LLM). Verified via `./scripts/verify-pipeline-e2e.sh`.
@@ -279,6 +280,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2.3 — DLQ redrive policies + `pipeline.failed` schema and terminal failure handling. E2E verified via `./scripts/verify-pipeline-e2e.sh`.
+**Backend-first track:** Phase 2 core pipeline complete (E2E + DLQ + `pipeline.failed`). Next: Phase 3 SSE/React Flow, or Phase 1 frontend ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119)), or `GET /api/v1/queries` list.
 
-Frontend + Phase 1 exit ([KRE-128](https://linear.app/kreativbiro/issue/KRE-128)) deferred until DLQ slice lands (or pick up [KRE-119](https://linear.app/kreativbiro/issue/KRE-119) in parallel).
+Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

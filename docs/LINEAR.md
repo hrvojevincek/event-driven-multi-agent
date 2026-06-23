@@ -59,20 +59,21 @@ save_issue(id: "KRE-122", state: "Done")
 | EF-014 | [KRE-130](https://linear.app/kreativbiro/issue/KRE-130) | SQS consumer base + ingestion stub worker             | 3        | KRE-129    |
 | EF-015 | [KRE-131](https://linear.app/kreativbiro/issue/KRE-131) | Harden pipeline idempotency (atomic claim + API keys) | 2        | KRE-130    |
 | EF-016 | [KRE-132](https://linear.app/kreativbiro/issue/KRE-132) | Re-verify deferred ingestion/worker review findings   | —        | KRE-131    |
-| EF-017 | [KRE-133](https://linear.app/kreativbiro/issue/KRE-133) | Automated RAG eval (faithfulness, citations, RAGAS) | 3        | Phase 4    |
+| EF-017 | [KRE-133](https://linear.app/kreativbiro/issue/KRE-133) | Automated RAG eval (faithfulness, citations, RAGAS)   | 3        | Phase 4    |
+| EF-018 | [KRE-134](https://linear.app/kreativbiro/issue/KRE-134) | SQS DLQ redrive policies (LocalStack)                 | 1        | E2E done   |
+| EF-019 | [KRE-135](https://linear.app/kreativbiro/issue/KRE-135) | pipeline.failed schema + DLQ terminal failure         | 2        | KRE-134    |
 
-> Remaining Phase 2 work (embedding → synthesis workers, orchestration, DLQ) stays in `docs/TASKS.md` until split into Linear issues. **Stage event schemas are added incrementally with each worker** — not upfront in KRE-122.
+> Remaining Phase 2 polish (`GET /queries` list) stays in `docs/TASKS.md`. **Stage event schemas are added incrementally with each worker** — not upfront in KRE-122.
 
 ## Backend-first track (recommended)
 
 ```
-Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125
+Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129 → KRE-130 → KRE-131 → KRE-132
+        + all stub workers + E2E smoke test + KRE-134 (DLQ redrive) + KRE-135 (pipeline.failed)
 
-Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129 → KRE-130 → KRE-131 → KRE-132 + embedding worker (Phase 2.2)
+Next:   Phase 3 SSE/React Flow — or Phase 1 frontend (KRE-119) — or GET /api/v1/queries list
 
-Next:   Knowledge mining worker (Phase 2.2) — or GET query endpoints (Phase 2.1)
-
-Parallel (optional): KRE-127 backend ruff job only
+Parallel (optional): KRE-127 backend ruff job only | GET /api/v1/queries list
 
 Defer:  KRE-119 → KRE-121 → KRE-124 → KRE-126 → KRE-128 (Phase 1 full-stack exit)
 ```

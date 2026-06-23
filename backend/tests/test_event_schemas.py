@@ -26,7 +26,8 @@ def test_query_submitted_payload_requires_topic() -> None:
 
 def test_query_submitted_payload_rejects_unknown_fields() -> None:
     with pytest.raises(ValidationError):
-        QuerySubmittedPayload.model_validate({"topic": "AI agents", "extra": True})
+        QuerySubmittedPayload.model_validate(
+            {"topic": "AI agents", "extra": True})
 
 
 def test_build_query_submitted_event_sets_envelope_fields() -> None:
@@ -69,7 +70,8 @@ def test_round_trip_through_pydantic() -> None:
         topic="Round trip",
     )
 
-    restored = QuerySubmittedEvent.model_validate_json(original.model_dump_json())
+    restored = QuerySubmittedEvent.model_validate_json(
+        original.model_dump_json())
     assert restored == original
 
 
@@ -80,6 +82,7 @@ def test_round_trip_through_pydantic() -> None:
         "query.submitted.schema.json",
         "ingestion.completed.schema.json",
         "embedding.completed.schema.json",
+        "pipeline.failed.schema.json",
     ],
 )
 def test_json_schema_files_are_valid_json(filename: str) -> None:

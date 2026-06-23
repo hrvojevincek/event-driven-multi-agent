@@ -70,6 +70,7 @@ class SqsConsumer(ABC):
                 MaxNumberOfMessages=self._max_messages,
                 WaitTimeSeconds=self._wait_time_seconds,
                 MessageAttributeNames=["All"],
+                AttributeNames=["ApproximateReceiveCount"],
             )
         except (BotoCoreError, ClientError):
             # Transient SQS/network errors must not kill the consumer loop;

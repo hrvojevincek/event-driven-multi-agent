@@ -15,6 +15,7 @@ EVENT_SOURCE_EMBEDDING = "eventforge.workers.embedding"
 EVENT_SOURCE_KNOWLEDGE = "eventforge.workers.knowledge"
 EVENT_SOURCE_RESEARCH = "eventforge.workers.research"
 EVENT_SOURCE_SYNTHESIS = "eventforge.workers.synthesis"
+EVENT_SOURCE_DLQ = "eventforge.workers.dlq"
 PUBLISHER_WORKER_NAME = "api"
 
 

@@ -123,6 +123,19 @@ Init script `infra/docker/localstack/init/01-eventforge.sh` runs on LocalStack s
 
 - EventBridge bus: `eventforge-bus`
 - SQS queues: `eventforge-ingestion`, `eventforge-embedding`, `eventforge-knowledge-mining`, `eventforge-research`, `eventforge-synthesis`, `eventforge-dlq`
+- **Redrive policies:** each worker queue → `eventforge-dlq` with `maxReceiveCount: 3` (override via `SQS_MAX_RECEIVE_COUNT` in init env)
+
+Verify redrive policies after `make dev`:
+
+```bash
+./scripts/verify-dlq-redrive.sh
+```
+
+If queues existed before redrive was added, restart LocalStack so init re-applies attributes:
+
+```bash
+docker compose restart localstack
+```
 
 ### Manual AWS CLI (with awslocal)
 
@@ -217,6 +230,7 @@ uv run python -m eventforge.workers.embedding
 uv run python -m eventforge.workers.knowledge
 uv run python -m eventforge.workers.research
 uv run python -m eventforge.workers.synthesis
+uv run python -m eventforge.workers.dlq
 ```
 
 Future: `docker compose --profile workers up` to run all workers.
