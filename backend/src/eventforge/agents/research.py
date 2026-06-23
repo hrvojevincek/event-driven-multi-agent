@@ -25,33 +25,28 @@ from eventforge.events.schemas import (
     build_research_task_dispatched_event,
 )
 from eventforge.events.schemas.constants import DETAIL_TYPE_KNOWLEDGE_MINED
+from eventforge.services.embedding import EmbeddingClient, get_embedding_client
 from eventforge.services.knowledge import (
     expected_research_task_count,
     research_entities_for_fanout,
 )
+from eventforge.services.llm.client import LLMClient, get_llm_client
+from eventforge.services.research import generate_research_note, generate_sub_queries
+from eventforge.services.search.tavily import TavilyClient, get_tavily_client
 
 
-def _sub_query_for_entity(job: Job, entity: KnowledgeEntity) -> str:
-    return f"How does {entity.name} relate to {job.topic[:120]}?"
-
-
-def _mock_research_note(job: Job, sub_query: str) -> str:
-    return (
-        f"Mock research findings for '{job.topic[:80]}'.\n"
-        f"Sub-query: {sub_query}\n"
-        "Key insight: stub note for Phase 2 pipeline validation."
-    )
-
-
-def _build_dispatched_events(
+async def _build_dispatched_events(
     event: KnowledgeMinedEvent,
     job: Job,
     entities: list[KnowledgeEntity],
+    *,
+    llm_client: LLMClient,
 ) -> list[ResearchTaskDispatchedEvent]:
     research_targets = research_entities_for_fanout(entities)
+    sub_queries = await generate_sub_queries(llm_client, job, research_targets)
     all_entity_ids = [entity.id for entity in entities]
     dispatched: list[ResearchTaskDispatchedEvent] = []
-    for task_index, entity in enumerate(research_targets):
+    for task_index, (_, sub_query) in enumerate(zip(research_targets, sub_queries, strict=True)):
         task_id = deterministic_research_task_id(job.id, task_index)
         dispatched.append(
             build_research_task_dispatched_event(
@@ -59,7 +54,7 @@ def _build_dispatched_events(
                 correlation_id=event.correlation_id,
                 task_id=task_id,
                 task_index=task_index,
-                sub_query=_sub_query_for_entity(job, entity),
+                sub_query=sub_query,
                 entity_ids=all_entity_ids,
                 event_id=deterministic_event_id(
                     job.id, f"{DETAIL_TYPE_RESEARCH_TASK_DISPATCHED}:{task_index}"
@@ -73,18 +68,40 @@ async def _load_or_create_note(
     session: AsyncSession,
     job: Job,
     task: ResearchTaskDispatchedEvent,
+    entities: list[KnowledgeEntity],
+    *,
+    llm_client: LLMClient,
+    embed_client: EmbeddingClient,
+    search_client: TavilyClient | None = None,
 ) -> ResearchNote:
     note_repo = ResearchNoteRepository(session)
     existing = await note_repo.get_by_task_id(task.payload.task_id)
     if existing is not None:
         return existing
 
+    research_targets = research_entities_for_fanout(entities)
+    focus_entity = (
+        research_targets[task.payload.task_index]
+        if task.payload.task_index < len(research_targets)
+        else None
+    )
+
+    content = await generate_research_note(
+        session,
+        llm_client,
+        embed_client,
+        job,
+        task.payload.sub_query,
+        focus_entity,
+        search_client=search_client,
+    )
+
     note = ResearchNote(
         job_id=job.id,
         task_id=task.payload.task_id,
         task_index=task.payload.task_index,
         sub_query=task.payload.sub_query,
-        content=_mock_research_note(job, task.payload.sub_query),
+        content=content,
     )
     session.add(note)
     await session.flush()
@@ -95,6 +112,8 @@ async def process_knowledge_mined(
     session: AsyncSession,
     publisher: EventPublisher,
     event: KnowledgeMinedEvent,
+    *,
+    llm_client: LLMClient | None = None,
 ) -> list[ResearchTaskDispatchedEvent] | None:
     """Fan out research sub-tasks from knowledge.mined. Returns None if already processed."""
     processed_repo = ProcessedEventRepository(session)
@@ -106,6 +125,7 @@ async def process_knowledge_mined(
     job_repo = JobRepository(session)
     stage_repo = JobStageRepository(session)
     entity_repo = KnowledgeEntityRepository(session)
+    llm_client = llm_client or get_llm_client(session=session)
 
     job = await job_repo.get_by_id(event.job_id)
     if job is None:
@@ -123,7 +143,9 @@ async def process_knowledge_mined(
         raise ValueError(msg)
 
     await stage_repo.mark_running(research_stage)
-    dispatched_events = _build_dispatched_events(event, job, entities)
+    dispatched_events = await _build_dispatched_events(
+        event, job, entities, llm_client=llm_client
+    )
 
     await session.commit()
 
@@ -142,6 +164,10 @@ async def process_research_task_dispatched(
     session: AsyncSession,
     publisher: EventPublisher,
     event: ResearchTaskDispatchedEvent,
+    *,
+    llm_client: LLMClient | None = None,
+    embed_client: EmbeddingClient | None = None,
+    search_client: TavilyClient | None = None,
 ) -> ResearchTaskCompletedEvent | None:
     """Run one research sub-task. Returns None if already processed."""
     processed_repo = ProcessedEventRepository(session)
@@ -154,6 +180,9 @@ async def process_research_task_dispatched(
     stage_repo = JobStageRepository(session)
     note_repo = ResearchNoteRepository(session)
     entity_repo = KnowledgeEntityRepository(session)
+    llm_client = llm_client or get_llm_client(session=session)
+    embed_client = embed_client or get_embedding_client(session=session)
+    search_client = search_client or get_tavily_client()
 
     job = await job_repo.get_by_id(event.job_id)
     if job is None:
@@ -165,7 +194,16 @@ async def process_research_task_dispatched(
         msg = f"Research stage missing for job: {job.id}"
         raise ValueError(msg)
 
-    note = await _load_or_create_note(session, job, event)
+    entities = await entity_repo.list_by_ids(event.payload.entity_ids)
+    note = await _load_or_create_note(
+        session,
+        job,
+        event,
+        entities,
+        llm_client=llm_client,
+        embed_client=embed_client,
+        search_client=search_client,
+    )
 
     completed_event = build_research_task_completed_event(
         job_id=job.id,
@@ -178,7 +216,6 @@ async def process_research_task_dispatched(
         ),
     )
 
-    entities = await entity_repo.list_by_ids(event.payload.entity_ids)
     expected_tasks = expected_research_task_count(entities)
     note_count = await note_repo.count_by_job_id(job.id)
     if note_count >= expected_tasks:

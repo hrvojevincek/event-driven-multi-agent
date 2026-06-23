@@ -40,7 +40,7 @@ Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/
 
 ## What works today
 
-The **full event pipeline runs locally**. Ingestion through knowledge mining use **real AI**; research and synthesis still use Phase 2 stubs until [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / [KRE-144](https://linear.app/kreativbiro/issue/KRE-144).
+The **full event pipeline runs locally**. Ingestion through research use **real AI**; synthesis still uses a Phase 2 stub until [KRE-144](https://linear.app/kreativbiro/issue/KRE-144).
 
 ```
 POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GET /api/v1/queries/{id}
@@ -58,7 +58,7 @@ POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GE
 | Tavily web search ingestion | ✅ [KRE-140](https://linear.app/kreativbiro/issue/KRE-140) |
 | Real chunking + OpenAI `text-embedding-3-small` → pgvector | ✅ [KRE-141](https://linear.app/kreativbiro/issue/KRE-141) |
 | RAG knowledge mining (vector retrieval + LLM entity extraction) | ✅ [KRE-143](https://linear.app/kreativbiro/issue/KRE-143) |
-| Real LLM research notes + cited synthesis | ⬜ [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / [KRE-144](https://linear.app/kreativbiro/issue/KRE-144) |
+| Real LLM research notes + cited synthesis | ✅ [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / ⬜ [KRE-144](https://linear.app/kreativbiro/issue/KRE-144) |
 | LLM cost API endpoint | ⬜ [KRE-145](https://linear.app/kreativbiro/issue/KRE-145) |
 | Backend JWT auth (Clerk) | ⬜ [KRE-146](https://linear.app/kreativbiro/issue/KRE-146) |
 | Dashboard / React Flow | ⬜ Phase 4 |
