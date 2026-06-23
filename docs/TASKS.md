@@ -107,16 +107,16 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] Knowledge mining worker (mock: extract fake entities) + `knowledge.mined` schema
 - [x] Research worker (mock: generate fake research notes) + `research.task.*` schemas
 - [x] Synthesis worker (mock: combine into markdown report) + `synthesis.completed` schema
-- [ ] Wire EventBridge rules → SQS queues (LocalStack)
+- [x] Wire EventBridge rules → SQS queues (LocalStack)
 
 ### 2.3 Orchestration
 
-- [ ] Sequential event chaining (ingestion → embedding → knowledge → research → synthesis)
-- [ ] Research fan-out: dispatch N tasks (simplified local — skip Step Functions initially)
+- [x] Sequential event chaining (ingestion → embedding → knowledge → research → synthesis)
+- [x] Research fan-out: dispatch N tasks (simplified local — skip Step Functions initially)
 - [ ] DLQ handling + `pipeline.failed` event + schema
-- [ ] Update `JobStage` status in Postgres at each step
+- [x] Update `JobStage` status in Postgres at each step
 
-**Phase 2 exit criteria:** Submit query via API → all stages complete → result in DB (mocked LLM).
+**Phase 2 exit criteria:** Submit query via API → all stages complete → result in DB (mocked LLM). Verified via `./scripts/verify-pipeline-e2e.sh`.
 
 ---
 
@@ -279,6 +279,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2 end-to-end smoke test, then Phase 2.3 (DLQ + `pipeline.failed`) or [KRE-132](https://linear.app/kreativbiro/issue/KRE-132) review cleanup.
+**Backend-first track:** Phase 2.3 — DLQ redrive policies + `pipeline.failed` schema and terminal failure handling. E2E verified via `./scripts/verify-pipeline-e2e.sh`.
 
-Frontend + Phase 1 exit ([KRE-128](https://linear.app/kreativbiro/issue/KRE-128)) deferred until pipeline slices work via API/curl.
+Frontend + Phase 1 exit ([KRE-128](https://linear.app/kreativbiro/issue/KRE-128)) deferred until DLQ slice lands (or pick up [KRE-119](https://linear.app/kreativbiro/issue/KRE-119) in parallel).
