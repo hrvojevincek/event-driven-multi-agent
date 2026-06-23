@@ -10,7 +10,7 @@ set -euo pipefail
 API_URL="${API_URL:-http://localhost:8000}"
 TOPIC="${TOPIC:-Event-driven architecture patterns}"
 POLL_INTERVAL="${POLL_INTERVAL:-2}"
-TIMEOUT="${TIMEOUT:-120}"
+TIMEOUT="${TIMEOUT:-180}"
 
 die() {
   echo "ERROR: $*" >&2

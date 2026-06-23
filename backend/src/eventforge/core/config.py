@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     embedding_chunk_size_tokens: int = 512
     embedding_chunk_overlap_tokens: int = 50
     knowledge_rag_top_k: int = 10
-    knowledge_max_entities: int = 15
+    knowledge_max_entities: int = 4
     research_rag_top_k: int = 8
     research_tavily_max_results: int = 3
     llm_max_retries: int = 3
