@@ -51,8 +51,7 @@ async def process_pipeline_failure(
     stage = stage_for_failed_detail_type(failed_event.detail_type)
     if stage is None:
         await processed_repo.release_claim(failed_event_id, WORKER_NAME_DLQ)
-        msg = f"Unknown detail_type for pipeline failure: {
-            failed_event.detail_type} "
+        msg = f"Unknown detail_type for pipeline failure: {failed_event.detail_type}"
         raise ValueError(msg)
 
     if source_queue is None:
@@ -67,18 +66,15 @@ async def process_pipeline_failure(
         msg = f"Job not found for pipeline failure: {failed_event.job_id}"
         raise ValueError(msg)
 
-    if job.status == JobStatus.FAILED.value:
-        await session.commit()
-        return None
-
     job_stage = await stage_repo.get_by_job_and_stage(job.id, stage)
     if job_stage is None:
         await processed_repo.release_claim(failed_event_id, WORKER_NAME_DLQ)
         msg = f"Stage {stage} missing for failed job: {job.id}"
         raise ValueError(msg)
 
-    await stage_repo.mark_failed(job_stage, error_message)
-    job.status = JobStatus.FAILED.value
+    if job.status != JobStatus.FAILED.value:
+        await stage_repo.mark_failed(job_stage, error_message)
+        job.status = JobStatus.FAILED.value
 
     pipeline_failed = build_pipeline_failed_event(
         job_id=job.id, correlation_id=failed_event.correlation_id, stage=stage,

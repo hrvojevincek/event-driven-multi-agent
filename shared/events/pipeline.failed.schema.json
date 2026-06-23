@@ -8,6 +8,7 @@
   "properties": {
     "stage": {
       "type": "string",
+      "minLength": 1,
       "description": "Pipeline stage that failed (JobStageName value, e.g. ingestion, embedding)."
     },
     "failed_event_id": {
@@ -26,11 +27,11 @@
       "description": "Human-readable failure reason."
     },
     "source_queue": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Worker queue the message was redriven from, if known."
     },
     "receive_count": {
-      "type": "integer",
+      "type": ["integer", "null"],
       "minimum": 1,
       "description": "Approximate SQS receive count when failure was recorded, if available."
     }

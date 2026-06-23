@@ -3,6 +3,7 @@
 set -euo pipefail
 
 MAX_RECEIVE_COUNT="${SQS_MAX_RECEIVE_COUNT:-3}"
+PREFIX="${SQS_QUEUE_PREFIX:-eventforge}"
 WORKER_QUEUES=(ingestion embedding knowledge-mining research synthesis)
 
 configure_redrive_policy() {
@@ -30,9 +31,9 @@ print(json.dumps({"RedrivePolicy": json.dumps(redrive)}))
 
 awslocal events create-event-bus --name eventforge-bus || true
 
-awslocal sqs create-queue --queue-name eventforge-dlq >/dev/null 2>&1 || true
+awslocal sqs create-queue --queue-name "${PREFIX}-dlq" >/dev/null 2>&1 || true
 
-DLQ_QUEUE_URL="$(awslocal sqs get-queue-url --queue-name eventforge-dlq --query 'QueueUrl' --output text)"
+DLQ_QUEUE_URL="$(awslocal sqs get-queue-url --queue-name "${PREFIX}-dlq" --query 'QueueUrl' --output text)"
 DLQ_ARN="$(awslocal sqs get-queue-attributes \
   --queue-url "${DLQ_QUEUE_URL}" \
   --attribute-names QueueArn \
@@ -40,7 +41,7 @@ DLQ_ARN="$(awslocal sqs get-queue-attributes \
   --output text)"
 
 for queue in "${WORKER_QUEUES[@]}"; do
-  configure_redrive_policy "eventforge-${queue}"
+  configure_redrive_policy "${PREFIX}-${queue}"
 done
 
 INGESTION_QUEUE_URL="$(awslocal sqs get-queue-url --queue-name eventforge-ingestion --query 'QueueUrl' --output text)"

@@ -44,7 +44,7 @@ for queue in "${WORKER_QUEUES[@]}"; do
     die "${queue_name}: missing RedrivePolicy"
   fi
 
-  REDRIVE_RAW="${redrive_raw}" DLQ_ARN="${DLQ_ARN}" MAX_RECEIVE_COUNT="${MAX_RECEIVE_COUNT}" QUEUE_NAME="${queue_name}" \
+  REDRIVE_RAW="${redrive_raw}" DLQ_ARN="${DLQ_ARN}" MAX_RECEIVE_COUNT="${MAX_RECEIVE_COUNT}" QUEUE_NAME="${queue_name}" PREFIX="${PREFIX}" \
     python3 -c '
 import json, os, sys
 
@@ -65,7 +65,7 @@ if int(redrive.get("maxReceiveCount", 0)) != max_count:
     print("  got:     ", redrive.get("maxReceiveCount"), file=sys.stderr)
     sys.exit(1)
 
-print(f"OK  {queue_name} -> eventforge-dlq (maxReceiveCount={max_count})")
+print(f"OK  {queue_name} -> {os.environ['PREFIX']}-dlq (maxReceiveCount={max_count})")
 '
 done
 

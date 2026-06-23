@@ -21,8 +21,15 @@ class DlqWorker(SqsConsumer):
         self._session_factory = get_session_factory(settings)
 
     async def handle_message(self, message: dict[str, Any]) -> None:
-        detail = parse_eventbridge_sqs_body(message["Body"])
-        failed_event = parse_failed_event_detail(detail)
+        try:
+            detail = parse_eventbridge_sqs_body(message["Body"])
+            failed_event = parse_failed_event_detail(detail)
+        except ValueError:
+            logger.exception(
+                "Poison pill DLQ message; discarding",
+                extra={"message_id": message.get("MessageId")},
+            )
+            return
 
         receive_count_raw = message.get("Attributes", {}).get("ApproximateReceiveCount")
         receive_count = int(receive_count_raw) if receive_count_raw else None

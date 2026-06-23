@@ -12,7 +12,7 @@ from eventforge.db.repositories import JobStageRepository
 from eventforge.db.session import reset_engine
 from eventforge.events.deterministic import deterministic_pipeline_failed_event_id
 from eventforge.events.parser import parse_eventbridge_sqs_body
-from eventforge.events.publisher import EventPublisher
+from eventforge.events.publisher import EventPublisher, EventPublishError
 from eventforge.events.schemas import (
     DETAIL_TYPE_PIPELINE_FAILED,
     build_query_submitted_event,
@@ -147,11 +147,16 @@ async def test_process_pipeline_failure_is_idempotent(
     assert publisher.publish.await_count == 1
 
 
-async def test_process_pipeline_failure_skips_when_job_already_failed(
+async def test_process_pipeline_failure_still_publishes_when_job_already_failed(
     db_session: AsyncSession,
 ) -> None:
+    """Publish retry after DB commit but before a successful pipeline.failed emit."""
     job = await _seed_job_with_stages(db_session)
     job.status = JobStatus.FAILED.value
+    stage_repo = JobStageRepository(db_session)
+    ingestion_stage = await stage_repo.get_by_job_and_stage(job.id, JobStageName.INGESTION.value)
+    assert ingestion_stage is not None
+    await stage_repo.mark_failed(ingestion_stage, "Prior failure")
     await db_session.flush()
 
     failed_event = parse_failed_event_detail(
@@ -167,8 +172,35 @@ async def test_process_pipeline_failure_skips_when_job_already_failed(
 
     result = await process_pipeline_failure(db_session, publisher, failed_event=failed_event)
 
-    assert result is None
-    publisher.publish.assert_not_awaited()
+    assert result is not None
+    publisher.publish.assert_awaited_once()
+
+
+async def test_process_pipeline_failure_retries_publish_after_release_claim(
+    db_session: AsyncSession,
+) -> None:
+    job = await _seed_job_with_stages(db_session)
+    failed_event = parse_failed_event_detail(
+        json.loads(
+            build_query_submitted_event(
+                job_id=job.id,
+                correlation_id=job.correlation_id,
+                topic=job.topic,
+            ).model_dump_json()
+        )
+    )
+    publisher = AsyncMock(spec=EventPublisher)
+    publisher.publish.side_effect = [EventPublishError("EventBridge down"), None]
+
+    with pytest.raises(EventPublishError):
+        await process_pipeline_failure(db_session, publisher, failed_event=failed_event)
+
+    retry_result = await process_pipeline_failure(db_session, publisher, failed_event=failed_event)
+
+    assert retry_result is not None
+    assert publisher.publish.await_count == 2
+    await db_session.refresh(job)
+    assert job.status == JobStatus.FAILED.value
 
 
 async def test_dlq_worker_deletes_message_on_success() -> None:

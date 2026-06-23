@@ -63,6 +63,14 @@ save_issue(id: "KRE-122", state: "Done")
 | EF-018 | [KRE-134](https://linear.app/kreativbiro/issue/KRE-134) | SQS DLQ redrive policies (LocalStack)                 | 1        | E2E done   |
 | EF-019 | [KRE-135](https://linear.app/kreativbiro/issue/KRE-135) | pipeline.failed schema + DLQ terminal failure         | 2        | KRE-134    |
 
+## Issue index (Deferred — revisit after backend complete)
+
+| ID     | Linear                                                  | Title                                      | Priority | When      |
+| ------ | ------------------------------------------------------- | ------------------------------------------ | -------- | --------- |
+| EF-020 | [KRE-136](https://linear.app/kreativbiro/issue/KRE-136) | Transactional outbox for event publishing  | Medium   | Phase 4/5 |
+| EF-021 | [KRE-137](https://linear.app/kreativbiro/issue/KRE-137) | LocalStack full `SQS_QUEUE_PREFIX` support | Low      | Pre-AWS   |
+| EF-022 | [KRE-138](https://linear.app/kreativbiro/issue/KRE-138) | DLQ poison-pill observability + archive    | Low      | Phase 3/6 |
+
 > Remaining Phase 2 polish (`GET /queries` list) stays in `docs/TASKS.md`. **Stage event schemas are added incrementally with each worker** — not upfront in KRE-122.
 
 ## Backend-first track (recommended)
