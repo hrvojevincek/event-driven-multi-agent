@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 import pytest
+from pydantic import ValidationError
 
 from eventforge.core.config import Settings
 from eventforge.services.resilience.circuit_breaker import (
@@ -9,7 +12,8 @@ from eventforge.services.resilience.circuit_breaker import (
 
 @pytest.mark.asyncio
 async def test_circuit_breaker_opens_after_failure_threshold() -> None:
-    breaker = CircuitBreaker("test", failure_threshold=2, recovery_timeout_seconds=60.0)
+    breaker = CircuitBreaker("test", failure_threshold=2,
+                             recovery_timeout_seconds=60.0)
 
     async def _fail() -> None:
         raise RuntimeError("boom")
@@ -70,3 +74,21 @@ async def test_retry_with_backoff_does_not_retry_non_retryable_errors() -> None:
         )
 
     assert attempts == 1
+
+
+def test_settings_rejects_negative_llm_max_retries() -> None:
+    with pytest.raises(ValidationError):
+        Settings(llm_max_retries=-1)
+
+
+def test_settings_rejects_base_delay_exceeding_max_delay() -> None:
+    with pytest.raises(ValidationError):
+        Settings(
+            llm_retry_base_delay_seconds=10.0,
+            llm_retry_max_delay_seconds=5.0,
+        )
+
+
+def test_settings_rejects_non_positive_job_max_cost_usd() -> None:
+    with pytest.raises(ValidationError):
+        Settings(job_max_cost_usd=Decimal("0"))

@@ -1,8 +1,8 @@
 from decimal import Decimal
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import Field
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from eventforge.core.llm_pricing import DEFAULT_MODEL_PRICING, ModelPricing, compute_cost_usd
@@ -60,6 +60,44 @@ class Settings(BaseSettings):
     llm_model_pricing: dict[str, ModelPricing] = Field(
         default_factory=lambda: DEFAULT_MODEL_PRICING.copy()
     )
+
+    @field_validator(
+        "llm_max_retries",
+        "circuit_breaker_failure_threshold",
+    )
+    @classmethod
+    def _non_negative_int(cls, value: int) -> int:
+        if value < 0:
+            msg = "must be >= 0"
+            raise ValueError(msg)
+        return value
+
+    @field_validator(
+        "llm_retry_base_delay_seconds",
+        "llm_retry_max_delay_seconds",
+        "circuit_breaker_recovery_timeout_seconds",
+    )
+    @classmethod
+    def _positive_float(cls, value: float) -> float:
+        if value <= 0:
+            msg = "must be > 0"
+            raise ValueError(msg)
+        return value
+
+    @field_validator("job_max_cost_usd")
+    @classmethod
+    def _positive_cost_cap(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and value <= 0:
+            msg = "must be > 0 when set"
+            raise ValueError(msg)
+        return value
+
+    @model_validator(mode="after")
+    def _retry_delays_ordered(self) -> Self:
+        if self.llm_retry_base_delay_seconds > self.llm_retry_max_delay_seconds:
+            msg = "llm_retry_base_delay_seconds must not exceed llm_retry_max_delay_seconds"
+            raise ValueError(msg)
+        return self
 
     @property
     def ingestion_queue_name(self) -> str:

@@ -95,6 +95,7 @@ async def test_emit_cost_cap_pipeline_failure_marks_job_failed(db_session: Async
         )
     await db_session.flush()
 
+    # Knowledge worker consumes embedding.completed; stage_mapping marks KNOWLEDGE_MINING failed.
     event = build_embedding_completed_event(
         job_id=job.id,
         correlation_id=job.correlation_id,

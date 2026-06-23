@@ -44,64 +44,64 @@ class EmbeddingClient:
 
         model = self._settings.embedding_model
 
-        async def _embed() -> list[list[float]]:
-            response = await self._client.embeddings.create(model=model, input=texts)
-            ordered = sorted(response.data, key=lambda item: item.index)
-            embeddings = [item.embedding for item in ordered]
+        async def _create_embeddings():
+            return await self._client.embeddings.create(model=model, input=texts)
 
-            for vector in embeddings:
-                if len(vector) != EMBEDDING_DIMENSION:
-                    msg = f"Expected {EMBEDDING_DIMENSION}-dim embedding, got {len(vector)}"
-                    raise ValueError(msg)
-
-            total_tokens = response.usage.total_tokens if response.usage else 0
-            resolved_model = response.model or model
-            cost_usd = self._settings.total_cost_for_tokens(
-                resolved_model,
-                total_tokens,
-                0,
-            )
-
-            if self._session is not None:
-                try:
-                    await LLMUsageRepository(self._session).log(
-                        job_id=job_id,
-                        agent_name=agent_name,
-                        model=resolved_model,
-                        input_tokens=total_tokens,
-                        output_tokens=0,
-                        cost_usd=cost_usd,
-                    )
-                except Exception:
-                    logger.exception(
-                        "Failed to log embedding usage",
-                        extra={
-                            "job_id": str(job_id),
-                            "agent_name": agent_name,
-                            "model": resolved_model,
-                        },
-                    )
-                else:
-                    await assert_job_under_cost_cap(self._session, job_id, self._settings)
-
-            logger.info(
-                "Embeddings created",
-                extra={
-                    "job_id": str(job_id),
-                    "agent_name": agent_name,
-                    "model": resolved_model,
-                    "text_count": len(texts),
-                    "total_tokens": total_tokens,
-                },
-            )
-            return embeddings
-
-        return await call_with_resilience(
+        response = await call_with_resilience(
             "openai",
-            _embed,
+            _create_embeddings,
             settings=self._settings,
             is_retryable=is_retryable_openai_error,
         )
+        ordered = sorted(response.data, key=lambda item: item.index)
+        embeddings = [item.embedding for item in ordered]
+
+        for vector in embeddings:
+            if len(vector) != EMBEDDING_DIMENSION:
+                msg = f"Expected {EMBEDDING_DIMENSION}-dim embedding, got {len(vector)}"
+                raise ValueError(msg)
+
+        total_tokens = response.usage.total_tokens if response.usage else 0
+        resolved_model = response.model or model
+        cost_usd = self._settings.total_cost_for_tokens(
+            resolved_model,
+            total_tokens,
+            0,
+        )
+
+        if self._session is not None:
+            try:
+                await LLMUsageRepository(self._session).log(
+                    job_id=job_id,
+                    agent_name=agent_name,
+                    model=resolved_model,
+                    input_tokens=total_tokens,
+                    output_tokens=0,
+                    cost_usd=cost_usd,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to log embedding usage",
+                    extra={
+                        "job_id": str(job_id),
+                        "agent_name": agent_name,
+                        "model": resolved_model,
+                    },
+                )
+            else:
+                await assert_job_under_cost_cap(self._session, job_id, self._settings)
+
+        logger.info(
+            "Embeddings created",
+            extra={
+                "job_id": str(job_id),
+                "agent_name": agent_name,
+                "model": resolved_model,
+                "text_count": len(texts),
+                "total_tokens": total_tokens,
+            },
+        )
+        return embeddings
 
 
 def get_embedding_client(session: AsyncSession | None = None) -> EmbeddingClient:
