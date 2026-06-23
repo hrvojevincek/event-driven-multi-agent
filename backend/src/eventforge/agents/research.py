@@ -16,7 +16,6 @@ from eventforge.events.publisher import EVENT_SOURCE_RESEARCH, EventPublisher, E
 from eventforge.events.schemas import (
     DETAIL_TYPE_RESEARCH_TASK_COMPLETED,
     DETAIL_TYPE_RESEARCH_TASK_DISPATCHED,
-    MOCK_RESEARCH_TASK_COUNT,
     WORKER_NAME_RESEARCH,
     WORKER_NAME_RESEARCH_ORCHESTRATOR,
     KnowledgeMinedEvent,
@@ -26,11 +25,14 @@ from eventforge.events.schemas import (
     build_research_task_dispatched_event,
 )
 from eventforge.events.schemas.constants import DETAIL_TYPE_KNOWLEDGE_MINED
+from eventforge.services.knowledge import (
+    expected_research_task_count,
+    research_entities_for_fanout,
+)
 
 
-def _mock_sub_query(job: Job, task_index: int, entities: list[KnowledgeEntity]) -> str:
-    entity_name = entities[task_index % len(entities)].name
-    return f"How does {entity_name} relate to {job.topic[:120]}?"
+def _sub_query_for_entity(job: Job, entity: KnowledgeEntity) -> str:
+    return f"How does {entity.name} relate to {job.topic[:120]}?"
 
 
 def _mock_research_note(job: Job, sub_query: str) -> str:
@@ -46,8 +48,10 @@ def _build_dispatched_events(
     job: Job,
     entities: list[KnowledgeEntity],
 ) -> list[ResearchTaskDispatchedEvent]:
+    research_targets = research_entities_for_fanout(entities)
+    all_entity_ids = [entity.id for entity in entities]
     dispatched: list[ResearchTaskDispatchedEvent] = []
-    for task_index in range(MOCK_RESEARCH_TASK_COUNT):
+    for task_index, entity in enumerate(research_targets):
         task_id = deterministic_research_task_id(job.id, task_index)
         dispatched.append(
             build_research_task_dispatched_event(
@@ -55,8 +59,8 @@ def _build_dispatched_events(
                 correlation_id=event.correlation_id,
                 task_id=task_id,
                 task_index=task_index,
-                sub_query=_mock_sub_query(job, task_index, entities),
-                entity_ids=event.payload.entity_ids,
+                sub_query=_sub_query_for_entity(job, entity),
+                entity_ids=all_entity_ids,
                 event_id=deterministic_event_id(
                     job.id, f"{DETAIL_TYPE_RESEARCH_TASK_DISPATCHED}:{task_index}"
                 ),
@@ -149,6 +153,7 @@ async def process_research_task_dispatched(
     job_repo = JobRepository(session)
     stage_repo = JobStageRepository(session)
     note_repo = ResearchNoteRepository(session)
+    entity_repo = KnowledgeEntityRepository(session)
 
     job = await job_repo.get_by_id(event.job_id)
     if job is None:
@@ -173,8 +178,10 @@ async def process_research_task_dispatched(
         ),
     )
 
+    entities = await entity_repo.list_by_ids(event.payload.entity_ids)
+    expected_tasks = expected_research_task_count(entities)
     note_count = await note_repo.count_by_job_id(job.id)
-    if note_count >= MOCK_RESEARCH_TASK_COUNT:
+    if note_count >= expected_tasks:
         await stage_repo.mark_completed(research_stage)
 
     await session.commit()

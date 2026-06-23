@@ -1,4 +1,5 @@
 from eventforge.db.repositories.base import BaseRepository
+from eventforge.db.repositories.document_chunk import DocumentChunkRepository
 from eventforge.db.repositories.job import JobRepository, JobStageRepository
 from eventforge.db.repositories.knowledge_entity import KnowledgeEntityRepository
 from eventforge.db.repositories.llm_usage import LLMUsageRepository
@@ -10,6 +11,7 @@ from eventforge.db.repositories.user import UserRepository
 
 __all__ = [
     "BaseRepository",
+    "DocumentChunkRepository",
     "JobRepository",
     "JobStageRepository",
     "KnowledgeEntityRepository",

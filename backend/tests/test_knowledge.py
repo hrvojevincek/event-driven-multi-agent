@@ -1,5 +1,6 @@
 import json
 import uuid
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
@@ -32,9 +33,43 @@ from eventforge.events.schemas import (
     WORKER_NAME_KNOWLEDGE,
     build_embedding_completed_event,
 )
+from eventforge.services.embedding import EmbeddingClient
+from eventforge.services.llm.client import LLMClient
+from eventforge.services.llm.types import LLMCompletionResult
 from eventforge.workers.knowledge import KnowledgeWorker
 
 settings = get_settings()
+
+_EXTRACTION_JSON = json.dumps(
+    [
+        {"name": "knowledge graphs", "entity_type": "concept", "source_chunk_index": 0},
+        {"name": "entity extraction", "entity_type": "concept", "source_chunk_index": 1},
+    ]
+)
+
+
+def _mock_embedding_client() -> EmbeddingClient:
+    client = AsyncMock(spec=EmbeddingClient)
+
+    async def _embed(texts: list[str], **kwargs: object) -> list[list[float]]:
+        return [[0.1] * EMBEDDING_DIMENSION for _ in texts]
+
+    client.embed_texts = AsyncMock(side_effect=_embed)
+    return client
+
+
+def _mock_llm_client() -> LLMClient:
+    client = AsyncMock(spec=LLMClient)
+    client.complete = AsyncMock(
+        return_value=LLMCompletionResult(
+            content=_EXTRACTION_JSON,
+            model="gpt-4o-mini",
+            input_tokens=50,
+            output_tokens=80,
+            cost_usd=Decimal("0.001"),
+        )
+    )
+    return client
 
 
 @pytest.fixture
@@ -109,6 +144,8 @@ async def test_process_embedding_completed_writes_entities_and_updates_stage(
 ) -> None:
     job, stage, chunks = await _seed_job_with_chunks(db_session)
     mock_publisher = AsyncMock(spec=EventPublisher)
+    embed_client = _mock_embedding_client()
+    llm_client = _mock_llm_client()
 
     inbound = build_embedding_completed_event(
         job_id=job.id,
@@ -116,11 +153,19 @@ async def test_process_embedding_completed_writes_entities_and_updates_stage(
         chunk_ids=[chunk.id for chunk in chunks],
     )
 
-    result = await process_embedding_completed(db_session, mock_publisher, inbound)
+    result = await process_embedding_completed(
+        db_session,
+        mock_publisher,
+        inbound,
+        embed_client=embed_client,
+        llm_client=llm_client,
+    )
 
     assert result is not None
-    assert result.payload.entity_count == len(chunks) + 1
+    assert result.payload.entity_count == 3
     mock_publisher.publish.assert_awaited_once()
+    embed_client.embed_texts.assert_awaited_once()
+    llm_client.complete.assert_awaited_once()
 
     await db_session.refresh(stage)
     assert stage.status == StageStatus.COMPLETED.value
@@ -129,7 +174,7 @@ async def test_process_embedding_completed_writes_entities_and_updates_stage(
     entity_count = await db_session.scalar(
         select(func.count()).select_from(KnowledgeEntity).where(KnowledgeEntity.job_id == job.id)
     )
-    assert entity_count == len(chunks) + 1
+    assert entity_count == 3
 
     topic_entity = await db_session.scalar(
         select(KnowledgeEntity).where(
@@ -141,6 +186,14 @@ async def test_process_embedding_completed_writes_entities_and_updates_stage(
     assert topic_entity.name == job.topic
     assert topic_entity.chunk_id is None
 
+    concept_names = await db_session.scalars(
+        select(KnowledgeEntity.name).where(
+            KnowledgeEntity.job_id == job.id,
+            KnowledgeEntity.entity_type == "concept",
+        )
+    )
+    assert set(concept_names.all()) == {"knowledge graphs", "entity extraction"}
+
     processed = ProcessedEventRepository(db_session)
     record = await processed.get_by_event_id(str(inbound.event_id))
     assert record is not None
@@ -150,23 +203,37 @@ async def test_process_embedding_completed_writes_entities_and_updates_stage(
 async def test_process_embedding_completed_skips_duplicate_event(db_session: AsyncSession) -> None:
     job, _, chunks = await _seed_job_with_chunks(db_session)
     mock_publisher = AsyncMock(spec=EventPublisher)
+    embed_client = _mock_embedding_client()
+    llm_client = _mock_llm_client()
     inbound = build_embedding_completed_event(
         job_id=job.id,
         correlation_id=job.correlation_id,
         chunk_ids=[chunk.id for chunk in chunks],
     )
 
-    await process_embedding_completed(db_session, mock_publisher, inbound)
+    await process_embedding_completed(
+        db_session,
+        mock_publisher,
+        inbound,
+        embed_client=embed_client,
+        llm_client=llm_client,
+    )
     mock_publisher.reset_mock()
 
-    duplicate_result = await process_embedding_completed(db_session, mock_publisher, inbound)
+    duplicate_result = await process_embedding_completed(
+        db_session,
+        mock_publisher,
+        inbound,
+        embed_client=embed_client,
+        llm_client=llm_client,
+    )
     assert duplicate_result is None
     mock_publisher.publish.assert_not_awaited()
 
     entity_count = await db_session.scalar(
         select(func.count()).select_from(KnowledgeEntity).where(KnowledgeEntity.job_id == job.id)
     )
-    assert entity_count == len(chunks) + 1
+    assert entity_count == 3
 
 
 async def test_knowledge_worker_deletes_message_on_success() -> None:

@@ -30,12 +30,12 @@ from eventforge.events.deterministic import deterministic_research_task_id
 from eventforge.events.parser import parse_eventbridge_sqs_body
 from eventforge.events.publisher import EventPublisher
 from eventforge.events.schemas import (
-    MOCK_RESEARCH_TASK_COUNT,
     WORKER_NAME_RESEARCH,
     WORKER_NAME_RESEARCH_ORCHESTRATOR,
     build_knowledge_mined_event,
     build_research_task_dispatched_event,
 )
+from eventforge.services.knowledge import expected_research_task_count
 from eventforge.workers.research import ResearchWorker
 
 settings = get_settings()
@@ -122,9 +122,10 @@ async def test_process_knowledge_mined_dispatches_tasks_and_starts_stage(
 
     result = await process_knowledge_mined(db_session, mock_publisher, inbound)
 
+    expected_tasks = expected_research_task_count(entities)
     assert result is not None
-    assert len(result) == MOCK_RESEARCH_TASK_COUNT
-    assert mock_publisher.publish.await_count == MOCK_RESEARCH_TASK_COUNT
+    assert len(result) == expected_tasks
+    assert mock_publisher.publish.await_count == expected_tasks
 
     await db_session.refresh(stage)
     assert stage.status == StageStatus.RUNNING.value
@@ -187,7 +188,8 @@ async def test_process_research_task_dispatched_writes_note_and_publishes(
     assert record.worker_name == WORKER_NAME_RESEARCH
 
     await db_session.refresh(stage)
-    assert stage.status == StageStatus.PENDING.value
+    assert stage.status == StageStatus.COMPLETED.value
+    assert stage.completed_at is not None
 
 
 async def test_process_research_task_dispatched_completes_stage_when_all_notes_exist(
@@ -196,8 +198,9 @@ async def test_process_research_task_dispatched_completes_stage_when_all_notes_e
     job, stage, entities = await _seed_job_with_entities(db_session)
     mock_publisher = AsyncMock(spec=EventPublisher)
     entity_ids = [entity.id for entity in entities]
+    expected_tasks = expected_research_task_count(entities)
 
-    for task_index in range(MOCK_RESEARCH_TASK_COUNT):
+    for task_index in range(expected_tasks):
         task_id = deterministic_research_task_id(job.id, task_index)
         inbound = build_research_task_dispatched_event(
             job_id=job.id,
@@ -216,7 +219,7 @@ async def test_process_research_task_dispatched_completes_stage_when_all_notes_e
     note_count = await db_session.scalar(
         select(func.count()).select_from(ResearchNote).where(ResearchNote.job_id == job.id)
     )
-    assert note_count == MOCK_RESEARCH_TASK_COUNT
+    assert note_count == expected_tasks
 
 
 async def test_process_research_task_dispatched_skips_duplicate_event(

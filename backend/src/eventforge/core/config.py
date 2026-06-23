@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_chunk_size_tokens: int = 512
     embedding_chunk_overlap_tokens: int = 50
+    knowledge_rag_top_k: int = 10
+    knowledge_max_entities: int = 15
     llm_model_pricing: dict[str, ModelPricing] = Field(
         default_factory=lambda: DEFAULT_MODEL_PRICING.copy()
     )

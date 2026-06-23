@@ -1,8 +1,10 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from eventforge.core.config import get_settings
 from eventforge.db.models import DocumentChunk, Job, JobStageName, KnowledgeEntity
 from eventforge.db.repositories import (
+    DocumentChunkRepository,
     JobRepository,
     JobStageRepository,
     KnowledgeEntityRepository,
@@ -18,45 +20,48 @@ from eventforge.events.schemas import (
     build_knowledge_mined_event,
 )
 from eventforge.events.schemas.constants import DETAIL_TYPE_EMBEDDING_COMPLETED
-
-
-def _entity_name_from_chunk(chunk: DocumentChunk) -> str:
-    words = chunk.content.split()
-    if not words:
-        return f"concept-{chunk.chunk_index + 1}"
-    return " ".join(words[:4]).rstrip(".,;:")
-
-
-def _mock_entities_for_job(job: Job, chunks: list[DocumentChunk]) -> list[KnowledgeEntity]:
-    entities: list[KnowledgeEntity] = [
-        KnowledgeEntity(
-            job_id=job.id,
-            chunk_id=None,
-            name=job.topic[:512],
-            entity_type="topic",
-        )
-    ]
-    for chunk in chunks:
-        entities.append(
-            KnowledgeEntity(
-                job_id=job.id,
-                chunk_id=chunk.id,
-                name=_entity_name_from_chunk(chunk),
-                entity_type="concept",
-            )
-        )
-    return entities
+from eventforge.services.embedding import EmbeddingClient, get_embedding_client
+from eventforge.services.knowledge import extract_knowledge_entities
+from eventforge.services.llm.client import LLMClient, get_llm_client
 
 
 async def _load_or_create_entities(
-    session: AsyncSession, job: Job, chunks: list[DocumentChunk]
+    session: AsyncSession,
+    job: Job,
+    chunks: list[DocumentChunk],
+    *,
+    embed_client: EmbeddingClient | None = None,
+    llm_client: LLMClient | None = None,
 ) -> list[KnowledgeEntity]:
     entity_repo = KnowledgeEntityRepository(session)
     existing = await entity_repo.list_by_job_id(job.id)
     if existing:
         return existing
 
-    entities = _mock_entities_for_job(job, chunks)
+    settings = get_settings()
+    embed_client = embed_client or get_embedding_client(session=session)
+    llm_client = llm_client or get_llm_client(session=session)
+    chunk_repo = DocumentChunkRepository(session)
+
+    topic_vectors = await embed_client.embed_texts(
+        [job.topic],
+        job_id=job.id,
+        agent_name=WORKER_NAME_KNOWLEDGE,
+    )
+    retrieved = await chunk_repo.search_similar(
+        job.id,
+        topic_vectors[0],
+        limit=settings.knowledge_rag_top_k,
+    )
+    if not retrieved:
+        retrieved = chunks
+
+    entities = await extract_knowledge_entities(
+        llm_client,
+        job,
+        retrieved,
+        max_entities=settings.knowledge_max_entities,
+    )
     session.add_all(entities)
     await session.flush()
     return entities
@@ -66,6 +71,9 @@ async def process_embedding_completed(
     session: AsyncSession,
     publisher: EventPublisher,
     event: EmbeddingCompletedEvent,
+    *,
+    embed_client: EmbeddingClient | None = None,
+    llm_client: LLMClient | None = None,
 ) -> KnowledgeMinedEvent | None:
     """Run knowledge mining for one embedding.completed event. Returns None if already processed."""
     processed_repo = ProcessedEventRepository(session)
@@ -100,7 +108,13 @@ async def process_embedding_completed(
         raise ValueError(msg)
 
     await stage_repo.mark_running(knowledge_stage)
-    entities = await _load_or_create_entities(session, job, chunks)
+    entities = await _load_or_create_entities(
+        session,
+        job,
+        chunks,
+        embed_client=embed_client,
+        llm_client=llm_client,
+    )
 
     completed_event = build_knowledge_mined_event(
         job_id=job.id,

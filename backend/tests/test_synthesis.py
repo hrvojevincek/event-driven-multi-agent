@@ -17,6 +17,7 @@ from eventforge.db.models import (
     JobStage,
     JobStageName,
     JobStatus,
+    KnowledgeEntity,
     ResearchNote,
     StageStatus,
     SynthesisReport,
@@ -28,10 +29,10 @@ from eventforge.events.deterministic import deterministic_research_task_id
 from eventforge.events.parser import parse_eventbridge_sqs_body
 from eventforge.events.publisher import EventPublisher
 from eventforge.events.schemas import (
-    MOCK_RESEARCH_TASK_COUNT,
     WORKER_NAME_SYNTHESIS,
     build_research_task_completed_event,
 )
+from eventforge.services.knowledge import expected_research_task_count
 from eventforge.workers.synthesis import SynthesisWorker
 
 settings = get_settings()
@@ -52,7 +53,8 @@ async def db_session() -> AsyncSession:
 async def _seed_job_with_notes(
     db_session: AsyncSession,
     *,
-    note_count: int = MOCK_RESEARCH_TASK_COUNT,
+    note_count: int | None = None,
+    concept_count: int = 1,
 ) -> tuple[Job, JobStage, list[ResearchNote]]:
     suffix = uuid.uuid4().hex[:8]
     user = User(email=f"synthesis-{suffix}@example.com", clerk_id=f"synthesis-user-{suffix}")
@@ -77,6 +79,29 @@ async def _seed_job_with_notes(
     )
     db_session.add(synthesis_stage)
 
+    entities = [
+        KnowledgeEntity(
+            job_id=job.id,
+            chunk_id=None,
+            name=job.topic,
+            entity_type="topic",
+        ),
+    ]
+    for index in range(concept_count):
+        entities.append(
+            KnowledgeEntity(
+                job_id=job.id,
+                chunk_id=None,
+                name=f"concept {index}",
+                entity_type="concept",
+            )
+        )
+    db_session.add_all(entities)
+    await db_session.flush()
+
+    resolved_note_count = (
+        note_count if note_count is not None else expected_research_task_count(entities)
+    )
     notes = [
         ResearchNote(
             job_id=job.id,
@@ -85,7 +110,7 @@ async def _seed_job_with_notes(
             sub_query=f"Sub-query {index}",
             content=f"Mock note content {index}",
         )
-        for index in range(note_count)
+        for index in range(resolved_note_count)
     ]
     db_session.add_all(notes)
     await db_session.flush()
@@ -100,7 +125,7 @@ def test_parse_research_task_completed_event_rejects_wrong_type() -> None:
 async def test_process_research_task_completed_waits_for_all_notes(
     db_session: AsyncSession,
 ) -> None:
-    job, stage, notes = await _seed_job_with_notes(db_session, note_count=1)
+    job, stage, notes = await _seed_job_with_notes(db_session, note_count=1, concept_count=2)
     mock_publisher = AsyncMock(spec=EventPublisher)
 
     inbound = build_research_task_completed_event(
@@ -137,7 +162,7 @@ async def test_process_research_task_completed_writes_report_and_completes_job(
     result = await process_research_task_completed(db_session, mock_publisher, inbound)
 
     assert result is not None
-    assert result.payload.note_count == MOCK_RESEARCH_TASK_COUNT
+    assert result.payload.note_count == 1
     mock_publisher.publish.assert_awaited_once()
 
     await db_session.refresh(stage)
@@ -162,7 +187,7 @@ async def test_process_research_task_completed_writes_report_and_completes_job(
 async def test_process_research_task_completed_skips_duplicate_trigger(
     db_session: AsyncSession,
 ) -> None:
-    job, _, notes = await _seed_job_with_notes(db_session)
+    job, _, notes = await _seed_job_with_notes(db_session, concept_count=2)
     mock_publisher = AsyncMock(spec=EventPublisher)
 
     first = build_research_task_completed_event(
@@ -191,7 +216,7 @@ async def test_process_research_task_completed_skips_duplicate_trigger(
 async def test_process_research_task_completed_is_idempotent_for_same_event(
     db_session: AsyncSession,
 ) -> None:
-    job, _, notes = await _seed_job_with_notes(db_session)
+    job, _, notes = await _seed_job_with_notes(db_session, concept_count=2)
     mock_publisher = AsyncMock(spec=EventPublisher)
     inbound = build_research_task_completed_event(
         job_id=job.id,

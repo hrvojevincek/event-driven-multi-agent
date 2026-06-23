@@ -4,6 +4,7 @@ from eventforge.db.models import Job, JobStageName, JobStatus, ResearchNote, Syn
 from eventforge.db.repositories import (
     JobRepository,
     JobStageRepository,
+    KnowledgeEntityRepository,
     ProcessedEventRepository,
     ResearchNoteRepository,
     SynthesisReportRepository,
@@ -12,13 +13,13 @@ from eventforge.events.deterministic import deterministic_event_id
 from eventforge.events.publisher import EVENT_SOURCE_SYNTHESIS, EventPublisher, EventPublishError
 from eventforge.events.schemas import (
     DETAIL_TYPE_SYNTHESIS_COMPLETED,
-    MOCK_RESEARCH_TASK_COUNT,
     WORKER_NAME_SYNTHESIS,
     ResearchTaskCompletedEvent,
     SynthesisCompletedEvent,
     build_synthesis_completed_event,
 )
 from eventforge.events.schemas.constants import DETAIL_TYPE_RESEARCH_TASK_COMPLETED
+from eventforge.services.knowledge import expected_research_task_count
 
 
 def _mock_report_content(job: Job, notes: list[ResearchNote]) -> str:
@@ -70,14 +71,17 @@ async def process_research_task_completed(
     job_repo = JobRepository(session)
     stage_repo = JobStageRepository(session)
     note_repo = ResearchNoteRepository(session)
+    entity_repo = KnowledgeEntityRepository(session)
 
     job = await job_repo.get_by_id(event.job_id)
     if job is None:
         msg = f"Job not found for synthesis: {event.job_id}"
         raise ValueError(msg)
 
+    entities = await entity_repo.list_by_job_id(job.id)
+    expected_tasks = expected_research_task_count(entities)
     note_count = await note_repo.count_by_job_id(job.id)
-    if note_count < MOCK_RESEARCH_TASK_COUNT:
+    if expected_tasks == 0 or note_count < expected_tasks:
         await processed_repo.release_claim(event_id, WORKER_NAME_SYNTHESIS)
         await session.commit()
         return None
