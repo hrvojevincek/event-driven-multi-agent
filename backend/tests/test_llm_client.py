@@ -124,6 +124,38 @@ async def test_llm_client_logs_usage_when_session_bound(
 
 
 @pytest.mark.asyncio
+async def test_llm_client_returns_result_when_logging_fails(
+    db_session: AsyncSession,
+    llm_settings: Settings,
+) -> None:
+    mock_result = LLMCompletionResult(
+        content="Hello",
+        model="gpt-4o-mini",
+        input_tokens=10,
+        output_tokens=5,
+        cost_usd=Decimal("0.0000045"),
+    )
+
+    client = LLMClient(settings=llm_settings, session=db_session)
+    with patch.object(
+        client,
+        "_get_provider",
+        return_value=AsyncMock(complete=AsyncMock(return_value=mock_result)),
+    ), patch.object(
+        LLMUsageRepository,
+        "log",
+        new=AsyncMock(side_effect=RuntimeError("db unavailable")),
+    ):
+        result = await client.complete(
+            [LLMMessage(role="user", content="Hi")],
+            job_id=uuid.uuid4(),
+            agent_name="research",
+        )
+
+    assert result.content == "Hello"
+
+
+@pytest.mark.asyncio
 async def test_llm_client_routes_to_anthropic_model(llm_settings: Settings) -> None:
     mock_result = LLMCompletionResult(
         content="Claude says hi",

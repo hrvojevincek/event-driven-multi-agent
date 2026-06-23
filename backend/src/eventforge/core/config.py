@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     tavily_api_key: str = ""
     llm_default_model: str = "gpt-4o-mini"
+    llm_max_output_tokens: int = 4096
     llm_model_pricing: dict[str, ModelPricing] = Field(
         default_factory=lambda: DEFAULT_MODEL_PRICING.copy()
     )

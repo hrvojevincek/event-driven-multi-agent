@@ -11,5 +11,6 @@ class LLMProvider(Protocol):
         messages: list[LLMMessage],
         *,
         model: str,
+        max_tokens: int | None = None,
     ) -> LLMCompletionResult:
         ...

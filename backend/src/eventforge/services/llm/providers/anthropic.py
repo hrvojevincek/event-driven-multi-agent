@@ -1,7 +1,11 @@
+import logging
+
 from anthropic import AsyncAnthropic
 
 from eventforge.core.config import Settings
 from eventforge.services.llm.types import LLMCompletionResult, LLMMessage
+
+logger = logging.getLogger(__name__)
 
 
 class AnthropicProvider:
@@ -19,18 +23,23 @@ class AnthropicProvider:
         messages: list[LLMMessage],
         *,
         model: str,
+        max_tokens: int | None = None,
     ) -> LLMCompletionResult:
         system_prompt: str | None = None
         anthropic_messages: list[dict[str, str]] = []
         for message in messages:
             if message.role == "system":
+                if system_prompt is not None:
+                    msg = "Anthropic provider supports at most one system message"
+                    raise ValueError(msg)
                 system_prompt = message.content
                 continue
             anthropic_messages.append({"role": message.role, "content": message.content})
 
+        resolved_max_tokens = max_tokens or self._settings.llm_max_output_tokens
         kwargs: dict = {
             "model": model,
-            "max_tokens": 4096,
+            "max_tokens": resolved_max_tokens,
             "messages": anthropic_messages,
         }
         if system_prompt is not None:

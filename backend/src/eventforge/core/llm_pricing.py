@@ -1,6 +1,9 @@
+import logging
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class ModelPricing(BaseModel):
@@ -43,6 +46,10 @@ def compute_cost_usd(
     """Calculate USD cost from a model pricing table."""
     pricing = pricing_table.get(model)
     if pricing is None:
+        logger.warning(
+            "Missing LLM pricing for model; cost will be recorded as zero",
+            extra={"model": model},
+        )
         return Decimal("0")
 
     million = Decimal("1000000")

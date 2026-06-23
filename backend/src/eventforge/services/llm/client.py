@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,8 @@ from eventforge.services.llm.providers.anthropic import AnthropicProvider
 from eventforge.services.llm.providers.base import LLMProvider
 from eventforge.services.llm.providers.openai import OpenAIProvider
 from eventforge.services.llm.types import LLMCompletionResult, LLMMessage
+
+logger = logging.getLogger(__name__)
 
 
 class LLMClient:
@@ -29,21 +32,36 @@ class LLMClient:
         job_id: uuid.UUID,
         agent_name: str,
         model: str | None = None,
+        max_tokens: int | None = None,
     ) -> LLMCompletionResult:
         resolved_model = model or self._settings.llm_default_model
         provider_name = self._settings.resolve_llm_provider(resolved_model)
         provider = self._get_provider(provider_name)
-        result = await provider.complete(messages, model=resolved_model)
+        result = await provider.complete(
+            messages,
+            model=resolved_model,
+            max_tokens=max_tokens,
+        )
 
         if self._session is not None:
-            await LLMUsageRepository(self._session).log(
-                job_id=job_id,
-                agent_name=agent_name,
-                model=result.model,
-                input_tokens=result.input_tokens,
-                output_tokens=result.output_tokens,
-                cost_usd=result.cost_usd,
-            )
+            try:
+                await LLMUsageRepository(self._session).log(
+                    job_id=job_id,
+                    agent_name=agent_name,
+                    model=result.model,
+                    input_tokens=result.input_tokens,
+                    output_tokens=result.output_tokens,
+                    cost_usd=result.cost_usd,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to log LLM usage; returning completion result",
+                    extra={
+                        "job_id": str(job_id),
+                        "agent_name": agent_name,
+                        "model": result.model,
+                    },
+                )
 
         return result
 
