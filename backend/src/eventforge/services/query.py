@@ -4,7 +4,12 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from eventforge.api.schemas.queries import JobStageResponse, QueryDetailResponse
+from eventforge.api.schemas.queries import (
+    JobStageResponse,
+    QueryDetailResponse,
+    QuerySummaryResponse,
+    SynthesisReportResponse,
+)
 from eventforge.db.models import Job, JobStage, JobStageName, JobStatus, StageStatus
 from eventforge.db.repositories import JobRepository, ProcessedEventRepository, UserRepository
 from eventforge.events.publisher import PUBLISHER_WORKER_NAME, EventPublisher
@@ -81,8 +86,28 @@ async def submit_query(
 _STAGE_ORDER = {stage.value: index for index, stage in enumerate(JobStageName)}
 
 
+def _job_to_summary_response(job: Job) -> QuerySummaryResponse:
+    return QuerySummaryResponse(
+        job_id=job.id,
+        correlation_id=job.correlation_id,
+        topic=job.topic,
+        depth=job.depth,
+        status=job.status,
+        max_sources=job.max_sources,
+        created_at=job.created_at,
+        updated_at=job.updated_at,
+    )
+
+
 def _job_to_detail_response(job: Job) -> QueryDetailResponse:
     stages = sorted(job.stages, key=lambda stage: _STAGE_ORDER.get(stage.stage, len(_STAGE_ORDER)))
+    synthesis_report = None
+    if job.synthesis_report is not None:
+        synthesis_report = SynthesisReportResponse(
+            id=job.synthesis_report.id,
+            content=job.synthesis_report.content,
+            created_at=job.synthesis_report.created_at,
+        )
     return QueryDetailResponse(
         job_id=job.id,
         correlation_id=job.correlation_id,
@@ -103,7 +128,14 @@ def _job_to_detail_response(job: Job) -> QueryDetailResponse:
             )
             for stage in stages
         ],
+        synthesis_report=synthesis_report,
     )
+
+
+async def list_queries(session: AsyncSession) -> list[QuerySummaryResponse]:
+    user = await UserRepository(session).get_or_create_mock_user()
+    jobs = await JobRepository(session).list_by_user_id(user.id)
+    return [_job_to_summary_response(job) for job in jobs]
 
 
 async def get_query_detail(session: AsyncSession, job_id: uuid.UUID) -> QueryDetailResponse | None:

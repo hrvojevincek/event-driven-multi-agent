@@ -79,9 +79,9 @@ save_issue(id: "KRE-122", state: "Done")
 Done:   KRE-118 → KRE-120 → KRE-123 → KRE-125 → KRE-122 → KRE-129 → KRE-130 → KRE-131 → KRE-132
         + all stub workers + E2E smoke test + KRE-134 (DLQ redrive) + KRE-135 (pipeline.failed)
 
-Next:   Phase 3 SSE/React Flow — or Phase 1 frontend (KRE-119) — or GET /api/v1/queries list
+Next:   Phase 3 SSE/React Flow — or Phase 1 frontend (KRE-119)
 
-Parallel (optional): KRE-127 backend ruff job only | GET /api/v1/queries list
+Parallel (optional): pytest in CI (commented in ci.yml)
 
 Defer:  KRE-119 → KRE-121 → KRE-124 → KRE-126 → KRE-128 (Phase 1 full-stack exit)
 ```

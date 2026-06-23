@@ -26,6 +26,23 @@ class JobStageResponse(BaseModel):
     error_detail: str | None
 
 
+class SynthesisReportResponse(BaseModel):
+    id: UUID
+    content: str
+    created_at: datetime
+
+
+class QuerySummaryResponse(BaseModel):
+    job_id: UUID
+    correlation_id: str
+    topic: str
+    depth: str
+    status: str
+    max_sources: int | None
+    created_at: datetime
+    updated_at: datetime
+
+
 class QueryDetailResponse(BaseModel):
     job_id: UUID
     correlation_id: str
@@ -36,3 +53,4 @@ class QueryDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     stages: list[JobStageResponse]
+    synthesis_report: SynthesisReportResponse | None = None

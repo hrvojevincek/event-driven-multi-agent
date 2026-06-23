@@ -74,7 +74,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [ ] OpenAPI spec generation from FastAPI — KRE-126
 - [ ] `openapi-typescript` codegen in frontend — KRE-126
 - [x] Event envelope + `query.submitted` JSON schemas (mini-122) — KRE-122
-- [ ] CI lint workflow (ruff + eslint) — KRE-127
+- [x] CI lint workflow (ruff; eslint when frontend exists) — KRE-127
 
 **Phase 1 exit criteria:** `make dev` runs full stack; health endpoints return 200; frontend renders placeholder UI. → [KRE-128](https://linear.app/kreativbiro/issue/KRE-128)
 
@@ -99,7 +99,8 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 ### 2.1 API & Data Layer
 
 - [x] `GET /api/v1/queries/{id}` — job detail with stages
-- [ ] `GET /api/v1/queries` — list user queries (mock user for now)
+- [x] `GET /api/v1/queries` — list user queries (mock user for now)
+- [x] Include synthesis report on `GET /api/v1/queries/{id}` when available
 
 ### 2.2 Workers (Stub Agents)
 
@@ -280,6 +281,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2 core pipeline complete (E2E + DLQ + `pipeline.failed`). Next: Phase 3 SSE/React Flow, or Phase 1 frontend ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119)), or `GET /api/v1/queries` list.
+**Backend-first track:** Phase 2 core pipeline complete (E2E + DLQ + `pipeline.failed`). Phase 2.1 API polish done (list + synthesis on detail). Next: Phase 3 SSE/React Flow, or Phase 1 frontend ([KRE-119](https://linear.app/kreativbiro/issue/KRE-119)).
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

@@ -6,12 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from eventforge.api.deps import get_db, get_settings
 from eventforge.api.schemas.queries import (
     QueryDetailResponse,
+    QuerySummaryResponse,
     SubmitQueryRequest,
     SubmitQueryResponse,
 )
 from eventforge.core.config import Settings
 from eventforge.events.publisher import EventPublisher, EventPublishError
-from eventforge.services.query import get_query_detail, submit_query
+from eventforge.services.query import get_query_detail, list_queries, submit_query
 
 router = APIRouter()
 
@@ -46,6 +47,16 @@ async def create_query(
         ) from exc
 
     return SubmitQueryResponse(job_id=result.job_id, correlation_id=result.correlation_id)
+
+
+@router.get(
+    "/queries",
+    response_model=list[QuerySummaryResponse],
+)
+async def list_user_queries(
+    db: AsyncSession = Depends(get_db),
+) -> list[QuerySummaryResponse]:
+    return await list_queries(db)
 
 
 @router.get(

@@ -12,7 +12,7 @@ from eventforge.api.deps import get_db
 from eventforge.api.routes.queries import get_publisher
 from eventforge.core.aws import BOTO_CONNECT_TIMEOUT_SECONDS, BOTO_READ_TIMEOUT_SECONDS
 from eventforge.core.config import get_settings
-from eventforge.db.models import Job, JobStageName, ProcessedEvent
+from eventforge.db.models import Job, JobStageName, ProcessedEvent, SynthesisReport
 from eventforge.db.repositories import JobRepository, ProcessedEventRepository
 from eventforge.db.session import reset_engine
 from eventforge.events.publisher import (
@@ -208,6 +208,71 @@ async def test_get_query_returns_404_for_unknown_job(client: AsyncClient) -> Non
     response = await client.get(f"/api/v1/queries/{uuid.uuid4()}")
     assert response.status_code == 404
     assert response.json()["detail"] == "Job not found"
+
+
+async def test_list_queries_returns_mock_user_jobs(client: AsyncClient) -> None:
+    first = await client.post(
+        "/api/v1/queries",
+        json={"topic": "First list item", "depth": "standard"},
+    )
+    second = await client.post(
+        "/api/v1/queries",
+        json={"topic": "Second list item", "depth": "deep"},
+    )
+    assert first.status_code == 201
+    assert second.status_code == 201
+
+    response = await client.get("/api/v1/queries")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) >= 2
+    assert body[0]["job_id"] == second.json()["job_id"]
+    assert body[0]["topic"] == "Second list item"
+    assert body[0]["depth"] == "deep"
+    assert body[0]["status"] == "pending"
+    assert body[1]["job_id"] == first.json()["job_id"]
+    assert body[1]["topic"] == "First list item"
+
+
+async def test_get_query_includes_synthesis_report_when_present(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    create_response = await client.post(
+        "/api/v1/queries",
+        json={"topic": "Synthesis detail test", "depth": "standard"},
+    )
+    job_id = UUID(create_response.json()["job_id"])
+
+    db_session.add(
+        SynthesisReport(
+            job_id=job_id,
+            content="# Mock report\n\nFindings here.",
+        )
+    )
+    await db_session.flush()
+
+    response = await client.get(f"/api/v1/queries/{job_id}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["synthesis_report"] is not None
+    assert body["synthesis_report"]["content"] == "# Mock report\n\nFindings here."
+    assert UUID(body["synthesis_report"]["id"])
+
+
+async def test_get_query_synthesis_report_null_when_absent(client: AsyncClient) -> None:
+    create_response = await client.post(
+        "/api/v1/queries",
+        json={"topic": "No synthesis yet", "depth": "standard"},
+    )
+    job_id = create_response.json()["job_id"]
+
+    response = await client.get(f"/api/v1/queries/{job_id}")
+
+    assert response.status_code == 200
+    assert response.json()["synthesis_report"] is None
 
 
 async def test_submit_query_returns_502_when_publish_fails(
