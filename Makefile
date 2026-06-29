@@ -1,4 +1,4 @@
-.PHONY: help dev down logs seed test lint hooks lint-backend lint-backend-fix verify-e2e verify-dlq workers workers-overmind
+.PHONY: help dev down logs seed test lint hooks lint-backend lint-backend-fix verify-e2e verify-dlq workers workers-overmind export-openapi codegen openapi
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -43,3 +43,11 @@ lint-backend: ## Run backend ruff locally (no docker)
 
 lint-backend-fix: ## Auto-fix backend ruff issues (matches pre-commit)
 	uv run --project backend ruff check --fix --config backend/pyproject.toml backend/
+
+export-openapi: ## Export FastAPI OpenAPI spec to shared/openapi/
+	./scripts/export-openapi.sh
+
+codegen: export-openapi ## Generate frontend TypeScript types from OpenAPI spec
+	cd frontend && npm run codegen
+
+openapi: codegen ## Regenerate OpenAPI spec + frontend types (alias)

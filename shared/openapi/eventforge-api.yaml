@@ -1,0 +1,421 @@
+openapi: 3.1.0
+info:
+  title: EventForge API
+  version: 0.1.0
+paths:
+  /health:
+    get:
+      tags:
+      - health
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health Health Get
+  /health/ready:
+    get:
+      tags:
+      - health
+      summary: Health Ready
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Health Ready Health Ready Get
+  /api/v1/queries:
+    get:
+      tags:
+      - api
+      summary: List User Queries
+      operationId: list_user_queries_api_v1_queries_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/QuerySummaryResponse'
+                type: array
+                title: Response List User Queries Api V1 Queries Get
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - api
+      summary: Create Query
+      operationId: create_query_api_v1_queries_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitQueryRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitQueryResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/queries/{job_id}:
+    get:
+      tags:
+      - api
+      summary: Get Query
+      operationId: get_query_api_v1_queries__job_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/:
+    get:
+      tags:
+      - api
+      summary: Api V1 Root
+      operationId: api_v1_root_api_v1__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Api V1 Root Api V1  Get
+components:
+  schemas:
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JobStageResponse:
+      properties:
+        stage:
+          type: string
+          title: Stage
+        status:
+          type: string
+          title: Status
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Completed At
+        duration_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration Ms
+        error_detail:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error Detail
+      type: object
+      required:
+      - stage
+      - status
+      - started_at
+      - completed_at
+      - duration_ms
+      - error_detail
+      title: JobStageResponse
+      description: One pipeline stage and its execution status.
+    LLMUsageCallResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        agent_name:
+          type: string
+          title: Agent Name
+        model:
+          type: string
+          title: Model
+        input_tokens:
+          type: integer
+          title: Input Tokens
+        output_tokens:
+          type: integer
+          title: Output Tokens
+        cost_usd:
+          type: number
+          title: Cost Usd
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - agent_name
+      - model
+      - input_tokens
+      - output_tokens
+      - cost_usd
+      - created_at
+      title: LLMUsageCallResponse
+      description: One logged LLM call for a job.
+    LLMUsageSummaryResponse:
+      properties:
+        total_cost_usd:
+          type: number
+          title: Total Cost Usd
+        calls:
+          items:
+            $ref: '#/components/schemas/LLMUsageCallResponse'
+          type: array
+          title: Calls
+      type: object
+      required:
+      - total_cost_usd
+      - calls
+      title: LLMUsageSummaryResponse
+      description: Aggregated LLM cost and per-call breakdown for a job.
+    QueryDepth:
+      type: string
+      enum:
+      - quick
+      - standard
+      - deep
+      title: QueryDepth
+      description: Research depth preset controlling source count and thoroughness.
+    QueryDetailResponse:
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          title: Job Id
+        correlation_id:
+          type: string
+          title: Correlation Id
+        topic:
+          type: string
+          title: Topic
+        depth:
+          type: string
+          title: Depth
+        status:
+          type: string
+          title: Status
+        max_sources:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Sources
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        stages:
+          items:
+            $ref: '#/components/schemas/JobStageResponse'
+          type: array
+          title: Stages
+        synthesis_report:
+          anyOf:
+          - $ref: '#/components/schemas/SynthesisReportResponse'
+          - type: 'null'
+        llm_usage:
+          $ref: '#/components/schemas/LLMUsageSummaryResponse'
+      type: object
+      required:
+      - job_id
+      - correlation_id
+      - topic
+      - depth
+      - status
+      - max_sources
+      - created_at
+      - updated_at
+      - stages
+      - llm_usage
+      title: QueryDetailResponse
+      description: Full job detail including stages and optional synthesis report.
+    QuerySummaryResponse:
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          title: Job Id
+        correlation_id:
+          type: string
+          title: Correlation Id
+        topic:
+          type: string
+          title: Topic
+        depth:
+          type: string
+          title: Depth
+        status:
+          type: string
+          title: Status
+        max_sources:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Sources
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - job_id
+      - correlation_id
+      - topic
+      - depth
+      - status
+      - max_sources
+      - created_at
+      - updated_at
+      title: QuerySummaryResponse
+      description: Lightweight job summary for list endpoints.
+    SubmitQueryRequest:
+      properties:
+        topic:
+          type: string
+          minLength: 1
+          title: Topic
+        depth:
+          $ref: '#/components/schemas/QueryDepth'
+          default: standard
+        max_sources:
+          anyOf:
+          - type: integer
+            maximum: 100.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Sources
+      type: object
+      required:
+      - topic
+      title: SubmitQueryRequest
+      description: HTTP body for POST /api/v1/queries.
+    SubmitQueryResponse:
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          title: Job Id
+        correlation_id:
+          type: string
+          title: Correlation Id
+      type: object
+      required:
+      - job_id
+      - correlation_id
+      title: SubmitQueryResponse
+      description: HTTP response after a query is accepted into the pipeline.
+    SynthesisReportResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        content:
+          type: string
+          title: Content
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - content
+      - created_at
+      title: SynthesisReportResponse
+      description: Final report produced by the synthesis stage.
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

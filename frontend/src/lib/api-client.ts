@@ -1,3 +1,5 @@
+import type { paths } from "@/types/api";
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -55,9 +57,8 @@ export async function apiFetch<T>(
   return parseJson<T>(response);
 }
 
-export type HealthResponse = {
-  status: string;
-};
+export type HealthResponse =
+  paths["/health"]["get"]["responses"][200]["content"]["application/json"];
 
 export async function getHealth(): Promise<HealthResponse> {
   return apiFetch<HealthResponse>("/health");

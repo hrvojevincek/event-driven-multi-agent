@@ -24,7 +24,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 
 ## Where things stand
 
-**Strategy:** Backend MVP complete (Phase 3). **Phase 4 frontend** underway — scaffold, layout, API client, and Docker Compose are live; typed OpenAPI codegen and React Flow come next.
+**Strategy:** Backend MVP complete (Phase 3). **Phase 4 frontend** underway — scaffold through OpenAPI codegen done; React Flow + SSE next.
 
 | Phase | Focus                                                                         | Status                                                                                                                                                                                           |
 | ----- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -32,7 +32,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 | **1** | FastAPI backend, health checks, SQLAlchemy, Alembic                           | ✅ Done                                                                                                                                                                                          |
 | **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done                                                                                                                                                                                          |
 | **3** | **Real AI** — full agent pipeline, cost API, resilience, Cognito auth         | ✅ **Complete**                                                                                                                                                                                  |
-| **4** | Next.js UI, SSE live updates, React Flow visualization, Cognito               | **In progress** — [KRE-119](https://linear.app/kreativbiro/issue/KRE-119) · [KRE-121](https://linear.app/kreativbiro/issue/KRE-121) · [KRE-124](https://linear.app/kreativbiro/issue/KRE-124) ✅ |
+| **4** | Next.js UI, SSE live updates, React Flow visualization, Cognito               | **In progress** — KRE-119 · KRE-121 · KRE-124 · [KRE-126](https://linear.app/kreativbiro/issue/KRE-126) ✅ |
 | **5** | AWS deploy (Terraform, ECS, Step Functions fan-out)                           | Planned                                                                                                                                                                                          |
 | **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard                        | Planned                                                                                                                                                                                          |
 
@@ -67,7 +67,8 @@ POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GE
 | Next.js scaffold (App Router, Tailwind, shadcn/ui)                   | ✅ [KRE-119](https://linear.app/kreativbiro/issue/KRE-119)                                                                                |
 | App shell + placeholder pages (`/`, `/queries/new`, `/queries/[id]`) | ✅ [KRE-121](https://linear.app/kreativbiro/issue/KRE-121)                                                                                |
 | API client + Docker Compose frontend service                         | ✅ [KRE-124](https://linear.app/kreativbiro/issue/KRE-124)                                                                                |
-| OpenAPI codegen + live React Flow dashboard                          | ⬜ [KRE-126](https://linear.app/kreativbiro/issue/KRE-126) onward                                                                         |
+| OpenAPI codegen (`shared/openapi` → `src/types/api.ts`)         | ✅ [KRE-126](https://linear.app/kreativbiro/issue/KRE-126)                                                              |
+| Live React Flow dashboard + SSE                                 | ⬜ Phase 4.1+                                                                                                           |
 
 **Smoke test:** `./scripts/verify-pipeline-e2e.sh` or `make verify-e2e` (API + all workers; real LLM run ~2–3 min with one research worker)
 
@@ -112,7 +113,7 @@ Full diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | **Data**                 | Postgres 16 + pgvector                                                                                                           |
 | **LLM**                  | OpenAI + Anthropic client; Tavily search; OpenAI embeddings; RAG; cited synthesis                                                |
 | **Resilience**           | Exponential backoff retries, per-provider circuit breakers, optional `JOB_MAX_COST_USD`                                          |
-| **Frontend** _(Phase 4)_ | Next.js 16 App Router, Tailwind v4, shadcn/ui — scaffold + layout + fetch api-client ✅; OpenAPI codegen + React Flow + SSE next |
+| **Frontend** _(Phase 4)_ | Next.js 16, shadcn/ui, fetch api-client, OpenAPI codegen ✅; React Flow + SSE next |
 | **Auth** _(Phase 3–4)_   | Cognito JWT → FastAPI ✅ (backend); Cognito Hosted UI in Next.js → Phase 4                                                       |
 | **IaC** _(Phase 5)_      | Terraform                                                                                                                        |
 | **Local**                | Docker Compose + LocalStack                                                                                                      |
@@ -225,7 +226,8 @@ event-driven/
     └── src/
         ├── app/              # /, /queries/new, /queries/[id]
         ├── components/       # layout shell, shadcn/ui, health badge
-        └── lib/api-client.ts # fetch wrapper → NEXT_PUBLIC_API_URL
+        ├── lib/api-client.ts # fetch wrapper → NEXT_PUBLIC_API_URL
+        └── types/api.ts      # generated from OpenAPI (npm run codegen)
 ```
 
 ---

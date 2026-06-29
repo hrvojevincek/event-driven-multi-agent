@@ -59,7 +59,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 → [KRE-126](https://linear.app/kreativbiro/issue/KRE-126) · [KRE-122](https://linear.app/kreativbiro/issue/KRE-122) · [KRE-127](https://linear.app/kreativbiro/issue/KRE-127) · [KRE-128](https://linear.app/kreativbiro/issue/KRE-128)
 
-- [ ] OpenAPI spec generation from FastAPI — KRE-126 (frontend codegen deferred to Phase 4)
+- [x] OpenAPI spec generation from FastAPI — KRE-126
 - [x] Event envelope + `query.submitted` JSON schemas (mini-122) — KRE-122
 - [x] CI lint workflow (ruff; eslint when frontend exists) — KRE-127
 
@@ -153,7 +153,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] Basic layout: header, sidebar, main content area — KRE-121
 - [x] Placeholder pages: `/` (home), `/queries/new`, `/queries/[id]` — KRE-121
 - [x] API client setup with env-based `NEXT_PUBLIC_API_URL` — KRE-124
-- [ ] `openapi-typescript` codegen from backend OpenAPI — KRE-126
+- [x] `openapi-typescript` codegen from backend OpenAPI — KRE-126
 - [x] Dockerfile for frontend — KRE-124
 - [x] Uncomment frontend service in `docker-compose.yml` — KRE-124
 - [ ] Phase 4 full-stack integration smoke test — KRE-128
@@ -287,6 +287,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2 complete. **Phase 3 complete** — KRE-139–147 done including KRE-146 (Cognito JWT auth). **Phase 4 in progress** — KRE-119 + KRE-121 + KRE-124 done; next [KRE-126](https://linear.app/kreativbiro/issue/KRE-126) (OpenAPI codegen).
+**Backend-first track:** Phase 2 complete. **Phase 3 complete**. **Phase 4 in progress** — KRE-119 + KRE-121 + KRE-124 + KRE-126 done; next [KRE-128](https://linear.app/kreativbiro/issue/KRE-128) (full-stack smoke test) or Phase 4.1 SSE.
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`
