@@ -211,15 +211,15 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 5.1 Infrastructure (Terraform)
 
-- [ ] `modules/networking` — VPC, subnets, security groups
+- [x] `modules/networking` — VPC, subnets, security groups → [KRE-156](https://linear.app/kreativbiro/issue/KRE-156)
+- [x] `modules/ecs` — ECR, cluster, ALB, API + worker + frontend Fargate services → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
 - [ ] `modules/rds` — Postgres with backups
 - [ ] `modules/eventbridge` — event bus + rules
 - [ ] `modules/sqs` — queues + DLQ + redrive
 - [ ] `modules/step-functions` — research fan-out workflow
-- [ ] `modules/ecs` — API + worker services (Fargate)
 - [ ] `modules/observability` — CloudWatch, ADOT
 - [ ] `modules/cognito` — user pool, app client, callback URLs
-- [ ] `environments/dev` — compose modules
+- [x] `environments/dev` — compose modules (networking + ecs) → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
 - [ ] Secrets Manager for API keys
 
 ### 5.2 CI/CD
@@ -227,7 +227,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [ ] GitHub Actions: lint + test on PR
 - [ ] Docker build + push to ECR
 - [ ] Terraform plan on PR, apply on merge to main
-- [ ] Frontend deploy to Vercel (or S3 + CloudFront)
+- [ ] Frontend deploy to ECS (same ALB as API) or CloudFront
 
 ### 5.3 Step Functions
 

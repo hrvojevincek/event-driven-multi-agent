@@ -1,0 +1,38 @@
+# Copy to terraform.tfvars and fill in before terraform apply.
+# Do not commit terraform.tfvars (gitignored).
+
+aws_region         = "eu-west-2"
+single_nat_gateway = true
+
+# After first ECR push (or use module output URLs + :latest):
+# backend_image  = "123456789012.dkr.ecr.eu-west-2.amazonaws.com/eventforge-dev-backend:latest"
+# frontend_image = "123456789012.dkr.ecr.eu-west-2.amazonaws.com/eventforge-dev-frontend:latest"
+backend_image  = "REPLACE_AFTER_ECR_PUSH"
+frontend_image = "REPLACE_AFTER_ECR_PUSH"
+
+# From modules/rds (next PR):
+postgres_host = "REPLACE_RDS_ENDPOINT"
+
+# From Secrets Manager:
+postgres_password_secret_arn = "arn:aws:secretsmanager:eu-west-2:ACCOUNT:secret:eventforge/dev/postgres-password"
+openai_api_key_secret_arn    = "arn:aws:secretsmanager:eu-west-2:ACCOUNT:secret:eventforge/dev/openai-api-key"
+tavily_api_key_secret_arn    = "arn:aws:secretsmanager:eu-west-2:ACCOUNT:secret:eventforge/dev/tavily-api-key"
+
+# From modules/eventbridge + modules/sqs (next PR):
+event_bus_arn = "arn:aws:events:eu-west-2:ACCOUNT:event-bus/eventforge-bus"
+worker_queue_arns = [
+  # "arn:aws:sqs:eu-west-2:ACCOUNT:eventforge-ingestion",
+  # "arn:aws:sqs:eu-west-2:ACCOUNT:eventforge-embedding",
+  # ...
+]
+
+# From modules/cognito (next PR):
+cognito_user_pool_id  = "eu-west-2_XXXXXXXXX"
+cognito_app_client_id = "your-app-client-id"
+auth_disabled         = false
+
+# After ALB is created, set CORS to your app URL:
+# cors_origins = "[\"http://eventforge-dev-alb-123456789.eu-west-2.elb.amazonaws.com\"]"
+
+# Optional TLS:
+# acm_certificate_arn = "arn:aws:acm:eu-west-2:ACCOUNT:certificate/..."

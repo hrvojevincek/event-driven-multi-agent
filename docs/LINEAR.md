@@ -13,20 +13,28 @@
 
 ## Latest progress (2026-06-30)
 
+**Phase 5 started** — Terraform networking + ECS modules, ADR-012 all-in-AWS ECS Fargate ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156), [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)).
+
+| Done (Phase 5 — partial)                              | Next                        |
+| ----------------------------------------------------- | --------------------------- |
+| [KRE-156](https://linear.app/kreativbiro/issue/KRE-156) Terraform `modules/networking` | **RDS** `modules/rds`       |
+| [KRE-157](https://linear.app/kreativbiro/issue/KRE-157) Terraform `modules/ecs` + `environments/dev` | SQS + EventBridge + Cognito |
+| ADR-012 all-in-AWS ECS deployment decision            | Step Functions, CI/CD       |
+
 **Phase 4 complete** — [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) local OTEL (SDK, collector, Jaeger).
 
-| Done (Phase 4)                                        | Next                   |
-| ----------------------------------------------------- | ---------------------- |
-| KRE-119 Next.js + Tailwind + shadcn                   | **Phase 5** AWS deploy |
-| KRE-121 layout + placeholder pages                    |                        |
-| KRE-124 API client + Dockerfile + compose             |                        |
-| KRE-126 OpenAPI → TypeScript codegen                  |                        |
-| KRE-128 full-stack smoke test (`verify-fullstack.sh`) |                        |
-| KRE-151 SSE + `useJobStream`                          |                        |
-| KRE-152 React Flow pipeline visualization             |                        |
-| KRE-153 Dashboard UI + TanStack Query                 |                        |
-| KRE-154 Cognito UI (Amplify Auth)                     |                        |
-| KRE-155 OTEL local — SDK, collector, Jaeger           |                        |
+| Done (Phase 4)                                        |
+| ----------------------------------------------------- |
+| KRE-119 Next.js + Tailwind + shadcn                   |
+| KRE-121 layout + placeholder pages                    |
+| KRE-124 API client + Dockerfile + compose             |
+| KRE-126 OpenAPI → TypeScript codegen                  |
+| KRE-128 full-stack smoke test (`verify-fullstack.sh`) |
+| KRE-151 SSE + `useJobStream`                          |
+| KRE-152 React Flow pipeline visualization             |
+| KRE-153 Dashboard UI + TanStack Query                 |
+| KRE-154 Cognito UI (Amplify Auth)                     |
+| KRE-155 OTEL local — SDK, collector, Jaeger           |
 
 **Phase 3 complete** — real AI pipeline + Cognito JWT auth verified end-to-end.
 
@@ -55,7 +63,8 @@ save_issue(id: "KRE-122", state: "Done")
 | Phase 1 — Scaffolding   | Backend complete; frontend → Phase 4                                         |
 | Phase 2 — Core Pipeline | Complete (stub agents + E2E)                                                 |
 | Phase 3 — Real AI       | **Complete** — KRE-139–147 (real agents + Cognito auth + resilience)         |
-| Phase 4 — Frontend      | **Complete** — KRE-151–154 ✅; Phase 4.5 ✅ OTEL local; next **Phase 5** AWS |
+| Phase 4 — Frontend      | **Complete** — KRE-151–155 ✅ |
+| Phase 5 — AWS Deploy    | **In progress** — networking + ECS modules ✅; RDS/SQS/Cognito next |
 
 ## Issue index (Phase 0 + 1)
 
@@ -133,6 +142,15 @@ Also see deferred infra/reliability: KRE-136 (outbox), KRE-137, KRE-138.
 | EF-038 | [KRE-154](https://linear.app/kreativbiro/issue/KRE-154) | Cognito UI — Amplify Auth, Bearer token (Phase 4.4)   | 5        | KRE-153    |
 | EF-039 | [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) | Local OTEL — SDK, collector, Jaeger (Phase 4.5)       | 5        | KRE-154    |
 
+## Issue index (Phase 5 — AWS deployment)
+
+| ID     | Linear                                                  | Title                                                 | Estimate | Blocked by |
+| ------ | ------------------------------------------------------- | ----------------------------------------------------- | -------- | ---------- |
+| EF-040 | [KRE-156](https://linear.app/kreativbiro/issue/KRE-156) | Terraform `modules/networking` — VPC, NAT, SG         | —        | —          |
+| EF-041 | [KRE-157](https://linear.app/kreativbiro/issue/KRE-157) | Terraform `modules/ecs` — ECR, ALB, Fargate services  | —        | KRE-156    |
+
+> **Next (not yet in Linear):** `modules/rds`, `modules/sqs`, `modules/eventbridge`, `modules/cognito`, Step Functions, CI/CD.
+
 ## Backend-first track (recommended)
 
 ```
@@ -149,8 +167,9 @@ Done:   KRE-139 (LLM client + cost tracking foundation)
         KRE-146 (Cognito JWT auth + user-scoped queries)
         KRE-147 (LLM resilience — retry, circuit breaker, cost cap)
 
-Next:   Phase 5 AWS deployment
-        Done: KRE-119 ✅ … KRE-154 ✅ KRE-155 ✅ (Phase 4 complete)
+Next:   Phase 5 AWS deployment (in progress)
+        Done: KRE-156 ✅ networking · KRE-157 ✅ ecs + environments/dev
+        Next: modules/rds → sqs/eventbridge → cognito → step-functions → CI/CD
 
 Optional: KRE-150 umbrella → KRE-148 chunking, KRE-149 richer ingestion, KRE-133 RAG eval (+ KRE-136/137/138)
 

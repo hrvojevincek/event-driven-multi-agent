@@ -323,6 +323,78 @@ Log every LLM call to `llm_usage` table: `job_id`, `agent_name`, `model`, `input
 
 ---
 
+## ADR-012: All-in-AWS Deployment on ECS Fargate
+
+**Status:** Accepted  
+**Date:** 2026-06-30
+
+### Context
+
+Phase 5 deploys EventForge from a **monorepo** (`backend/`, `frontend/`, `infra/`) to AWS. Frontend hosting options were Vercel (split cloud) vs all-in-AWS. The stack already targets EventBridge, SQS, RDS, and Cognito in **`eu-west-2`**.
+
+### Decision
+
+Deploy **all runtime services on AWS ECS Fargate** in a single VPC:
+
+| Monorepo path | Artifact | ECS services |
+|---------------|----------|--------------|
+| `backend/` | One ECR image (`eventforge-backend`) | API + 6 workers (same image, different `command`) |
+| `frontend/` | One ECR image (`eventforge-frontend`) | Next.js standalone |
+| `shared/events/` | Bundled in backend image | — |
+| `infra/terraform/` | Terraform apply | VPC, ALB, RDS, queues, etc. |
+
+**Routing:** One ALB — `/api/*` and `/health*` → API target group; default → frontend.
+
+**Networking:** Public subnets (ALB only); private subnets (ECS tasks, RDS); NAT gateway for worker egress (Tavily, OpenAI).
+
+**Secrets:** AWS Secrets Manager for DB password and API keys; injected into ECS task definitions (not in tfvars).
+
+**Migrations:** Alembic runs in API container entrypoint on deploy (same as local `docker-entrypoint.sh`). Workers override entrypoint to skip migrations.
+
+**CI/CD:** Path-filtered GitHub Actions — `backend/**` → ECR → ECS rolling update; `frontend/**` → ECR → ECS; `infra/terraform/**` → plan/apply.
+
+### Rationale
+
+- Single cloud footprint aligns with Cognito, EventBridge, and portfolio “AWS-native” story
+- Reuses existing Dockerfiles; local Compose topology maps 1:1 to ECS services
+- One backend image keeps worker deploys simple (shared code, per-service IAM still scoped by queue)
+- ALB idle timeout configurable for SSE (≥ 300s)
+
+### Trade-offs
+
+- More ops than Vercel for frontend (ALB, TLS, scaling)
+- NAT gateway cost in dev (~$32/mo per AZ; mitigated with `single_nat_gateway = true`)
+- Build-time `NEXT_PUBLIC_*` vars require CI to pass Cognito/API URL at image build
+
+### Alternatives Considered
+
+| Option | Pros | Cons | Verdict |
+|--------|------|------|---------|
+| **Vercel + AWS backend** | Fastest Next.js deploy | Split hosting | Rejected — user chose all-AWS |
+| **Lambda for workers** | Pay per invoke | Long-poll SQS awkward; cold starts | Rejected for MVP |
+| **EKS** | Full Kubernetes | Overkill for portfolio MVP | Rejected |
+
+### Terraform module order
+
+1. `networking` — VPC, subnets, NAT, security groups  
+2. `ecs` — cluster, ECR, ALB, task definitions, services  
+3. `rds`, `sqs`, `eventbridge`, `cognito`, `step-functions`, `observability` — subsequent PRs  
+4. `environments/dev` — composes modules in `eu-west-2`
+
+### Environment matrix (local → AWS)
+
+| Variable | Local | AWS dev |
+|----------|-------|---------|
+| `AWS_ENDPOINT_URL` | `http://localstack:4566` | unset |
+| `POSTGRES_HOST` | `localhost` / `postgres` | RDS endpoint (from `modules/rds`) |
+| `AUTH_DISABLED` | `true` | `false` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | local collector | ADOT sidecar / Grafana (Phase 5 observability module) |
+| `CORS_ORIGINS` | `http://localhost:3000` | `https://app.<domain>` |
+
+See `infra/terraform/environments/dev/terraform.tfvars.example` for full ECS env wiring.
+
+---
+
 ## Decision Log
 
 | ADR | Title | Status |
@@ -338,3 +410,4 @@ Log every LLM call to `llm_usage` table: `job_id`, `agent_name`, `model`, `input
 | 009 | Tavily Web Search | Accepted |
 | 010 | SSE Real-Time | Accepted |
 | 011 | LLM Cost Tracking | Accepted |
+| 012 | All-in-AWS ECS Fargate | Accepted |

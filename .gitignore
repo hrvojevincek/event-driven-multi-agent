@@ -41,11 +41,14 @@ frontend/out/
 # Docker
 docker-compose.override.yml
 
-# Terraform
+# Terraform — commit .terraform.lock.hcl; never commit state, secrets, or saved plans
 infra/terraform/**/.terraform/
+.terraform/
 infra/terraform/**/*.tfstate
 infra/terraform/**/*.tfstate.*
-infra/terraform/**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
 *.tfvars
 !*.tfvars.example
 

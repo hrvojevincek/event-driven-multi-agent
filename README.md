@@ -24,7 +24,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 
 ## Where things stand
 
-**Strategy:** Backend MVP complete (Phase 3). **Phase 4 complete** — scaffold, SSE, React Flow, dashboard, Cognito sign-in, and local OTEL ✅. **Next: Phase 5** AWS deployment.
+**Strategy:** Phases 0–4 complete. **Phase 5 in progress** — ADR-012 all-in-AWS ECS; Terraform `networking` + `ecs` modules + `environments/dev` ✅. **Next:** RDS, SQS, EventBridge, Cognito modules.
 
 | Phase | Focus                                                                         | Status                                                                                                                                                                                                                                                                                                                    |
 | ----- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -33,7 +33,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 | **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done                                                                                                                                                                                                                                                                                                                   |
 | **3** | **Real AI** — full agent pipeline, cost API, resilience, Cognito auth         | ✅ **Complete**                                                                                                                                                                                                                                                                                                           |
 | **4** | Next.js UI, SSE, React Flow, dashboard, Cognito UI, OTEL                      | ✅ **Complete** — [KRE-151](https://linear.app/kreativbiro/issue/KRE-151) SSE · [KRE-152](https://linear.app/kreativbiro/issue/KRE-152) React Flow · [KRE-153](https://linear.app/kreativbiro/issue/KRE-153) dashboard · [KRE-154](https://linear.app/kreativbiro/issue/KRE-154) Cognito UI · [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) OTEL local |
-| **5** | AWS deploy (Terraform, ECS, Step Functions fan-out)                           | **Next**                                                                                                                                                                                                                                                                                                                  |
+| **5** | AWS deploy (Terraform, ECS, Step Functions fan-out)                           | **In progress** — networking + ECS modules, ADR-012; RDS/SQS/Cognito next                                                                                                                                                                                                                                                 |
 | **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard                        | Planned                                                                                                                                                                                                                                                                                                                   |
 
 Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/LINEAR.md)
@@ -122,7 +122,7 @@ Full diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | **Frontend** _(Phase 4)_ | Next.js 16, shadcn/ui, TanStack Query, React Flow, SSE, Amplify Cognito UI ✅                                               |
 | **Auth** _(Phase 3–4)_   | Cognito JWT → FastAPI ✅ · Amplify sign-in + Bearer on API/SSE ✅ ([KRE-154](https://linear.app/kreativbiro/issue/KRE-154)) |
 | **Observability**        | OpenTelemetry → OTLP collector → Jaeger ✅ ([KRE-155](https://linear.app/kreativbiro/issue/KRE-155))                        |
-| **IaC** _(Phase 5)_      | Terraform                                                                                                                   |
+| **IaC** _(Phase 5)_      | Terraform — `modules/networking`, `modules/ecs`, `environments/dev` ([ADR-012](./docs/TECH_DECISIONS.md#adr-012-all-in-aws-deployment-on-ecs-fargate)) |
 | **Local**                | Docker Compose + LocalStack                                                                                                 |
 
 ---
@@ -244,7 +244,8 @@ event-driven/
 │   ├── services/resilience/  # Retry, circuit breaker, cost cap
 │   └── services/search/      # Tavily client
 ├── shared/events/            # JSON Schema contracts (source of truth)
-├── infra/                    # Terraform, LocalStack init, Docker, OTEL collector config
+├── infra/                    # Terraform (Phase 5), LocalStack init, Docker, OTEL
+│   └── terraform/            # modules/networking, modules/ecs, environments/dev
 ├── docs/                     # PRD, architecture, ADRs, roadmap
 ├── scripts/                  # setup, E2E verify, seed
 └── frontend/                 # Next.js app (Phase 4)
