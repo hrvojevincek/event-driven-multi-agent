@@ -56,7 +56,7 @@ output "frontend_build_env" {
     NEXT_PUBLIC_COGNITO_USER_POOL_ID  = module.cognito.user_pool_id
     NEXT_PUBLIC_COGNITO_APP_CLIENT_ID = module.cognito.app_client_id
     NEXT_PUBLIC_COGNITO_REGION        = var.aws_region
-    NEXT_PUBLIC_COGNITO_DOMAIN        = module.cognito.hosted_ui_domain_fqdn
+    NEXT_PUBLIC_COGNITO_DOMAIN        = module.cognito.hosted_ui_domain_fqdn != null ? module.cognito.hosted_ui_domain_fqdn : ""
   }
 }
 

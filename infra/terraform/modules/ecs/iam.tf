@@ -75,6 +75,7 @@ data "aws_iam_policy_document" "worker_task" {
     sid    = "ConsumeQueues"
     effect = "Allow"
     actions = [
+      "sqs:GetQueueUrl",
       "sqs:ReceiveMessage",
       "sqs:DeleteMessage",
       "sqs:GetQueueAttributes",

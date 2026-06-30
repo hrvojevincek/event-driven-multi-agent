@@ -15,7 +15,11 @@ from eventforge.db.models import User
 from eventforge.db.repositories import JobRepository
 from eventforge.db.session import get_session_factory
 from eventforge.services.auth.cognito import CognitoTokenValidator
-from eventforge.services.stage_stream import format_sse, iter_job_stream_events
+from eventforge.services.stage_stream import (
+    format_sse,
+    format_sse_keepalive,
+    iter_job_stream_events,
+)
 
 router = APIRouter()
 _bearer = HTTPBearer(auto_error=False)
@@ -28,7 +32,8 @@ async def _assert_job_access(
 ) -> None:
     job = await JobRepository(db).get_by_id(job_id)
     if job is None or job.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
 
 @router.get("/queries/{job_id}/stream")
@@ -47,7 +52,10 @@ async def stream_query_events(
 
     async def event_generator():
         async for event in iter_job_stream_events(job_id, user_id):
-            yield format_sse(event, sse_event=event.event)
+            if event is None:
+                yield format_sse_keepalive()
+            else:
+                yield format_sse(event, sse_event=event.event)
 
     return StreamingResponse(
         event_generator(),

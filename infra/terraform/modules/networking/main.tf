@@ -170,7 +170,7 @@ resource "aws_security_group" "alb" {
 
 resource "aws_security_group" "api" {
   name        = "${local.name_prefix}-api"
-  description = "FastAPI tasks — traffic from ALB only"
+  description = "FastAPI tasks - traffic from ALB only"
   vpc_id      = aws_vpc.this.id
 
   ingress {
@@ -195,7 +195,7 @@ resource "aws_security_group" "api" {
 
 resource "aws_security_group" "frontend" {
   name        = "${local.name_prefix}-frontend"
-  description = "Next.js tasks — traffic from ALB only"
+  description = "Next.js tasks - traffic from ALB only"
   vpc_id      = aws_vpc.this.id
 
   ingress {
@@ -220,7 +220,7 @@ resource "aws_security_group" "frontend" {
 
 resource "aws_security_group" "worker" {
   name        = "${local.name_prefix}-worker"
-  description = "SQS worker tasks — no inbound; egress via NAT"
+  description = "SQS worker tasks - no inbound; egress via NAT"
   vpc_id      = aws_vpc.this.id
 
   egress {
@@ -237,7 +237,7 @@ resource "aws_security_group" "worker" {
 
 resource "aws_security_group" "rds" {
   name        = "${local.name_prefix}-rds"
-  description = "RDS Postgres — API and worker tasks only"
+  description = "RDS Postgres - API and worker tasks only"
   vpc_id      = aws_vpc.this.id
 
   ingress {

@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import time
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from typing import Literal
@@ -15,6 +16,8 @@ from eventforge.db.session import get_session_factory
 from eventforge.services.query import _STAGE_ORDER
 
 StreamEventType = Literal["snapshot", "stage_update", "job_complete"]
+
+SSE_KEEPALIVE_SECONDS = 15.0
 
 
 class JobStreamEvent(BaseModel):
@@ -36,7 +39,8 @@ class StreamBroker:
     """Fan-out stage events to SSE subscribers within the same API process."""
 
     def __init__(self) -> None:
-        self._subscribers: dict[str, list[asyncio.Queue[JobStreamEvent | None]]] = {}
+        self._subscribers: dict[str,
+                                list[asyncio.Queue[JobStreamEvent | None]]] = {}
         self._lock = asyncio.Lock()
 
     async def subscribe(self, key: str) -> asyncio.Queue[JobStreamEvent | None]:
@@ -45,7 +49,8 @@ class StreamBroker:
             self._subscribers.setdefault(key, []).append(queue)
         return queue
 
-    async def unsubscribe(self, key: str, queue: asyncio.Queue[JobStreamEvent | None]) -> None:
+    async def unsubscribe(self, key: str, queue: asyncio.Queue
+                          [JobStreamEvent | None]) -> None:
         async with self._lock:
             queues = self._subscribers.get(key, [])
             if queue in queues:
@@ -87,6 +92,11 @@ def publish_stage_event(
     )
 
 
+def format_sse_keepalive() -> str:
+    """SSE comment frame to keep ALB/proxy connections alive between stage updates."""
+    return ": keepalive\n\n"
+
+
 def format_sse(event: JobStreamEvent, *, sse_event: str | None = None) -> str:
     """Serialize a stream event as a Server-Sent Events frame."""
     lines: list[str] = []
@@ -98,7 +108,8 @@ def format_sse(event: JobStreamEvent, *, sse_event: str | None = None) -> str:
 
 
 def _sorted_stages(job: Job) -> list:
-    return sorted(job.stages, key=lambda stage: _STAGE_ORDER.get(stage.stage, len(_STAGE_ORDER)))
+    return sorted(job.stages, key=lambda stage: _STAGE_ORDER.get(
+        stage.stage, len(_STAGE_ORDER)))
 
 
 def _stage_responses(job: Job) -> list[JobStageResponse]:
@@ -122,24 +133,38 @@ def _stage_fingerprint(job: Job) -> tuple[tuple[str, str, str | None, int | None
     )
 
 
-async def iter_job_stream_events(job_id: UUID, user_id: UUID) -> AsyncIterator[JobStreamEvent]:
+async def iter_job_stream_events(
+    job_id: UUID,
+    user_id: UUID,
+) -> AsyncIterator[JobStreamEvent | None]:
     """Yield SSE events for a job, polling the DB and listening on the in-process broker."""
     from eventforge.db.repositories import JobRepository
 
     session_factory = get_session_factory()
     broker_key = str(job_id)
     queue = await stream_broker.subscribe(broker_key)
-    last_fingerprint: tuple[tuple[str, str, str | None, int | None], ...] | None = None
+    last_fingerprint: tuple[tuple[str, str, str |
+                                  None, int | None], ...] | None = None
     last_job_status: str | None = None
+    last_yield_at = time.monotonic()
 
     try:
         poll_immediately = True
         while True:
+            now = time.monotonic()
+            if now - last_yield_at >= SSE_KEEPALIVE_SECONDS:
+                yield None
+                last_yield_at = now
+                continue
+
             if not poll_immediately:
-                try:
-                    await asyncio.wait_for(queue.get(), timeout=1.0)
-                except TimeoutError:
-                    pass
+                wait_seconds = min(
+                    1.0, SSE_KEEPALIVE_SECONDS - (now - last_yield_at))
+                if wait_seconds > 0:
+                    try:
+                        await asyncio.wait_for(queue.get(), timeout=wait_seconds)
+                    except TimeoutError:
+                        pass
             poll_immediately = False
 
             async with session_factory() as session:
@@ -158,6 +183,7 @@ async def iter_job_stream_events(job_id: UUID, user_id: UUID) -> AsyncIterator[J
                         job_status=job.status,
                         stages=stages,
                     )
+                    last_yield_at = time.monotonic()
                 elif fingerprint != last_fingerprint:
                     previous = {item[0]: item for item in last_fingerprint}
                     for stage_row in fingerprint:
@@ -173,6 +199,7 @@ async def iter_job_stream_events(job_id: UUID, user_id: UUID) -> AsyncIterator[J
                                 detail=detail,
                                 duration_ms=duration_ms,
                             )
+                            last_yield_at = time.monotonic()
 
                 if job.status != last_job_status and job.status in {
                     JobStatus.COMPLETED.value,
@@ -185,6 +212,7 @@ async def iter_job_stream_events(job_id: UUID, user_id: UUID) -> AsyncIterator[J
                         job_status=job.status,
                         stages=stages,
                     )
+                    last_yield_at = time.monotonic()
                     return
 
                 last_fingerprint = fingerprint

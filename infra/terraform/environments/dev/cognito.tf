@@ -11,17 +11,12 @@ variable "cognito_domain_prefix" {
 }
 
 variable "create_cognito_domain" {
-  description = "Create Cognito Hosted UI domain."
+  description = "Create Cognito Hosted UI domain when OAuth is enabled (requires HTTPS app_base_url)."
   type        = bool
   default     = true
 }
 
 locals {
-  oauth_base = var.app_base_url != "" ? trim(var.app_base_url, "/") : "http://localhost:3000"
-
-  cognito_callback_urls = ["${local.oauth_base}/auth/callback"]
-  cognito_logout_urls   = ["${local.oauth_base}/"]
-
   cognito_domain_prefix = var.cognito_domain_prefix != "" ? var.cognito_domain_prefix : "${var.project_name}-${var.environment}"
 }
 
@@ -30,8 +25,7 @@ module "cognito" {
 
   project_name  = var.project_name
   environment   = var.environment
-  callback_urls = local.cognito_callback_urls
-  logout_urls   = local.cognito_logout_urls
+  app_base_url  = var.app_base_url
   domain_prefix = local.cognito_domain_prefix
   create_domain = var.create_cognito_domain
   tags          = var.tags

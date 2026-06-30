@@ -1,5 +1,17 @@
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
+  oauth_base  = var.app_base_url != "" ? trim(var.app_base_url, "/") : "http://localhost:3000"
+
+  # Cognito OAuth callbacks must use HTTPS unless the host is localhost/127.0.0.1.
+  oauth_enabled = (
+    startswith(local.oauth_base, "https://") ||
+    can(regex("^http://localhost(:[0-9]+)?$", local.oauth_base)) ||
+    can(regex("^http://127\\.0\\.0\\.1(:[0-9]+)?$", local.oauth_base))
+  )
+
+  callback_urls = local.oauth_enabled ? ["${local.oauth_base}/auth/callback"] : ["http://localhost:3000/auth/callback"]
+  logout_urls   = local.oauth_enabled ? ["${local.oauth_base}/"] : ["http://localhost:3000/"]
+  create_hosted_ui_domain = var.create_domain && local.oauth_enabled
 
   common_tags = merge(var.tags, {
     Project     = var.project_name
@@ -40,12 +52,12 @@ resource "aws_cognito_user_pool_client" "web" {
 
   generate_secret = false
 
-  allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_flows                  = ["code"]
-  allowed_oauth_scopes                 = ["openid", "email", "profile"]
+  allowed_oauth_flows_user_pool_client = local.oauth_enabled
+  allowed_oauth_flows                  = local.oauth_enabled ? ["code"] : []
+  allowed_oauth_scopes                 = local.oauth_enabled ? ["openid", "email", "profile"] : []
 
-  callback_urls = var.callback_urls
-  logout_urls   = var.logout_urls
+  callback_urls = local.callback_urls
+  logout_urls   = local.logout_urls
 
   supported_identity_providers = ["COGNITO"]
 
@@ -68,7 +80,7 @@ resource "aws_cognito_user_pool_client" "web" {
 }
 
 resource "aws_cognito_user_pool_domain" "this" {
-  count = var.create_domain ? 1 : 0
+  count = local.create_hosted_ui_domain ? 1 : 0
 
   domain       = var.domain_prefix
   user_pool_id = aws_cognito_user_pool.this.id

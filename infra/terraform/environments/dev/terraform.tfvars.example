@@ -10,6 +10,10 @@ frontend_image = "REPLACE_AFTER_ECR_PUSH"
 # After first apply, set to ALB URL (terraform output alb_dns_name):
 # app_base_url = "http://eventforge-dev-alb-123456789.eu-west-2.elb.amazonaws.com"
 # cors_origins = "[\"http://eventforge-dev-alb-123456789.eu-west-2.elb.amazonaws.com\"]"
+#
+# HTTP ALB is fine for API/CORS. Cognito Hosted UI OAuth requires HTTPS callbacks
+# (localhost is the only HTTP exception). With http:// ALB, Terraform disables OAuth
+# and uses email/password (SRP) sign-in until you add ACM + https:// app_base_url.
 
 # LLM / search API keys (create in Secrets Manager manually until secrets module):
 openai_api_key_secret_arn = "arn:aws:secretsmanager:eu-west-2:ACCOUNT:secret:eventforge/dev/openai-api-key"

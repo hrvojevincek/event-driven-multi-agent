@@ -9,14 +9,10 @@ variable "environment" {
   type        = string
 }
 
-variable "callback_urls" {
-  description = "OAuth callback URLs for the web app client (Amplify Hosted UI)."
-  type        = list(string)
-}
-
-variable "logout_urls" {
-  description = "OAuth sign-out redirect URLs."
-  type        = list(string)
+variable "app_base_url" {
+  description = "Public frontend URL for OAuth callbacks. Empty uses localhost defaults."
+  type        = string
+  default     = ""
 }
 
 variable "domain_prefix" {
@@ -25,7 +21,7 @@ variable "domain_prefix" {
 }
 
 variable "create_domain" {
-  description = "Create Cognito Hosted UI domain."
+  description = "Create Cognito Hosted UI domain when OAuth is enabled."
   type        = bool
   default     = true
 }

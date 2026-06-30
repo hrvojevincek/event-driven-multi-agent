@@ -234,7 +234,7 @@ variable "sqs_queue_prefix" {
 variable "otel_enabled" {
   description = "Enable OpenTelemetry export."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "otel_exporter_otlp_endpoint" {

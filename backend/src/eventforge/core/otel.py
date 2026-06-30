@@ -38,7 +38,7 @@ def setup_otel(settings: Settings, *, service_name: str | None = None) -> bool:
     if _initialized:
         return settings.otel_enabled
 
-    if not settings.otel_enabled:
+    if not settings.otel_enabled or not settings.otel_exporter_otlp_endpoint.strip():
         logger.info("OpenTelemetry disabled")
         return False
 
