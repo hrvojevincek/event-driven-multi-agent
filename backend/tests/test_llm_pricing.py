@@ -20,6 +20,40 @@ def test_compute_cost_usd_gpt4o_mini() -> None:
     assert cost == Decimal("0.45")
 
 
+def test_compute_cost_usd_openai_versioned_model_id() -> None:
+    exact = compute_cost_usd(
+        "gpt-4o-mini",
+        input_tokens=7323,
+        output_tokens=0,
+        pricing_table=DEFAULT_MODEL_PRICING,
+    )
+    versioned = compute_cost_usd(
+        "gpt-4o-mini-2024-07-18",
+        input_tokens=7323,
+        output_tokens=0,
+        pricing_table=DEFAULT_MODEL_PRICING,
+    )
+    assert versioned == exact
+    assert versioned > Decimal("0")
+
+
+def test_compute_cost_usd_embedding_versioned_model_id() -> None:
+    cost = compute_cost_usd(
+        "text-embedding-3-small-2024-07-18",
+        input_tokens=10_000,
+        output_tokens=0,
+        pricing_table=DEFAULT_MODEL_PRICING,
+    )
+    assert cost == Decimal("0.0002")
+
+
+def test_settings_total_cost_for_tokens_versioned_model() -> None:
+    settings = Settings()
+    cost = settings.total_cost_for_tokens("gpt-4o-mini-2024-07-18", 1000, 2000)
+    expected = settings.total_cost_for_tokens("gpt-4o-mini", 1000, 2000)
+    assert cost == expected
+
+
 def test_compute_cost_usd_unknown_model_returns_zero(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level("WARNING"):
         cost = compute_cost_usd(

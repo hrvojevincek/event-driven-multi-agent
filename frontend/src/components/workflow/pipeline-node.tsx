@@ -47,21 +47,23 @@ export function PipelineNode({ data, selected }: NodeProps) {
       />
       <div
         className={cn(
-          "min-w-[140px] rounded-lg border bg-card px-3 py-2.5 ring-2 transition-shadow",
+          "min-w-[180px] h-[130px] rounded-lg border bg-card px-3 py-2.5 ring-2 transition-shadow gap-4 flex flex-col",
           statusRing[status],
           selected && "border-primary",
         )}
       >
         <div className="flex items-center gap-2">
           <StatusIcon status={status} />
-          <span className="text-sm font-medium leading-tight">{label}</span>
+          <span className="text-base font-medium leading-tight">{label}</span>
         </div>
-        <p className="mt-1 truncate font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-          {agentName}
-        </p>
-        <p className="mt-1 font-mono text-[10px] uppercase text-muted-foreground">
-          {status}
-        </p>
+        <div className="flex flex-col gap-2">
+          <p className="mt-1 truncate font-mono text-sm uppercase tracking-wide text-muted-foreground">
+            {agentName}
+          </p>
+          <p className="mt-1 font-mono text-sm uppercase text-muted-foreground">
+            {status}
+          </p>
+        </div>
       </div>
       <Handle
         type="source"

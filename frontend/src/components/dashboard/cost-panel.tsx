@@ -7,11 +7,17 @@ type CostPanelProps = {
   isLoading: boolean;
 };
 
-function formatUsd(value: number): string {
-  if (value === 0) {
+function formatUsd(value: number | undefined, hasUsage: boolean): string {
+  if (!hasUsage || value === undefined) {
     return "—";
   }
-  return `$${value.toFixed(4)}`;
+  if (value >= 0.01) {
+    return `$${value.toFixed(4)}`;
+  }
+  if (value > 0) {
+    return `$${value.toFixed(6)}`;
+  }
+  return "$0.0000";
 }
 
 function formatTokens(calls: QueryDetail["llm_usage"]["calls"]): string {
@@ -28,6 +34,7 @@ function formatTokens(calls: QueryDetail["llm_usage"]["calls"]): string {
 export function CostPanel({ detail, isLoading }: CostPanelProps) {
   const usage = detail?.llm_usage;
   const calls = usage?.calls ?? [];
+  const hasUsage = calls.length > 0;
 
   return (
     <>
@@ -41,11 +48,13 @@ export function CostPanel({ detail, isLoading }: CostPanelProps) {
         <div>
           <dt className="text-muted-foreground">Est. cost</dt>
           <dd className="font-mono">
-            {isLoading && !detail ? "…" : formatUsd(usage?.total_cost_usd ?? 0)}
+            {isLoading && !detail
+              ? "…"
+              : formatUsd(usage?.total_cost_usd, hasUsage)}
           </dd>
         </div>
       </dl>
-      {calls.length > 0 ? (
+      {hasUsage ? (
         <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
           {calls.map((call) => (
             <li
@@ -53,7 +62,9 @@ export function CostPanel({ detail, isLoading }: CostPanelProps) {
               className="flex items-center justify-between gap-2 font-mono"
             >
               <span className="truncate">{call.agent_name}</span>
-              <span className="shrink-0">${call.cost_usd.toFixed(4)}</span>
+              <span className="shrink-0">
+                {formatUsd(call.cost_usd, true)}
+              </span>
             </li>
           ))}
         </ul>

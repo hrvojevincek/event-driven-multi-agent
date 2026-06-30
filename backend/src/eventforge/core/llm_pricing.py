@@ -37,6 +37,23 @@ DEFAULT_MODEL_PRICING: dict[str, ModelPricing] = {
 }
 
 
+def resolve_model_pricing(
+    model: str,
+    pricing_table: dict[str, ModelPricing],
+) -> ModelPricing | None:
+    """Match a provider model id to configured pricing (exact or versioned prefix)."""
+    if model in pricing_table:
+        return pricing_table[model]
+
+    # OpenAI returns dated ids like gpt-4o-mini-2024-07-18 — longest prefix wins.
+    candidates = sorted(pricing_table.keys(), key=len, reverse=True)
+    for key in candidates:
+        if model.startswith(f"{key}-"):
+            return pricing_table[key]
+
+    return None
+
+
 def compute_cost_usd(
     model: str,
     input_tokens: int,
@@ -44,7 +61,7 @@ def compute_cost_usd(
     pricing_table: dict[str, ModelPricing],
 ) -> Decimal:
     """Calculate USD cost from a model pricing table."""
-    pricing = pricing_table.get(model)
+    pricing = resolve_model_pricing(model, pricing_table)
     if pricing is None:
         logger.warning(
             "Missing LLM pricing for model; cost will be recorded as zero",
