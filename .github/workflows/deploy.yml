@@ -1,0 +1,224 @@
+name: Deploy
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/deploy.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      component:
+        description: "Component to deploy"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
+          - terraform
+
+concurrency:
+  group: deploy-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'main' }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-2' }}
+  ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME || 'eventforge-dev-cluster' }}
+  ECS_NAME_PREFIX: ${{ vars.ECS_NAME_PREFIX || 'eventforge-dev' }}
+  FRONTEND_BUILD_SSM_PATH: ${{ vars.FRONTEND_BUILD_SSM_PATH || '/eventforge/dev/frontend-build' }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.result.outputs.backend }}
+      frontend: ${{ steps.result.outputs.frontend }}
+      terraform: ${{ steps.result.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+            terraform:
+              - 'infra/terraform/**'
+              - '.github/workflows/deploy.yml'
+
+      - id: result
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ inputs.component }}" in
+              all)
+                echo "backend=true" >> "$GITHUB_OUTPUT"
+                echo "frontend=true" >> "$GITHUB_OUTPUT"
+                echo "terraform=true" >> "$GITHUB_OUTPUT"
+                ;;
+              backend) echo "backend=true" >> "$GITHUB_OUTPUT" ;;
+              frontend) echo "frontend=true" >> "$GITHUB_OUTPUT" ;;
+              terraform) echo "terraform=true" >> "$GITHUB_OUTPUT" ;;
+            esac
+          else
+            echo "backend=${{ steps.filter.outputs.backend == 'true' && 'true' || 'false' }}" >> "$GITHUB_OUTPUT"
+            echo "frontend=${{ steps.filter.outputs.frontend == 'true' && 'true' || 'false' }}" >> "$GITHUB_OUTPUT"
+            echo "terraform=${{ steps.filter.outputs.terraform == 'true' && 'true' || 'false' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy-backend:
+    needs: changes
+    if: |
+      needs.changes.outputs.backend == 'true' &&
+      github.event_name != 'pull_request' &&
+      vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Resolve ECR repository
+        id: ecr
+        run: |
+          REPO="${{ vars.ECR_BACKEND_REPOSITORY }}"
+          if [ -z "$REPO" ]; then
+            REPO="$(aws ecr describe-repositories \
+              --repository-names "${ECS_NAME_PREFIX}-backend" \
+              --query 'repositories[0].repositoryUri' \
+              --output text)"
+          fi
+          echo "repository=$REPO" >> "$GITHUB_OUTPUT"
+          echo "image=${REPO}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend image
+        run: |
+          docker build -t "${{ steps.ecr.outputs.image }}" -t "${{ steps.ecr.outputs.repository }}:latest" backend/
+          docker push "${{ steps.ecr.outputs.image }}"
+          docker push "${{ steps.ecr.outputs.repository }}:latest"
+
+      - name: Roll out ECS services
+        env:
+          BACKEND_IMAGE: ${{ steps.ecr.outputs.image }}
+        run: ./scripts/ci/ecs-deploy-backend.sh
+
+  deploy-frontend:
+    needs: changes
+    if: |
+      needs.changes.outputs.frontend == 'true' &&
+      github.event_name != 'pull_request' &&
+      vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Resolve ECR repository
+        id: ecr
+        run: |
+          REPO="${{ vars.ECR_FRONTEND_REPOSITORY }}"
+          if [ -z "$REPO" ]; then
+            REPO="$(aws ecr describe-repositories \
+              --repository-names "${ECS_NAME_PREFIX}-frontend" \
+              --query 'repositories[0].repositoryUri' \
+              --output text)"
+          fi
+          echo "repository=$REPO" >> "$GITHUB_OUTPUT"
+          echo "image=${REPO}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push frontend image
+        run: |
+          mapfile -t BUILD_ARGS < <(./scripts/ci/frontend-build-args.sh)
+          docker build -f frontend/Dockerfile \
+            "${BUILD_ARGS[@]}" \
+            -t "${{ steps.ecr.outputs.image }}" \
+            -t "${{ steps.ecr.outputs.repository }}:latest" \
+            frontend/
+          docker push "${{ steps.ecr.outputs.image }}"
+          docker push "${{ steps.ecr.outputs.repository }}:latest"
+
+      - name: Roll out frontend service
+        run: |
+          ./scripts/ci/ecs-deploy-service.sh \
+            "$ECS_CLUSTER_NAME" \
+            "${ECS_NAME_PREFIX}-frontend" \
+            "${{ steps.ecr.outputs.image }}" \
+            frontend
+
+  terraform:
+    needs: changes
+    if: |
+      needs.changes.outputs.terraform == 'true' &&
+      vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform/environments/dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - id: prepare
+        name: Prepare terraform.tfvars
+        env:
+          TFVARS_CONTENT: ${{ secrets.TFVARS_DEV }}
+        run: |
+          if [ -z "$TFVARS_CONTENT" ]; then
+            echo "TFVARS_DEV secret not set — plan/apply will be skipped"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          printf '%s\n' "$TFVARS_CONTENT" > terraform.tfvars
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive ../../..
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        if: steps.prepare.outputs.ready == 'true'
+        run: terraform plan -input=false -no-color -out=tfplan
+
+      - name: Terraform apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.prepare.outputs.ready == 'true'
+        run: terraform apply -input=false -auto-approve

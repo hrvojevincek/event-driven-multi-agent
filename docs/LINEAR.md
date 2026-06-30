@@ -13,11 +13,12 @@
 
 ## Latest progress (2026-06-30)
 
-**Phase 5 started** — Terraform networking + ECS modules, ADR-012 all-in-AWS ECS Fargate ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156), [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)).
+**Phase 5 in progress** — full Terraform stack + deploy hardening for first AWS apply.
 
-| Done (Phase 5 — partial)                              | Next                        |
+| Done (Phase 5)                                        | Next                        |
 | ----------------------------------------------------- | --------------------------- |
 | [KRE-156](https://linear.app/kreativbiro/issue/KRE-156) … [KRE-161](https://linear.app/kreativbiro/issue/KRE-161) Terraform modules (networking → cognito) | **First AWS apply + ECR**   |
+| [KRE-162](https://linear.app/kreativbiro/issue/KRE-162) ECS runtime, Cognito OAuth, SSE keepalives | step-functions, CI/CD       |
 
 **Phase 4 complete** — [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) local OTEL (SDK, collector, Jaeger).
 
@@ -62,7 +63,7 @@ save_issue(id: "KRE-122", state: "Done")
 | Phase 2 — Core Pipeline | Complete (stub agents + E2E)                                                 |
 | Phase 3 — Real AI       | **Complete** — KRE-139–147 (real agents + Cognito auth + resilience)         |
 | Phase 4 — Frontend      | **Complete** — KRE-151–155 ✅ |
-| Phase 5 — AWS Deploy    | **In progress** — networking + ECS modules ✅; RDS/SQS/Cognito next |
+| Phase 5 — AWS Deploy    | **In progress** — Terraform + deploy hardening ✅; first apply + ECR next |
 
 ## Issue index (Phase 0 + 1)
 
@@ -150,6 +151,7 @@ Also see deferred infra/reliability: KRE-136 (outbox), KRE-137, KRE-138.
 | EF-043 | [KRE-159](https://linear.app/kreativbiro/issue/KRE-159) | Terraform `modules/sqs` — worker queues, DLQ, redrive   | —        | —          |
 | EF-044 | [KRE-160](https://linear.app/kreativbiro/issue/KRE-160) | Terraform `modules/eventbridge` — bus + stage rules     | —        | KRE-159    |
 | EF-045 | [KRE-161](https://linear.app/kreativbiro/issue/KRE-161) | Terraform `modules/cognito` — pool, client, Hosted UI   | —        | —          |
+| EF-046 | [KRE-162](https://linear.app/kreativbiro/issue/KRE-162) | AWS deploy hardening — ECS runtime, Cognito OAuth, SSE  | —        | KRE-157    |
 
 > **Next (not yet in Linear):** First AWS apply + ECR, Step Functions, CI/CD.
 
@@ -170,7 +172,7 @@ Done:   KRE-139 (LLM client + cost tracking foundation)
         KRE-147 (LLM resilience — retry, circuit breaker, cost cap)
 
 Next:   Phase 5 AWS deployment (in progress)
-        Done: KRE-156–161 ✅ Terraform (networking → cognito)
+        Done: KRE-156–162 ✅ Terraform + deploy hardening
         Next: first terraform apply + ECR → step-functions → CI/CD
 
 Optional: KRE-150 umbrella → KRE-148 chunking, KRE-149 richer ingestion, KRE-133 RAG eval (+ KRE-136/137/138)

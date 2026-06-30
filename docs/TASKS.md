@@ -219,8 +219,19 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [ ] `modules/step-functions` — research fan-out workflow
 - [ ] `modules/observability` — CloudWatch, ADOT
 - [x] `modules/cognito` — user pool, app client, callback URLs → [KRE-161](https://linear.app/kreativbiro/issue/KRE-161)
-- [x] `environments/dev` — compose modules (networking + ecs) → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
+- [x] `environments/dev` — compose modules (networking → cognito → ecs) → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
 - [ ] Secrets Manager for API keys
+
+### 5.1.1 Deploy hardening (pre-first-apply)
+
+→ [KRE-162](https://linear.app/kreativbiro/issue/KRE-162)
+
+- [x] SSE comment keepalives (15s) for ALB idle timeout — KRE-162
+- [x] `boto_client` IAM task role on AWS; static creds only for LocalStack — KRE-162
+- [x] OTEL skip when OTLP endpoint empty; ECS `otel_enabled` default false — KRE-162
+- [x] Cognito OAuth gated on HTTPS/localhost; HTTP ALB uses SRP sign-in — KRE-162
+- [x] Worker IAM `sqs:GetQueueUrl` — KRE-162
+- [x] Frontend Dockerfile `NEXT_PUBLIC_COGNITO_*` build args — KRE-162
 
 ### 5.2 CI/CD
 
@@ -299,6 +310,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2–4 complete. **Next:** Phase 5 AWS deployment.
+**Backend-first track:** Phase 2–4 complete. **Phase 5:** Terraform modules + deploy hardening done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR.
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

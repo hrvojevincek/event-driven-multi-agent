@@ -30,10 +30,18 @@ terraform/
 | **rds**        | Postgres 16 (gp3), subnet group, backups, password in Secrets Manager; pgvector via Alembic on migrate |
 | **sqs**        | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                          |
 | **eventbridge**| `eventforge-bus` + rules routing each `detail-type` to the next stage queue                                 |
-| **cognito**    | User pool, public SPA client, Hosted UI domain; OAuth callbacks from `app_base_url`                       |
+| **cognito**    | User pool, public SPA client; OAuth + Hosted UI only when `app_base_url` is HTTPS or localhost |
 | **ecs**        | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services                |
 
 `environments/dev` wires **networking → rds → sqs → eventbridge → cognito → ecs**. LLM API keys remain **manual Secrets Manager ARNs** in tfvars.
+
+### Cognito OAuth vs HTTP ALB
+
+Cognito Hosted UI OAuth requires **HTTPS** callbacks (localhost is the only HTTP exception). With a plain `http://` ALB URL, Terraform **disables OAuth** and the app client uses **email/password (SRP)** sign-in until you add ACM + `https://` `app_base_url`. See `terraform.tfvars.example` comments.
+
+### Frontend Docker build (prod)
+
+Use `terraform output -json frontend_build_env` for all `NEXT_PUBLIC_*` build args (API URL, Cognito pool/client/region/domain). The frontend `Dockerfile` accepts these as build args.
 
 ## Prerequisites
 
@@ -74,6 +82,7 @@ docker push $(terraform output -raw backend_ecr_repository_url):latest
 
 docker build -t eventforge-dev-frontend \
   --build-arg NEXT_PUBLIC_API_URL=http://$(terraform output -raw alb_dns_name) \
+  $(terraform output -json frontend_build_env | jq -r 'to_entries | map("--build-arg \(.key)=\(.value)") | join(" ")') \
   frontend/
 docker tag eventforge-dev-frontend:latest $(terraform output -raw frontend_ecr_repository_url):latest
 docker push $(terraform output -raw frontend_ecr_repository_url):latest

@@ -73,6 +73,6 @@ Phase 1+: `uv run uvicorn eventforge.main:app --reload` (backend), `npm run dev`
 - **Project:** [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) on team `Kreativbiro`
 - **Active work:** Linear MCP (`list_issues`, `get_issue`) — not just markdown
 - **Mirror:** `docs/TASKS.md` + `docs/LINEAR.md` issue index
-- **Next issue:** Phase 4.5 OTEL local (Phase 4.4 done — [KRE-154](https://linear.app/kreativbiro/issue/KRE-154)).
+- **Next issue:** First AWS apply + ECR ([KRE-162](https://linear.app/kreativbiro/issue/KRE-162) deploy hardening done).
 
-**Phase status:** Phase 3 complete. Phase 4.1–4.4 complete ([KRE-151](https://linear.app/kreativbiro/issue/KRE-151), [KRE-152](https://linear.app/kreativbiro/issue/KRE-152), [KRE-153](https://linear.app/kreativbiro/issue/KRE-153), [KRE-154](https://linear.app/kreativbiro/issue/KRE-154)). **Next:** Phase 4.5 OTEL local.
+**Phase status:** Phases 0–4 complete. Phase 5 Terraform + deploy hardening complete ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR.

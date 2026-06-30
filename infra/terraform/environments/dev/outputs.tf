@@ -76,3 +76,28 @@ output "frontend_ecr_repository_url" {
 output "ecs_cluster_name" {
   value = module.ecs.cluster_name
 }
+
+output "api_service_name" {
+  description = "ECS API service name for deploy scripts."
+  value       = module.ecs.api_service_name
+}
+
+output "frontend_service_name" {
+  description = "ECS frontend service name for deploy scripts."
+  value       = module.ecs.frontend_service_name
+}
+
+output "worker_service_names" {
+  description = "ECS worker service names keyed by stage."
+  value       = module.ecs.worker_service_names
+}
+
+output "github_actions_role_arn" {
+  description = "IAM role ARN — set as GitHub repository secret AWS_DEPLOY_ROLE_ARN."
+  value       = var.enable_github_oidc ? module.github_oidc[0].role_arn : null
+}
+
+output "frontend_build_ssm_path" {
+  description = "SSM path prefix for frontend Docker build args in CI."
+  value       = local.frontend_build_ssm_path
+}

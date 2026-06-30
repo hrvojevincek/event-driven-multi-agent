@@ -26,7 +26,7 @@
 
 ## Current status
 
-**Phase 3** complete (real AI + Cognito auth). **Phase 4.1–4.4** complete (SSE [KRE-151](https://linear.app/kreativbiro/issue/KRE-151), React Flow [KRE-152](https://linear.app/kreativbiro/issue/KRE-152), dashboard [KRE-153](https://linear.app/kreativbiro/issue/KRE-153), Cognito UI [KRE-154](https://linear.app/kreativbiro/issue/KRE-154)). **Next:** Phase 4.5 OTEL local. Index: `docs/LINEAR.md`
+**Phases 0–4 complete.** **Phase 5 in progress** — Terraform modules + deploy hardening done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR. Index: `docs/LINEAR.md`
 
 ## Commands
 

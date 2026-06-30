@@ -24,7 +24,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 
 ## Where things stand
 
-**Strategy:** Phases 0–4 complete. **Phase 5 in progress** — full Terraform stack (networking → cognito) ✅. **Next:** first AWS apply + ECR.
+**Strategy:** Phases 0–4 complete. **Phase 5 in progress** — full Terraform stack + deploy hardening ✅ ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR.
 
 | Phase | Focus                                                                         | Status                                                                                                                                                                                                                                                                                                                                                           |
 | ----- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -33,7 +33,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 | **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done                                                                                                                                                                                                                                                                                                                                                          |
 | **3** | **Real AI** — full agent pipeline, cost API, resilience, Cognito auth         | ✅ **Complete**                                                                                                                                                                                                                                                                                                                                                  |
 | **4** | Next.js UI, SSE, React Flow, dashboard, Cognito UI, OTEL                      | ✅ **Complete** — [KRE-151](https://linear.app/kreativbiro/issue/KRE-151) SSE · [KRE-152](https://linear.app/kreativbiro/issue/KRE-152) React Flow · [KRE-153](https://linear.app/kreativbiro/issue/KRE-153) dashboard · [KRE-154](https://linear.app/kreativbiro/issue/KRE-154) Cognito UI · [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) OTEL local |
-| **5** | AWS deploy (Terraform, ECS, Step Functions fan-out)                           | **In progress** — IaC complete (KRE-156–161); first apply + ECR next                                                                                                                                                                                                                                                                                              |
+| **5** | AWS deploy (Terraform, ECS, Step Functions fan-out)                           | **In progress** — IaC + deploy hardening done (KRE-156–162); first apply + ECR next |
 | **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard                        | Planned                                                                                                                                                                                                                                                                                                                                                          |
 
 Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/LINEAR.md)
@@ -73,6 +73,7 @@ POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GE
 | Dashboard UI — submit query, job history, synthesis, sources, cost   | ✅ [KRE-153](https://linear.app/kreativbiro/issue/KRE-153)                                                                                |
 | Cognito sign-in UI — Amplify Auth, Bearer token, route guard         | ✅ [KRE-154](https://linear.app/kreativbiro/issue/KRE-154)                                                                                |
 | Local OTEL — FastAPI + worker spans, collector, Jaeger UI            | ✅ [KRE-155](https://linear.app/kreativbiro/issue/KRE-155)                                                                                |
+| AWS deploy hardening — IAM creds, SSE keepalives, Cognito OAuth gate | ✅ [KRE-162](https://linear.app/kreativbiro/issue/KRE-162)                                                                                |
 
 **Smoke test:** `./scripts/verify-pipeline-e2e.sh` or `make verify-e2e` (API + all workers; real LLM run ~2–3 min with one research worker)
 
