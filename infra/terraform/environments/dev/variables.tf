@@ -64,21 +64,6 @@ variable "cors_origins" {
   default     = "[]"
 }
 
-variable "cognito_user_pool_id" {
-  type    = string
-  default = ""
-}
-
-variable "cognito_app_client_id" {
-  type    = string
-  default = ""
-}
-
-variable "cognito_region" {
-  type    = string
-  default = "eu-west-2"
-}
-
 variable "auth_disabled" {
   description = "Set false once Cognito is wired."
   type        = bool

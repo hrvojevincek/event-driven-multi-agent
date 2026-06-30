@@ -16,8 +16,8 @@ terraform/
     ├── rds/                 # Postgres 16 + Secrets Manager password ✅
     ├── sqs/                 # Worker queues + DLQ + redrive ✅
     ├── eventbridge/         # Bus + stage routing rules ✅
+    ├── cognito/             # User pool, app client, Hosted UI domain ✅
     ├── ecs/                 # ECR, cluster, ALB, Fargate services ✅
-    ├── cognito/             # User pool (next)
     ├── step-functions/      # Research fan-out (next)
     └── observability/       # ADOT, alarms (next)
 ```
@@ -30,9 +30,10 @@ terraform/
 | **rds**        | Postgres 16 (gp3), subnet group, backups, password in Secrets Manager; pgvector via Alembic on migrate |
 | **sqs**        | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                          |
 | **eventbridge**| `eventforge-bus` + rules routing each `detail-type` to the next stage queue                                 |
+| **cognito**    | User pool, public SPA client, Hosted UI domain; OAuth callbacks from `app_base_url`                       |
 | **ecs**        | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services                |
 
-`environments/dev` wires **networking → rds → sqs → eventbridge → ecs**. Cognito and LLM secrets are still **manual tfvars** until their modules land.
+`environments/dev` wires **networking → rds → sqs → eventbridge → cognito → ecs**. LLM API keys remain **manual Secrets Manager ARNs** in tfvars.
 
 ## Prerequisites
 
@@ -51,7 +52,7 @@ Do **not** commit `terraform.tfvars`, `*.tfstate`, or `*.tfplan` (see root `.git
 cd infra/terraform/environments/dev
 
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars — at minimum images, LLM secret ARNs, Cognito IDs
+# Edit terraform.tfvars — images, LLM secret ARNs, app_base_url after first apply
 
 terraform init
 terraform plan
@@ -78,8 +79,8 @@ docker tag eventforge-dev-frontend:latest $(terraform output -raw frontend_ecr_r
 docker push $(terraform output -raw frontend_ecr_repository_url):latest
 ```
 
-3. Update `terraform.tfvars` with image URIs + Cognito IDs when that module exists
-4. Re-apply to start ECS services
+3. Set `app_base_url` and `cors_origins` from `terraform output alb_dns_name`, then re-apply
+4. Rebuild frontend using `terraform output -json frontend_build_env` for `--build-arg` values; push images and re-apply if needed
 
 After first apply, run Alembic migrations via the API task (entrypoint runs `alembic upgrade head` on deploy) or connect to RDS from a bastion/session for manual verify. The `vector` extension is created by Alembic migration `5f4297155502`.
 
@@ -92,9 +93,9 @@ Uncomment the `backend "s3"` block in `environments/dev/main.tf` and create:
 
 ## Next modules
 
-1. `cognito` — user pool; callback URLs → ALB DNS
-2. Secrets module for OpenAI/Tavily keys (optional; manual SM secrets work for dev)
-3. `step-functions` — research Map state
-4. CI/CD — GitHub Actions path filters → ECR → ECS rolling deploy
+1. Secrets module for OpenAI/Tavily keys (optional; manual SM secrets work for dev)
+2. `step-functions` — research Map state
+3. CI/CD — GitHub Actions path filters → ECR → ECS rolling deploy
+4. First full `terraform apply` + ECR push
 
 See `docs/TASKS.md` Phase 5 and `docs/TECH_DECISIONS.md` ADR-012.

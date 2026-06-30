@@ -4,26 +4,21 @@
 aws_region         = "eu-west-2"
 single_nat_gateway = true
 
-# After first ECR push (or use module output URLs + :latest):
-# backend_image  = "123456789012.dkr.ecr.eu-west-2.amazonaws.com/eventforge-dev-backend:latest"
-# frontend_image = "123456789012.dkr.ecr.eu-west-2.amazonaws.com/eventforge-dev-frontend:latest"
 backend_image  = "REPLACE_AFTER_ECR_PUSH"
 frontend_image = "REPLACE_AFTER_ECR_PUSH"
 
-# Postgres + event pipeline — provisioned by modules/rds, modules/sqs, modules/eventbridge
-# Optional overrides: sqs_queue_prefix, event_bus_name, sqs_max_receive_count (see events.tf)
+# After first apply, set to ALB URL (terraform output alb_dns_name):
+# app_base_url = "http://eventforge-dev-alb-123456789.eu-west-2.elb.amazonaws.com"
+# cors_origins = "[\"http://eventforge-dev-alb-123456789.eu-west-2.elb.amazonaws.com\"]"
 
 # LLM / search API keys (create in Secrets Manager manually until secrets module):
 openai_api_key_secret_arn = "arn:aws:secretsmanager:eu-west-2:ACCOUNT:secret:eventforge/dev/openai-api-key"
 tavily_api_key_secret_arn = "arn:aws:secretsmanager:eu-west-2:ACCOUNT:secret:eventforge/dev/tavily-api-key"
 
-# From modules/cognito (next PR):
-cognito_user_pool_id  = "eu-west-2_XXXXXXXXX"
-cognito_app_client_id = "your-app-client-id"
-auth_disabled         = false
+auth_disabled = false
 
-# After ALB is created, set CORS to your app URL:
-# cors_origins = "[\"http://eventforge-dev-alb-123456789.eu-west-2.elb.amazonaws.com\"]"
+# Optional Cognito domain prefix if eventforge-dev is taken globally:
+# cognito_domain_prefix = "eventforge-dev-yourname"
 
 # Optional RDS sizing overrides:
 # rds_instance_class = "db.t4g.micro"

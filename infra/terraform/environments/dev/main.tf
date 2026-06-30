@@ -71,9 +71,9 @@ module "ecs" {
   tavily_api_key_secret_arn    = var.tavily_api_key_secret_arn
 
   cors_origins                = var.cors_origins
-  cognito_user_pool_id        = var.cognito_user_pool_id
-  cognito_app_client_id       = var.cognito_app_client_id
-  cognito_region              = var.cognito_region
+  cognito_user_pool_id        = module.cognito.user_pool_id
+  cognito_app_client_id       = module.cognito.app_client_id
+  cognito_region              = var.aws_region
   auth_disabled               = var.auth_disabled
   acm_certificate_arn         = var.acm_certificate_arn
   otel_exporter_otlp_endpoint = var.otel_exporter_otlp_endpoint

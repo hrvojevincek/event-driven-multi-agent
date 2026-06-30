@@ -218,7 +218,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] `modules/sqs` — queues + DLQ + redrive → [KRE-159](https://linear.app/kreativbiro/issue/KRE-159)
 - [ ] `modules/step-functions` — research fan-out workflow
 - [ ] `modules/observability` — CloudWatch, ADOT
-- [ ] `modules/cognito` — user pool, app client, callback URLs
+- [x] `modules/cognito` — user pool, app client, callback URLs → [KRE-161](https://linear.app/kreativbiro/issue/KRE-161)
 - [x] `environments/dev` — compose modules (networking + ecs) → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
 - [ ] Secrets Manager for API keys
 
