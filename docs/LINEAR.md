@@ -13,12 +13,14 @@
 
 ## Latest progress (2026-06-30)
 
-**Phase 5 in progress** — full Terraform stack + deploy hardening for first AWS apply.
+**Phase 5 in progress** — AWS dev live + GitHub Actions CI/CD.
 
 | Done (Phase 5)                                        | Next                        |
 | ----------------------------------------------------- | --------------------------- |
-| [KRE-156](https://linear.app/kreativbiro/issue/KRE-156) … [KRE-161](https://linear.app/kreativbiro/issue/KRE-161) Terraform modules (networking → cognito) | **First AWS apply + ECR**   |
-| [KRE-162](https://linear.app/kreativbiro/issue/KRE-162) ECS runtime, Cognito OAuth, SSE keepalives | step-functions, CI/CD       |
+| [KRE-156](https://linear.app/kreativbiro/issue/KRE-156) … [KRE-161](https://linear.app/kreativbiro/issue/KRE-161) Terraform modules (networking → cognito) | **Step Functions**          |
+| [KRE-162](https://linear.app/kreativbiro/issue/KRE-162) ECS runtime, Cognito OAuth, SSE keepalives | **observability module**    |
+| AWS dev apply + ECR (manual first deploy)             | Phase 6 polish              |
+| [KRE-163](https://linear.app/kreativbiro/issue/KRE-163) GitHub Actions CI/CD — OIDC, ECR, ECS | —                           |
 
 **Phase 4 complete** — [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) local OTEL (SDK, collector, Jaeger).
 
@@ -63,7 +65,7 @@ save_issue(id: "KRE-122", state: "Done")
 | Phase 2 — Core Pipeline | Complete (stub agents + E2E)                                                 |
 | Phase 3 — Real AI       | **Complete** — KRE-139–147 (real agents + Cognito auth + resilience)         |
 | Phase 4 — Frontend      | **Complete** — KRE-151–155 ✅ |
-| Phase 5 — AWS Deploy    | **In progress** — Terraform + deploy hardening ✅; first apply + ECR next |
+| Phase 5 — AWS Deploy    | **In progress** — Terraform + AWS dev + CI/CD ✅ (KRE-163); Step Functions next |
 
 ## Issue index (Phase 0 + 1)
 
@@ -152,8 +154,9 @@ Also see deferred infra/reliability: KRE-136 (outbox), KRE-137, KRE-138.
 | EF-044 | [KRE-160](https://linear.app/kreativbiro/issue/KRE-160) | Terraform `modules/eventbridge` — bus + stage rules     | —        | KRE-159    |
 | EF-045 | [KRE-161](https://linear.app/kreativbiro/issue/KRE-161) | Terraform `modules/cognito` — pool, client, Hosted UI   | —        | —          |
 | EF-046 | [KRE-162](https://linear.app/kreativbiro/issue/KRE-162) | AWS deploy hardening — ECS runtime, Cognito OAuth, SSE  | —        | KRE-157    |
+| EF-047 | [KRE-163](https://linear.app/kreativbiro/issue/KRE-163) | GitHub Actions CI/CD — OIDC, ECR deploy, Terraform    | —        | KRE-162    |
 
-> **Next (not yet in Linear):** First AWS apply + ECR, Step Functions, CI/CD.
+> **Next (not yet in Linear):** Step Functions module, observability module.
 
 ## Backend-first track (recommended)
 
@@ -172,8 +175,8 @@ Done:   KRE-139 (LLM client + cost tracking foundation)
         KRE-147 (LLM resilience — retry, circuit breaker, cost cap)
 
 Next:   Phase 5 AWS deployment (in progress)
-        Done: KRE-156–162 ✅ Terraform + deploy hardening
-        Next: first terraform apply + ECR → step-functions → CI/CD
+        Done: KRE-156–163 ✅ Terraform, AWS dev, CI/CD
+        Next: step-functions → observability → Phase 6
 
 Optional: KRE-150 umbrella → KRE-148 chunking, KRE-149 richer ingestion, KRE-133 RAG eval (+ KRE-136/137/138)
 

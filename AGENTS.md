@@ -26,7 +26,7 @@
 
 ## Current status
 
-**Phases 0–4 complete.** **Phase 5 in progress** — Terraform modules + deploy hardening done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR. Index: `docs/LINEAR.md`
+**Phases 0–4 complete.** **Phase 5 in progress** — AWS dev + CI/CD done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability. Index: `docs/LINEAR.md`
 
 ## Commands
 

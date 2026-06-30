@@ -24,7 +24,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 
 ## Where things stand
 
-**Strategy:** Phases 0–4 complete. **Phase 5 in progress** — full Terraform stack + deploy hardening ✅ ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR.
+**Strategy:** Phases 0–4 complete. **Phase 5 in progress** — AWS dev live ✅ · CI/CD via GitHub Actions ✅ ([KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability.
 
 | Phase | Focus                                                                         | Status                                                                                                                                                                                                                                                                                                                                                           |
 | ----- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -33,7 +33,7 @@ Turn open-ended research questions into **cited, multi-source syntheses** you ca
 | **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done                                                                                                                                                                                                                                                                                                                                                          |
 | **3** | **Real AI** — full agent pipeline, cost API, resilience, Cognito auth         | ✅ **Complete**                                                                                                                                                                                                                                                                                                                                                  |
 | **4** | Next.js UI, SSE, React Flow, dashboard, Cognito UI, OTEL                      | ✅ **Complete** — [KRE-151](https://linear.app/kreativbiro/issue/KRE-151) SSE · [KRE-152](https://linear.app/kreativbiro/issue/KRE-152) React Flow · [KRE-153](https://linear.app/kreativbiro/issue/KRE-153) dashboard · [KRE-154](https://linear.app/kreativbiro/issue/KRE-154) Cognito UI · [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) OTEL local |
-| **5** | AWS deploy (Terraform, ECS, Step Functions fan-out)                           | **In progress** — IaC + deploy hardening done (KRE-156–162); first apply + ECR next |
+| **5** | AWS deploy (Terraform, ECS, CI/CD, Step Functions)                            | **In progress** — IaC + AWS dev + CI/CD done (KRE-156–163); Step Functions + observability next                                                                                                                                                                                                                                                                  |
 | **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard                        | Planned                                                                                                                                                                                                                                                                                                                                                          |
 
 Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/LINEAR.md)
@@ -74,6 +74,8 @@ POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GE
 | Cognito sign-in UI — Amplify Auth, Bearer token, route guard         | ✅ [KRE-154](https://linear.app/kreativbiro/issue/KRE-154)                                                                                |
 | Local OTEL — FastAPI + worker spans, collector, Jaeger UI            | ✅ [KRE-155](https://linear.app/kreativbiro/issue/KRE-155)                                                                                |
 | AWS deploy hardening — IAM creds, SSE keepalives, Cognito OAuth gate | ✅ [KRE-162](https://linear.app/kreativbiro/issue/KRE-162)                                                                                |
+| AWS dev deploy — ECS Fargate, ALB, RDS, EventBridge, Cognito         | ✅ Terraform apply + ECR                                                                                                                  |
+| GitHub Actions CI/CD — OIDC, ECR push, ECS rollout                   | ✅ [KRE-163](https://linear.app/kreativbiro/issue/KRE-163) · [`docs/CICD.md`](./docs/CICD.md)                                             |
 
 **Smoke test:** `./scripts/verify-pipeline-e2e.sh` or `make verify-e2e` (API + all workers; real LLM run ~2–3 min with one research worker)
 
@@ -123,7 +125,8 @@ Full diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | **Frontend** _(Phase 4)_ | Next.js 16, shadcn/ui, TanStack Query, React Flow, SSE, Amplify Cognito UI ✅                                               |
 | **Auth** _(Phase 3–4)_   | Cognito JWT → FastAPI ✅ · Amplify sign-in + Bearer on API/SSE ✅ ([KRE-154](https://linear.app/kreativbiro/issue/KRE-154)) |
 | **Observability**        | OpenTelemetry → OTLP collector → Jaeger ✅ ([KRE-155](https://linear.app/kreativbiro/issue/KRE-155))                        |
-| **IaC** _(Phase 5)_      | Terraform — networking, rds, sqs, eventbridge, cognito, ecs |
+| **IaC** _(Phase 5)_      | Terraform — networking, rds, sqs, eventbridge, cognito, ecs, github-oidc                                                    |
+| **CI/CD** _(Phase 5)_    | GitHub Actions — lint/test on PR; OIDC deploy to ECR/ECS on `main` ([`docs/CICD.md`](./docs/CICD.md))                       |
 | **Local**                | Docker Compose + LocalStack                                                                                                 |
 
 ---
@@ -231,6 +234,24 @@ Full guide: [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md)
 
 ---
 
+## AWS dev deploy
+
+EventForge runs on **ECS Fargate** in `eu-west-2` (ALB → API + frontend, RDS, EventBridge/SQS workers).
+
+| Item          | Value                                                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| App URL       | `http://<alb_dns_name>` (from `terraform output alb_dns_name`)                                                        |
+| CI/CD         | [`docs/CICD.md`](./docs/CICD.md) — set repo variable `AWS_DEPLOY_ROLE_ARN`, push to `main` or run **Deploy** workflow |
+| Manual deploy | `infra/terraform/README.md` — ECR build/push + `scripts/ci/ecs-deploy-*.sh`                                           |
+
+```bash
+cd infra/terraform/environments/dev
+terraform output alb_dns_name
+terraform output -raw github_actions_role_arn   # → GitHub variable AWS_DEPLOY_ROLE_ARN
+```
+
+---
+
 ## Project structure
 
 ```
@@ -246,9 +267,9 @@ event-driven/
 │   └── services/search/      # Tavily client
 ├── shared/events/            # JSON Schema contracts (source of truth)
 ├── infra/                    # Terraform (Phase 5), LocalStack init, Docker, OTEL
-│   └── terraform/            # modules/networking, modules/rds, modules/ecs, environments/dev
-├── docs/                     # PRD, architecture, ADRs, roadmap
-├── scripts/                  # setup, E2E verify, seed
+│   └── terraform/            # modules/networking, rds, ecs, github-oidc, environments/dev
+├── docs/                     # PRD, architecture, ADRs, roadmap, CICD
+├── scripts/                  # setup, E2E verify, CI deploy (scripts/ci/)
 └── frontend/                 # Next.js app (Phase 4)
     └── src/
         ├── app/              # /, /login, /queries/new, /queries/[id]
@@ -269,6 +290,7 @@ event-driven/
 | [`docs/TASKS.md`](./docs/TASKS.md)                   | Phase roadmap and checkboxes         |
 | [`docs/TECH_DECISIONS.md`](./docs/TECH_DECISIONS.md) | ADRs (Tavily, pgvector, SSE, etc.)   |
 | [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md)           | Troubleshooting and worker setup     |
+| [`docs/CICD.md`](./docs/CICD.md)                     | GitHub Actions deploy setup          |
 
 For Cursor agents: [AGENTS.md](./AGENTS.md) · [`.cursor/rules/`](./.cursor/rules/)
 

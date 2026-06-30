@@ -73,6 +73,6 @@ Phase 1+: `uv run uvicorn eventforge.main:app --reload` (backend), `npm run dev`
 - **Project:** [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) on team `Kreativbiro`
 - **Active work:** Linear MCP (`list_issues`, `get_issue`) — not just markdown
 - **Mirror:** `docs/TASKS.md` + `docs/LINEAR.md` issue index
-- **Next issue:** First AWS apply + ECR ([KRE-162](https://linear.app/kreativbiro/issue/KRE-162) deploy hardening done).
+- **Next issue:** Step Functions module ([KRE-163](https://linear.app/kreativbiro/issue/KRE-163) CI/CD done).
 
-**Phase status:** Phases 0–4 complete. Phase 5 Terraform + deploy hardening complete ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR.
+**Phase status:** Phases 0–4 complete. Phase 5 AWS dev + CI/CD complete ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability.

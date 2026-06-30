@@ -235,10 +235,13 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 5.2 CI/CD
 
-- [ ] GitHub Actions: lint + test on PR
-- [ ] Docker build + push to ECR
-- [ ] Terraform plan on PR, apply on merge to main
-- [ ] Frontend deploy to ECS (same ALB as API) or CloudFront
+→ [KRE-163](https://linear.app/kreativbiro/issue/KRE-163)
+
+- [x] GitHub Actions: lint + test on PR — KRE-163
+- [x] Docker build + push to ECR — KRE-163
+- [x] Terraform plan on PR, apply on merge to main — KRE-163 (requires `TFVARS_DEV` secret)
+- [x] Frontend deploy to ECS (same ALB as API) — KRE-163
+- [x] GitHub OIDC IAM role + SSM frontend build env — KRE-163
 
 ### 5.3 Step Functions
 
@@ -310,6 +313,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2–4 complete. **Phase 5:** Terraform modules + deploy hardening done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-162](https://linear.app/kreativbiro/issue/KRE-162)). **Next:** first AWS apply + ECR.
+**Backend-first track:** Phase 2–4 complete. **Phase 5:** AWS dev live + CI/CD done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability module.
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

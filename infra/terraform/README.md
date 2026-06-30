@@ -18,6 +18,7 @@ terraform/
     ├── eventbridge/         # Bus + stage routing rules ✅
     ├── cognito/             # User pool, app client, Hosted UI domain ✅
     ├── ecs/                 # ECR, cluster, ALB, Fargate services ✅
+    ├── github-oidc/         # GitHub Actions OIDC IAM role ✅
     ├── step-functions/      # Research fan-out (next)
     └── observability/       # ADOT, alarms (next)
 ```
@@ -104,7 +105,6 @@ Uncomment the `backend "s3"` block in `environments/dev/main.tf` and create:
 
 1. Secrets module for OpenAI/Tavily keys (optional; manual SM secrets work for dev)
 2. `step-functions` — research Map state
-3. CI/CD — GitHub Actions path filters → ECR → ECS rolling deploy
-4. First full `terraform apply` + ECR push
+3. `observability` — ADOT, CloudWatch alarms
 
-See `docs/TASKS.md` Phase 5 and `docs/TECH_DECISIONS.md` ADR-012.
+**CI/CD:** GitHub Actions deploy — see [`docs/CICD.md`](../../docs/CICD.md). Set repo variable `AWS_DEPLOY_ROLE_ARN` from `terraform output github_actions_role_arn`.
