@@ -211,6 +211,8 @@ export interface components {
             updated_at: string;
             /** Stages */
             stages: components["schemas"]["JobStageResponse"][];
+            /** Sources */
+            sources?: components["schemas"]["SourceResponse"][];
             synthesis_report?: components["schemas"]["SynthesisReportResponse"] | null;
             llm_usage: components["schemas"]["LLMUsageSummaryResponse"];
         };
@@ -244,6 +246,28 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /**
+         * SourceResponse
+         * @description Web source discovered during ingestion.
+         */
+        SourceResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Url */
+            url: string;
+            /** Title */
+            title: string;
+            /** Snippet */
+            snippet: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * SubmitQueryRequest

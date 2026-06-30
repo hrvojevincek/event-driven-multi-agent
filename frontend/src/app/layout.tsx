@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, JetBrains_Mono } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
@@ -34,7 +35,9 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AppShell>{children}</AppShell>
+          <QueryProvider>
+            <AppShell>{children}</AppShell>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

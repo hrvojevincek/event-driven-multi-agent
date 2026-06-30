@@ -299,6 +299,11 @@ components:
             $ref: '#/components/schemas/JobStageResponse'
           type: array
           title: Stages
+        sources:
+          items:
+            $ref: '#/components/schemas/SourceResponse'
+          type: array
+          title: Sources
         synthesis_report:
           anyOf:
           - $ref: '#/components/schemas/SynthesisReportResponse'
@@ -362,6 +367,34 @@ components:
       - updated_at
       title: QuerySummaryResponse
       description: Lightweight job summary for list endpoints.
+    SourceResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        url:
+          type: string
+          title: Url
+        title:
+          type: string
+          title: Title
+        snippet:
+          type: string
+          title: Snippet
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - url
+      - title
+      - snippet
+      - created_at
+      title: SourceResponse
+      description: Web source discovered during ingestion.
     SubmitQueryRequest:
       properties:
         topic:

@@ -73,6 +73,6 @@ Phase 1+: `uv run uvicorn eventforge.main:app --reload` (backend), `npm run dev`
 - **Project:** [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) on team `Kreativbiro`
 - **Active work:** Linear MCP (`list_issues`, `get_issue`) — not just markdown
 - **Mirror:** `docs/TASKS.md` + `docs/LINEAR.md` issue index
-- **Next issue:** Phase 4.2 React Flow ([KRE-152](https://linear.app/kreativbiro/issue/KRE-152)).
+- **Next issue:** Phase 4.4 Cognito UI (Phase 4.3 done — [KRE-153](https://linear.app/kreativbiro/issue/KRE-153)).
 
-**Phase status:** Phase 3 complete. Phase 4.1 SSE complete ([KRE-151](https://linear.app/kreativbiro/issue/KRE-151)). **Next:** React Flow.
+**Phase status:** Phase 3 complete. Phase 4.1–4.3 complete ([KRE-151](https://linear.app/kreativbiro/issue/KRE-151), [KRE-152](https://linear.app/kreativbiro/issue/KRE-152), [KRE-153](https://linear.app/kreativbiro/issue/KRE-153)). **Next:** Phase 4.4 Cognito UI.

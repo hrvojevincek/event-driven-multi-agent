@@ -393,7 +393,7 @@ After infrastructure is verified:
 
 1. **Phase 1–3:** Backend API + real AI pipeline ✅
 2. **Phase 4.1:** SSE live updates on `/queries/[id]` ✅ ([KRE-151](https://linear.app/kreativbiro/issue/KRE-151))
-3. **Phase 4.2:** React Flow pipeline visualization — next ([KRE-152](https://linear.app/kreativbiro/issue/KRE-152))
-4. See `docs/TASKS.md` for full roadmap
-
-Say: _"Implement KRE-152"_ for React Flow.
+3. **Phase 4.2:** React Flow pipeline visualization ✅ ([KRE-152](https://linear.app/kreativbiro/issue/KRE-152))
+4. **Phase 4.3:** Dashboard UI — submit, history, synthesis, sources, cost ✅ ([KRE-153](https://linear.app/kreativbiro/issue/KRE-153))
+5. **Phase 4.4:** Cognito sign-in UI — next
+6. See `docs/TASKS.md` for full roadmap

@@ -146,3 +146,47 @@
   --xy-edge-stroke-default: var(--border);
   --xy-node-background-color-default: var(--card);
 }
+
+.markdown-body {
+  @apply space-y-3 leading-relaxed text-foreground;
+}
+
+.markdown-body h1 {
+  @apply text-xl font-semibold tracking-tight;
+}
+
+.markdown-body h2 {
+  @apply text-lg font-semibold tracking-tight;
+}
+
+.markdown-body h3 {
+  @apply text-base font-medium;
+}
+
+.markdown-body p {
+  @apply text-muted-foreground;
+}
+
+.markdown-body ul {
+  @apply list-disc space-y-1 pl-5 text-muted-foreground;
+}
+
+.markdown-body ol {
+  @apply list-decimal space-y-1 pl-5 text-muted-foreground;
+}
+
+.markdown-body a {
+  @apply text-primary underline underline-offset-2;
+}
+
+.markdown-body code {
+  @apply rounded bg-muted px-1 py-0.5 font-mono text-xs;
+}
+
+.markdown-body pre {
+  @apply overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs;
+}
+
+.markdown-body blockquote {
+  @apply border-l-2 border-primary/40 pl-3 italic text-muted-foreground;
+}

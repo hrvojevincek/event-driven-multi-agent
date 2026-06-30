@@ -32,6 +32,16 @@ class JobStageResponse(BaseModel):
     error_detail: str | None
 
 
+class SourceResponse(BaseModel):
+    """Web source discovered during ingestion."""
+
+    id: UUID
+    url: str
+    title: str
+    snippet: str
+    created_at: datetime
+
+
 class SynthesisReportResponse(BaseModel):
     """Final report produced by the synthesis stage."""
 
@@ -84,5 +94,6 @@ class QueryDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     stages: list[JobStageResponse]
+    sources: list[SourceResponse] = Field(default_factory=list)
     synthesis_report: SynthesisReportResponse | None = None
     llm_usage: LLMUsageSummaryResponse

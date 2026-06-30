@@ -60,6 +60,35 @@ export async function apiFetch<T>(
 export type HealthResponse =
   paths["/health"]["get"]["responses"][200]["content"]["application/json"];
 
+export type QuerySummary =
+  paths["/api/v1/queries"]["get"]["responses"][200]["content"]["application/json"][number];
+
+export type QueryDetail =
+  paths["/api/v1/queries/{job_id}"]["get"]["responses"][200]["content"]["application/json"];
+
+export type SubmitQueryRequest =
+  paths["/api/v1/queries"]["post"]["requestBody"]["content"]["application/json"];
+
+export type SubmitQueryResponse =
+  paths["/api/v1/queries"]["post"]["responses"][201]["content"]["application/json"];
+
 export async function getHealth(): Promise<HealthResponse> {
   return apiFetch<HealthResponse>("/health");
+}
+
+export async function listQueries(): Promise<QuerySummary[]> {
+  return apiFetch<QuerySummary[]>("/api/v1/queries");
+}
+
+export async function getQueryDetail(jobId: string): Promise<QueryDetail> {
+  return apiFetch<QueryDetail>(`/api/v1/queries/${jobId}`);
+}
+
+export async function submitQuery(
+  body: SubmitQueryRequest,
+): Promise<SubmitQueryResponse> {
+  return apiFetch<SubmitQueryResponse>("/api/v1/queries", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }

@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -8,9 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { CostPanel } from "@/components/dashboard/cost-panel";
+import { SourcesPanel } from "@/components/dashboard/sources-panel";
+import { SynthesisViewer } from "@/components/dashboard/synthesis-viewer";
 import { PipelineGraph } from "@/components/workflow/pipeline-graph";
+import { useQueryDetail } from "@/hooks/use-queries";
 import { useJobStream } from "@/hooks/useJobStream";
+import { queryKeys } from "@/lib/query-keys";
 
 type QueryDetailLiveProps = {
   jobId: string;
@@ -25,6 +32,19 @@ function jobStatusLabel(status: string | null): string {
 
 export function QueryDetailLive({ jobId }: QueryDetailLiveProps) {
   const stream = useJobStream(jobId);
+  const queryClient = useQueryClient();
+  const jobStatus = stream.jobStatus ?? null;
+  const detailQuery = useQueryDetail(jobId, jobStatus);
+
+  useEffect(() => {
+    if (jobStatus === "completed" || jobStatus === "failed") {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.queries.detail(jobId),
+      });
+    }
+  }, [jobId, jobStatus, queryClient]);
+
+  const displayStatus = jobStatus ?? detailQuery.data?.status ?? null;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-6 md:p-10">
@@ -33,7 +53,9 @@ export function QueryDetailLive({ jobId }: QueryDetailLiveProps) {
           Job detail
         </Badge>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">Query job</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {detailQuery.data?.topic ?? "Query job"}
+          </h1>
           <Badge variant="outline" className="font-mono text-xs">
             {jobId}
           </Badge>
@@ -56,6 +78,11 @@ export function QueryDetailLive({ jobId }: QueryDetailLiveProps) {
         {stream.error ? (
           <p className="text-sm text-destructive">{stream.error}</p>
         ) : null}
+        {detailQuery.error ? (
+          <p className="text-sm text-destructive">
+            Failed to load job detail from API.
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
@@ -65,7 +92,7 @@ export function QueryDetailLive({ jobId }: QueryDetailLiveProps) {
             <CardDescription>
               Job status:{" "}
               <span className="font-mono uppercase">
-                {jobStatusLabel(stream.jobStatus)}
+                {jobStatusLabel(displayStatus)}
               </span>
             </CardDescription>
           </CardHeader>
@@ -82,12 +109,12 @@ export function QueryDetailLive({ jobId }: QueryDetailLiveProps) {
                 Markdown report with citations appears when the job completes.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p className="rounded-lg border border-dashed border-border p-4">
-                {stream.jobStatus === "completed"
-                  ? "Job complete — fetch full report via GET /queries/{id} in Phase 4.3."
-                  : "Report preview placeholder…"}
-              </p>
+            <CardContent>
+              <SynthesisViewer
+                detail={detailQuery.data}
+                jobStatus={displayStatus}
+                isLoading={detailQuery.isLoading}
+              />
             </CardContent>
           </Card>
 
@@ -98,10 +125,11 @@ export function QueryDetailLive({ jobId }: QueryDetailLiveProps) {
                 Expandable snippets from ingested documents and web results.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p className="rounded-lg border border-dashed border-border p-3">
-                No sources loaded yet.
-              </p>
+            <CardContent>
+              <SourcesPanel
+                detail={detailQuery.data}
+                isLoading={detailQuery.isLoading}
+              />
             </CardContent>
           </Card>
 
@@ -114,17 +142,10 @@ export function QueryDetailLive({ jobId }: QueryDetailLiveProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Separator className="mb-3" />
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <dt className="text-muted-foreground">Tokens</dt>
-                  <dd className="font-mono">—</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Est. cost</dt>
-                  <dd className="font-mono">—</dd>
-                </div>
-              </dl>
+              <CostPanel
+                detail={detailQuery.data}
+                isLoading={detailQuery.isLoading}
+              />
             </CardContent>
           </Card>
         </div>

@@ -1,7 +1,8 @@
+import { Badge } from "@/components/ui/badge";
+import { QueryHistory } from "@/components/dashboard/query-history";
 import Link from "next/link";
 import { ArrowRight, GitBranch, Layers, Zap } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -50,6 +51,8 @@ export default function HomePage() {
           </Button>
         </div>
       </section>
+
+      <QueryHistory />
 
       <section className="grid gap-4 md:grid-cols-3">
         <Card>

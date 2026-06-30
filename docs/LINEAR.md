@@ -11,19 +11,20 @@
 | Project | [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) |
 | Target  | Phase 4 frontend (backend MVP complete)                                      |
 
-## Latest progress (2026-06-29)
+## Latest progress (2026-06-30)
 
-**Phase 4 scaffold complete** — KRE-119–128 done. **Phase 4.1 complete** — [KRE-151](https://linear.app/kreativbiro/issue/KRE-151) SSE + `useJobStream`.
+**Phase 4.3 complete** — [KRE-153](https://linear.app/kreativbiro/issue/KRE-153) dashboard UI (TanStack Query, submit, history, synthesis, sources, cost).
 
-| Done (Phase 4 scaffold)                               | Next                                    |
-| ----------------------------------------------------- | --------------------------------------- |
-| KRE-119 Next.js + Tailwind + shadcn                   | **Phase 4.3** dashboard UI + TanStack Query |
-| KRE-121 layout + placeholder pages                    | Phase 4.4 Cognito UI                    |
-| KRE-124 API client + Dockerfile + compose             |                                         |
-| KRE-126 OpenAPI → TypeScript codegen                  |                                         |
-| KRE-128 full-stack smoke test (`verify-fullstack.sh`) |                                         |
-| KRE-151 SSE + `useJobStream`                          |                                         |
-| KRE-152 React Flow pipeline visualization             |                                         |
+| Done (Phase 4)                                        | Next                    |
+| ----------------------------------------------------- | ----------------------- |
+| KRE-119 Next.js + Tailwind + shadcn                   | **Phase 4.4** Cognito UI |
+| KRE-121 layout + placeholder pages                    | Phase 4.5 OTEL local    |
+| KRE-124 API client + Dockerfile + compose             |                         |
+| KRE-126 OpenAPI → TypeScript codegen                  |                         |
+| KRE-128 full-stack smoke test (`verify-fullstack.sh`) |                         |
+| KRE-151 SSE + `useJobStream`                          |                         |
+| KRE-152 React Flow pipeline visualization             |                         |
+| KRE-153 Dashboard UI + TanStack Query                 |                         |
 
 **Phase 3 complete** — real AI pipeline + Cognito JWT auth verified end-to-end.
 
@@ -52,7 +53,7 @@ save_issue(id: "KRE-122", state: "Done")
 | Phase 1 — Scaffolding   | Backend complete; frontend → Phase 4                                 |
 | Phase 2 — Core Pipeline | Complete (stub agents + E2E)                                         |
 | Phase 3 — Real AI       | **Complete** — KRE-139–147 (real agents + Cognito auth + resilience) |
-| Phase 4 — Frontend      | **In progress** — KRE-151 ✅ SSE; KRE-152 ✅ React Flow; next **Phase 4.3** dashboard UI |
+| Phase 4 — Frontend      | **In progress** — KRE-151 ✅ SSE; KRE-152 ✅ React Flow; KRE-153 ✅ dashboard UI; next **Phase 4.4** Cognito |
 
 ## Issue index (Phase 0 + 1)
 
@@ -126,8 +127,9 @@ Also see deferred infra/reliability: KRE-136 (outbox), KRE-137, KRE-138.
 | ------ | ------------------------------------------------------- | ----------------------------------------------------- | -------- | ---------- |
 | EF-035 | [KRE-151](https://linear.app/kreativbiro/issue/KRE-151) | SSE pipeline stream + `useJobStream` hook (Phase 4.1) | 5        | KRE-128    |
 | EF-036 | [KRE-152](https://linear.app/kreativbiro/issue/KRE-152) | React Flow pipeline visualization (Phase 4.2)       | 5        | KRE-151    |
+| EF-037 | [KRE-153](https://linear.app/kreativbiro/issue/KRE-153) | Dashboard UI — submit, history, synthesis (Phase 4.3) | 5        | KRE-152    |
 
-> Phase 4.3+ (dashboard UI, Cognito UI) — track in `docs/TASKS.md` §4.3–4.4; Linear issues TBD.
+> Phase 4.4+ (Cognito UI, local OTEL) — track in `docs/TASKS.md` §4.4–4.5; Linear issues TBD.
 
 ## Backend-first track (recommended)
 
@@ -145,8 +147,8 @@ Done:   KRE-139 (LLM client + cost tracking foundation)
         KRE-146 (Cognito JWT auth + user-scoped queries)
         KRE-147 (LLM resilience — retry, circuit breaker, cost cap)
 
-Next:   Phase 4.3 dashboard UI → 4.4 Cognito
-        Done: KRE-119 ✅ KRE-121 ✅ KRE-124 ✅ KRE-126 ✅ KRE-128 ✅ KRE-151 ✅ KRE-152 ✅
+Next:   Phase 4.4 Cognito UI → 4.5 OTEL local
+        Done: KRE-119 ✅ KRE-121 ✅ KRE-124 ✅ KRE-126 ✅ KRE-128 ✅ KRE-151 ✅ KRE-152 ✅ KRE-153 ✅
 
 Optional: KRE-150 umbrella → KRE-148 chunking, KRE-149 richer ingestion, KRE-133 RAG eval (+ KRE-136/137/138)
 

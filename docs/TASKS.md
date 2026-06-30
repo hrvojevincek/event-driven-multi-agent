@@ -179,10 +179,12 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 4.3 Dashboard UI
 
-- [ ] Query submission form (topic, depth, max_sources)
-- [ ] Results viewer (markdown rendering)
-- [ ] Source list with expandable snippets
-- [ ] Job history page
+→ [KRE-153](https://linear.app/kreativbiro/issue/KRE-153)
+
+- [x] Query submission form (topic, depth, max_sources)
+- [x] Results viewer (markdown rendering)
+- [x] Source list with expandable snippets
+- [x] Job history page
 
 ### 4.4 Authentication (Cognito UI)
 
@@ -293,6 +295,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2–3 complete. **Phase 4.2 complete** (KRE-152 React Flow); next **Phase 4.3** dashboard UI.
+**Backend-first track:** Phase 2–3 complete. **Phase 4.3 complete** (dashboard UI); next **Phase 4.4** Cognito UI.
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

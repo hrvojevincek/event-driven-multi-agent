@@ -207,6 +207,39 @@ async def test_get_query_returns_job_with_stages(client: AsyncClient) -> None:
     assert all(stage["status"] == "pending" for stage in body["stages"])
     assert body["llm_usage"]["total_cost_usd"] == 0.0
     assert body["llm_usage"]["calls"] == []
+    assert body["sources"] == []
+
+
+async def test_get_query_includes_sources_when_present(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    from eventforge.db.models import Source
+
+    create_response = await client.post(
+        "/api/v1/queries",
+        json={"topic": "Sources detail test", "depth": "standard"},
+    )
+    job_id = UUID(create_response.json()["job_id"])
+
+    db_session.add(
+        Source(
+            job_id=job_id,
+            url="https://example.com/article",
+            title="Example Article",
+            snippet="A short excerpt from the article.",
+        )
+    )
+    await db_session.flush()
+
+    response = await client.get(f"/api/v1/queries/{job_id}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["sources"]) == 1
+    assert body["sources"][0]["url"] == "https://example.com/article"
+    assert body["sources"][0]["title"] == "Example Article"
+    assert body["sources"][0]["snippet"] == "A short excerpt from the article."
 
 
 async def test_get_query_returns_404_for_unknown_job(client: AsyncClient) -> None:

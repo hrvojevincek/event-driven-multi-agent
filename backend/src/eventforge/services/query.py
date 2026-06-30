@@ -11,6 +11,7 @@ from eventforge.api.schemas.queries import (
     LLMUsageSummaryResponse,
     QueryDetailResponse,
     QuerySummaryResponse,
+    SourceResponse,
     SynthesisReportResponse,
 )
 from eventforge.db.models import Job, JobStage, JobStageName, JobStatus, LLMUsage, StageStatus, User
@@ -18,6 +19,7 @@ from eventforge.db.repositories import (
     JobRepository,
     LLMUsageRepository,
     ProcessedEventRepository,
+    SourceRepository,
 )
 from eventforge.events.publisher import PUBLISHER_WORKER_NAME, EventPublisher
 from eventforge.events.schemas import QueryDepth, build_query_submitted_event
@@ -132,6 +134,7 @@ def _build_llm_usage_summary(
 def _job_to_detail_response(
     job: Job,
     *,
+    sources: list[SourceResponse],
     llm_usage: LLMUsageSummaryResponse,
 ) -> QueryDetailResponse:
     stages = sorted(
@@ -164,6 +167,7 @@ def _job_to_detail_response(
             )
             for stage in stages
         ],
+        sources=sources,
         synthesis_report=synthesis_report,
         llm_usage=llm_usage,
     )
@@ -188,4 +192,16 @@ async def get_query_detail(
     total_cost = await usage_repo.total_cost_by_job_id(job_id)
     llm_usage = _build_llm_usage_summary(records, total_cost)
 
-    return _job_to_detail_response(job, llm_usage=llm_usage)
+    source_records = await SourceRepository(session).list_by_job_id(job_id)
+    sources = [
+        SourceResponse(
+            id=source.id,
+            url=source.url,
+            title=source.title,
+            snippet=source.snippet,
+            created_at=source.created_at,
+        )
+        for source in source_records
+    ]
+
+    return _job_to_detail_response(job, sources=sources, llm_usage=llm_usage)
