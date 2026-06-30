@@ -59,8 +59,8 @@ module "ecs" {
   backend_image  = var.backend_image
   frontend_image = var.frontend_image
 
-  event_bus_arn                = var.event_bus_arn
-  worker_queue_arns            = var.worker_queue_arns
+  event_bus_arn                = module.eventbridge.bus_arn
+  worker_queue_arns            = module.sqs.worker_queue_arns
   postgres_host                = module.rds.address
   postgres_port                = module.rds.port
   postgres_db                  = module.rds.database_name

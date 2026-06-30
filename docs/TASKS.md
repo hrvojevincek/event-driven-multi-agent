@@ -214,8 +214,8 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] `modules/networking` — VPC, subnets, security groups → [KRE-156](https://linear.app/kreativbiro/issue/KRE-156)
 - [x] `modules/ecs` — ECR, cluster, ALB, API + worker + frontend Fargate services → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
 - [x] `modules/rds` — Postgres with backups → [KRE-158](https://linear.app/kreativbiro/issue/KRE-158)
-- [ ] `modules/eventbridge` — event bus + rules
-- [ ] `modules/sqs` — queues + DLQ + redrive
+- [x] `modules/eventbridge` — event bus + rules → [KRE-160](https://linear.app/kreativbiro/issue/KRE-160)
+- [x] `modules/sqs` — queues + DLQ + redrive → [KRE-159](https://linear.app/kreativbiro/issue/KRE-159)
 - [ ] `modules/step-functions` — research fan-out workflow
 - [ ] `modules/observability` — CloudWatch, ADOT
 - [ ] `modules/cognito` — user pool, app client, callback URLs

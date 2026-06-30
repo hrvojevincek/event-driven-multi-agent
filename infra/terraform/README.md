@@ -10,13 +10,13 @@ IaC for AWS resources. Default region: **`eu-west-2` (London)**.
 ```
 terraform/
 ├── environments/
-│   └── dev/                 # Compose modules for dev (networking + rds + ecs)
+│   └── dev/                 # networking + rds + sqs + eventbridge + ecs
 └── modules/
     ├── networking/          # VPC, subnets, NAT, security groups ✅
     ├── rds/                 # Postgres 16 + Secrets Manager password ✅
+    ├── sqs/                 # Worker queues + DLQ + redrive ✅
+    ├── eventbridge/         # Bus + stage routing rules ✅
     ├── ecs/                 # ECR, cluster, ALB, Fargate services ✅
-    ├── sqs/                 # Queues + DLQ (next)
-    ├── eventbridge/         # Bus + rules (next)
     ├── cognito/             # User pool (next)
     ├── step-functions/      # Research fan-out (next)
     └── observability/       # ADOT, alarms (next)
@@ -28,9 +28,11 @@ terraform/
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | **networking** | VPC `/16`, 2 AZs, public + private subnets, NAT (single for dev), SGs for ALB/API/frontend/workers/RDS |
 | **rds**        | Postgres 16 (gp3), subnet group, backups, password in Secrets Manager; pgvector via Alembic on migrate |
+| **sqs**        | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                          |
+| **eventbridge**| `eventforge-bus` + rules routing each `detail-type` to the next stage queue                                 |
 | **ecs**        | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services                |
 
-`environments/dev` wires **networking → rds → ecs**. SQS, EventBridge, and Cognito are still **manual tfvars** until their modules land.
+`environments/dev` wires **networking → rds → sqs → eventbridge → ecs**. Cognito and LLM secrets are still **manual tfvars** until their modules land.
 
 ## Prerequisites
 
@@ -49,7 +51,7 @@ Do **not** commit `terraform.tfvars`, `*.tfstate`, or `*.tfplan` (see root `.git
 cd infra/terraform/environments/dev
 
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars — at minimum images, LLM secret ARNs, event_bus_arn
+# Edit terraform.tfvars — at minimum images, LLM secret ARNs, Cognito IDs
 
 terraform init
 terraform plan
@@ -76,7 +78,7 @@ docker tag eventforge-dev-frontend:latest $(terraform output -raw frontend_ecr_r
 docker push $(terraform output -raw frontend_ecr_repository_url):latest
 ```
 
-3. Update `terraform.tfvars` with image URIs + SQS/Cognito ARNs when those modules exist
+3. Update `terraform.tfvars` with image URIs + Cognito IDs when that module exists
 4. Re-apply to start ECS services
 
 After first apply, run Alembic migrations via the API task (entrypoint runs `alembic upgrade head` on deploy) or connect to RDS from a bastion/session for manual verify. The `vector` extension is created by Alembic migration `5f4297155502`.
@@ -90,10 +92,9 @@ Uncomment the `backend "s3"` block in `environments/dev/main.tf` and create:
 
 ## Next modules
 
-1. `sqs` + `eventbridge` — mirror LocalStack names (`eventforge-*`)
-2. `cognito` — user pool; callback URLs → ALB DNS
-3. Secrets module for OpenAI/Tavily keys (optional; manual SM secrets work for dev)
-4. `step-functions` — research Map state
-5. CI/CD — GitHub Actions path filters → ECR → ECS rolling deploy
+1. `cognito` — user pool; callback URLs → ALB DNS
+2. Secrets module for OpenAI/Tavily keys (optional; manual SM secrets work for dev)
+3. `step-functions` — research Map state
+4. CI/CD — GitHub Actions path filters → ECR → ECS rolling deploy
 
 See `docs/TASKS.md` Phase 5 and `docs/TECH_DECISIONS.md` ADR-012.

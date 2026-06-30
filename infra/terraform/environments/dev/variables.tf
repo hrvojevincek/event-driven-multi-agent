@@ -33,17 +33,6 @@ variable "frontend_image" {
   type        = string
 }
 
-variable "event_bus_arn" {
-  description = "EventBridge bus ARN (from modules/eventbridge — wire when available)."
-  type        = string
-}
-
-variable "worker_queue_arns" {
-  description = "SQS queue ARNs for worker IAM (from modules/sqs — wire when available)."
-  type        = list(string)
-  default     = []
-}
-
 variable "postgres_db" {
   type    = string
   default = "eventforge"
