@@ -76,11 +76,6 @@ variable "acm_certificate_arn" {
   default     = ""
 }
 
-variable "otel_exporter_otlp_endpoint" {
-  type    = string
-  default = ""
-}
-
 variable "create_ecr_repositories" {
   type    = bool
   default = true

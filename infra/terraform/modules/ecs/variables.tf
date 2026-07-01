@@ -238,7 +238,7 @@ variable "otel_enabled" {
 }
 
 variable "otel_exporter_otlp_endpoint" {
-  description = "OTLP gRPC endpoint for traces."
+  description = "OTLP gRPC endpoint for traces when otel_enabled is false (local override)."
   type        = string
   default     = ""
 }

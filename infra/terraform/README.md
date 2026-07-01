@@ -19,8 +19,8 @@ terraform/
     ├── cognito/             # User pool, app client, Hosted UI domain ✅
     ├── ecs/                 # ECR, cluster, ALB, Fargate services ✅
     ├── github-oidc/         # GitHub Actions OIDC IAM role ✅
-    ├── step-functions/      # Research fan-out (next)
-    └── observability/       # ADOT, alarms (next)
+    ├── step-functions/      # Research fan-out Map workflow ✅
+    └── observability/       # ADOT sidecar config, CloudWatch alarms ✅
 ```
 
 ## What exists today
@@ -32,9 +32,13 @@ terraform/
 | **sqs**         | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                         |
 | **eventbridge** | `eventforge-bus` + rules routing each `detail-type` to the next stage queue                            |
 | **cognito**     | User pool, public SPA client; OAuth + Hosted UI only when `app_base_url` is HTTPS or localhost         |
-| **ecs**         | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services                |
+| **ecs**         | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services; optional ADOT sidecar when observability enabled |
+| **observability** | ADOT collector config, DLQ + API task CloudWatch alarms |
+| **step-functions** | Research fan-out Map state machine (optional via `enable_step_functions_research`) |
 
-`environments/dev` wires **networking → rds → sqs → eventbridge → cognito → ecs**. LLM API keys remain **manual Secrets Manager ARNs** in tfvars.
+`environments/dev` wires **networking → rds → sqs → eventbridge → step-functions → cognito → observability → ecs**. LLM API keys remain **manual Secrets Manager ARNs** in tfvars.
+
+Set `enable_observability = true` (default) to add an ADOT sidecar on API/worker tasks exporting traces to X-Ray (`OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317`).
 
 ### Cognito OAuth vs HTTP ALB
 
@@ -104,6 +108,6 @@ Uncomment the `backend "s3"` block in `environments/dev/main.tf` and create:
 ## Next modules
 
 1. Secrets module for OpenAI/Tavily keys (optional; manual SM secrets work for dev)
-2. `observability` — ADOT, CloudWatch alarms
+2. Phase 6 — Playwright E2E, DLQ replay UI, demo GIF
 
 **CI/CD:** GitHub Actions deploy — see [`docs/CICD.md`](../../docs/CICD.md). Set repo variable `AWS_DEPLOY_ROLE_ARN` from `terraform output github_actions_role_arn`.

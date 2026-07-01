@@ -43,7 +43,7 @@ create_github_oidc_provider = false
 
 | Name                  | Example                                                        | Required |
 | --------------------- | -------------------------------------------------------------- | -------- |
-| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::988563522701:role/eventforge-dev-github-actions` | Yes      |
+| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::123456789012:role/eventforge-dev-github-actions` | Yes      |
 
 Get the ARN:
 

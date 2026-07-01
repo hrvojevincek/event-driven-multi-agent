@@ -52,7 +52,7 @@ locals {
     { name = "CORS_ORIGINS", value = var.cors_origins },
     { name = "OTEL_ENABLED", value = var.otel_enabled ? "true" : "false" },
     { name = "OTEL_SERVICE_NAME", value = "eventforge-api" },
-    { name = "OTEL_EXPORTER_OTLP_ENDPOINT", value = var.otel_exporter_otlp_endpoint },
+    { name = "OTEL_EXPORTER_OTLP_ENDPOINT", value = local.otlp_endpoint_effective },
   ]
 
   api_secrets = concat(

@@ -45,7 +45,7 @@ Phase 1+: `uv run uvicorn eventforge.main:app --reload` | `npm run dev`
 
 ## Current phase
 
-**Phases 0–4 complete.** **Phase 5 in progress** — AWS dev + CI/CD ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability. Index: `docs/LINEAR.md`
+**Phases 0–4 complete.** **Phase 5 in progress** — AWS dev + CI/CD + Step Functions + observability ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-165](https://linear.app/kreativbiro/issue/KRE-165)). **Next:** cloud E2E verify, Phase 6. Index: `docs/LINEAR.md`
 
 ## User shortcuts
 

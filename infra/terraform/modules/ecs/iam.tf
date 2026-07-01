@@ -64,6 +64,31 @@ resource "aws_iam_role_policy" "api_task" {
   policy = data.aws_iam_policy_document.api_task.json
 }
 
+data "aws_iam_policy_document" "api_task_otel" {
+  count = var.otel_enabled ? 1 : 0
+
+  statement {
+    sid    = "ExportTraces"
+    effect = "Allow"
+    actions = [
+      "xray:PutTraceSegments",
+      "xray:PutTelemetryRecords",
+      "xray:GetSamplingRules",
+      "xray:GetSamplingTargets",
+      "xray:GetSamplingStatisticSummaries",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "api_task_otel" {
+  count = var.otel_enabled ? 1 : 0
+
+  name   = "${local.name_prefix}-api-task-otel"
+  role   = aws_iam_role.api_task.id
+  policy = data.aws_iam_policy_document.api_task_otel[0].json
+}
+
 resource "aws_iam_role" "worker_task" {
   name               = "${local.name_prefix}-worker-task"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
@@ -98,6 +123,14 @@ resource "aws_iam_role_policy" "worker_task" {
   name   = "${local.name_prefix}-worker-task"
   role   = aws_iam_role.worker_task.id
   policy = data.aws_iam_policy_document.worker_task.json
+}
+
+resource "aws_iam_role_policy" "worker_task_otel" {
+  count = var.otel_enabled ? 1 : 0
+
+  name   = "${local.name_prefix}-worker-task-otel"
+  role   = aws_iam_role.worker_task.id
+  policy = data.aws_iam_policy_document.api_task_otel[0].json
 }
 
 data "aws_iam_policy_document" "worker_step_functions" {

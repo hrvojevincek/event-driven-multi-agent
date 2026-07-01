@@ -73,6 +73,6 @@ Phase 1+: `uv run uvicorn eventforge.main:app --reload` (backend), `npm run dev`
 - **Project:** [EventForge](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) on team `Kreativbiro`
 - **Active work:** Linear MCP (`list_issues`, `get_issue`) — not just markdown
 - **Mirror:** `docs/TASKS.md` + `docs/LINEAR.md` issue index
-- **Next issue:** Step Functions module ([KRE-163](https://linear.app/kreativbiro/issue/KRE-163) CI/CD done).
+- **Next issue:** Cloud E2E verify on AWS dev, then Phase 6 polish.
 
-**Phase status:** Phases 0–4 complete. Phase 5 AWS dev + CI/CD complete ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability.
+**Phase status:** Phases 0–4 complete. Phase 5 AWS dev + CI/CD + Step Functions + observability ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-165](https://linear.app/kreativbiro/issue/KRE-165)). **Next:** cloud E2E verify, Phase 6.

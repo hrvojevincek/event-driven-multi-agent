@@ -21,6 +21,10 @@ tavily_api_key_secret_arn = "arn:aws:secretsmanager:eu-west-2:ACCOUNT:secret:eve
 
 auth_disabled = false
 
+# ADOT sidecar + X-Ray traces + CloudWatch alarms (default true):
+# enable_observability = true
+# enable_step_functions_research = true
+
 # Optional Cognito domain prefix if eventforge-dev is taken globally:
 # cognito_domain_prefix = "eventforge-dev-yourname"
 

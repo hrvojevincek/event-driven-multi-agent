@@ -37,6 +37,15 @@ alwaysApply: false
 | `docs/ARCHITECTURE.md` | Pipeline, events, diagrams |
 | `docs/TECH_DECISIONS.md` | Before changing stack |
 | `docs/PRD.md` | Product scope |
+| `docs/ISSUES.md` | Postmortems — append after non-trivial infra/CI/debug fixes (placeholders only, no secrets) |
+
+## On non-trivial bug fix
+
+After resolving a production-style issue (Terraform thrash, CI OIDC, hung apply, etc.):
+
+1. Add a STAR entry to `docs/ISSUES.md` using the template at the bottom
+2. Use placeholders — never real account IDs, ARNs, API keys, or secret contents
+3. Link file paths and error messages; point to `docs/CICD.md` for setup details
 
 ## Phase exit criteria
 

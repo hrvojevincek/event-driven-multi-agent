@@ -191,7 +191,7 @@ event-driven/
 ├── shared/events/            # JSON Schema contracts (source of truth)
 ├── infra/                    # Terraform (Phase 5), LocalStack init, Docker, OTEL
 │   └── terraform/            # modules/networking, rds, ecs, github-oidc, environments/dev
-├── docs/                     # PRD, architecture, ADRs, roadmap, CICD
+├── docs/                     # PRD, architecture, ADRs, roadmap, CICD, ISSUES
 ├── scripts/                  # setup, E2E verify, CI deploy (scripts/ci/)
 └── frontend/                 # Next.js app (Phase 4)
     └── src/
@@ -214,6 +214,7 @@ event-driven/
 | [`docs/TECH_DECISIONS.md`](./docs/TECH_DECISIONS.md) | ADRs (Tavily, pgvector, SSE, etc.)   |
 | [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md)           | Troubleshooting and worker setup     |
 | [`docs/CICD.md`](./docs/CICD.md)                     | GitHub Actions deploy setup          |
+| [`docs/ISSUES.md`](./docs/ISSUES.md)                 | Problems solved (STAR postmortems)   |
 
 For Cursor agents: [AGENTS.md](./AGENTS.md) · [`.cursor/rules/`](./.cursor/rules/)
 

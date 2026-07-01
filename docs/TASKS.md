@@ -216,8 +216,8 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] `modules/rds` — Postgres with backups → [KRE-158](https://linear.app/kreativbiro/issue/KRE-158)
 - [x] `modules/eventbridge` — event bus + rules → [KRE-160](https://linear.app/kreativbiro/issue/KRE-160)
 - [x] `modules/sqs` — queues + DLQ + redrive → [KRE-159](https://linear.app/kreativbiro/issue/KRE-159)
-- [x] `modules/step-functions` — research fan-out workflow
-- [ ] `modules/observability` — CloudWatch, ADOT
+- [x] `modules/step-functions` — research fan-out workflow → [KRE-164](https://linear.app/kreativbiro/issue/KRE-164)
+- [x] `modules/observability` — ADOT sidecar, X-Ray, CloudWatch alarms → [KRE-165](https://linear.app/kreativbiro/issue/KRE-165)
 - [x] `modules/cognito` — user pool, app client, callback URLs → [KRE-161](https://linear.app/kreativbiro/issue/KRE-161)
 - [x] `environments/dev` — compose modules (networking → cognito → ecs) → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
 - [ ] Secrets Manager for API keys
@@ -313,6 +313,6 @@ Project: EventForge
 
 ## Current Priority
 
-**Backend-first track:** Phase 2–4 complete. **Phase 5:** AWS dev live + CI/CD done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability module.
+**Backend-first track:** Phase 2–4 complete. **Phase 5:** AWS dev live + CI/CD done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-165](https://linear.app/kreativbiro/issue/KRE-165)). **Next:** cloud E2E verify, Phase 6 polish.
 
 Verify: `./scripts/verify-pipeline-e2e.sh` · `./scripts/verify-dlq-redrive.sh` · run DLQ worker: `uv run --project backend python -m eventforge.workers.dlq`

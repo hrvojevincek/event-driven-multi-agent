@@ -15,6 +15,7 @@
 | 7 | `docs/TECH_DECISIONS.md` | Before changing stack or patterns |
 | 8 | `docs/PRD.md` | Product scope and user stories |
 | 9 | `docs/LOCAL_DEV.md` | Local setup and troubleshooting |
+| 10 | `docs/ISSUES.md` | Past postmortems; append after hard infra/CI fixes (no secrets) |
 
 ## Project summary
 
@@ -26,7 +27,7 @@
 
 ## Current status
 
-**Phases 0–4 complete.** **Phase 5 in progress** — AWS dev + CI/CD done ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability. Index: `docs/LINEAR.md`
+**Phases 0–4 complete.** **Phase 5 in progress** — AWS dev + CI/CD + Step Functions + observability ([KRE-156](https://linear.app/kreativbiro/issue/KRE-156)–[KRE-165](https://linear.app/kreativbiro/issue/KRE-165)). **Next:** cloud E2E verify, Phase 6. Index: `docs/LINEAR.md`
 
 ## Commands
 

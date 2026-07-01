@@ -30,6 +30,12 @@ provider "aws" {
   }
 }
 
+variable "enable_observability" {
+  description = "Enable ADOT sidecar on ECS tasks, X-Ray export, and CloudWatch alarms."
+  type        = bool
+  default     = true
+}
+
 module "networking" {
   source = "../../modules/networking"
 
@@ -38,6 +44,17 @@ module "networking" {
   vpc_cidr           = var.vpc_cidr
   single_nat_gateway = var.single_nat_gateway
   tags               = var.tags
+}
+
+module "observability" {
+  source = "../../modules/observability"
+
+  project_name   = var.project_name
+  environment    = var.environment
+  aws_region     = var.aws_region
+  dlq_queue_name = "${module.sqs.queue_prefix}-dlq"
+  enable_alarms  = var.enable_observability
+  tags           = var.tags
 }
 
 module "ecs" {
@@ -75,8 +92,10 @@ module "ecs" {
   cognito_app_client_id       = module.cognito.app_client_id
   cognito_region              = var.aws_region
   auth_disabled               = var.auth_disabled
-  acm_certificate_arn         = var.acm_certificate_arn
-  otel_exporter_otlp_endpoint = var.otel_exporter_otlp_endpoint
+  acm_certificate_arn  = var.acm_certificate_arn
+  otel_enabled         = var.enable_observability
+  adot_collector_image = module.observability.adot_collector_image
+  adot_config_content  = var.enable_observability ? module.observability.adot_config_content : ""
 
   create_ecr_repositories = var.create_ecr_repositories
   tags                    = var.tags

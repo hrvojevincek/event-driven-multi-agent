@@ -106,3 +106,13 @@ output "research_fanout_state_machine_arn" {
   description = "Step Functions state machine ARN for research fan-out (null when disabled)."
   value       = var.enable_step_functions_research ? module.step_functions[0].state_machine_arn : null
 }
+
+output "observability_enabled" {
+  description = "Whether ADOT sidecar and CloudWatch alarms are enabled."
+  value       = var.enable_observability
+}
+
+output "otel_exporter_otlp_endpoint" {
+  description = "OTLP endpoint configured on ECS tasks (ADOT sidecar on localhost when observability enabled)."
+  value       = module.observability.otlp_endpoint
+}
