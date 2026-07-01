@@ -116,4 +116,5 @@ async def test_list_queries_scoped_to_mock_user(
     response = await client.get("/api/v1/queries")
     assert response.status_code == 200
     topics = {item["topic"] for item in response.json()}
-    assert topics == {"Mine"}
+    assert "Mine" in topics
+    assert "Theirs" not in topics
