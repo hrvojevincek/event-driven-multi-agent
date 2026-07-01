@@ -25,6 +25,10 @@ auth_disabled = false
 # enable_observability = true
 # enable_step_functions_research = true
 
+# GitHub OIDC — must match the repo running Actions (see docs/CICD.md):
+# github_org  = "hrvojevincek"
+# github_repo = "event-driven-multi-agent"
+
 # Optional Cognito domain prefix if eventforge-dev is taken globally:
 # cognito_domain_prefix = "eventforge-dev-yourname"
 

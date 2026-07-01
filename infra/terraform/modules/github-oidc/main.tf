@@ -5,6 +5,12 @@ data "tls_certificate" "github" {
   url = "https://token.actions.githubusercontent.com/.well-known/openid-configuration"
 }
 
+variable "oidc_subject_wildcard" {
+  description = "When true, trust repo:org/repo:* (covers main push, pull_request, workflow_dispatch from any branch). Prefer false in prod."
+  type        = bool
+  default     = false
+}
+
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
 
@@ -14,13 +20,20 @@ locals {
     ManagedBy   = "terraform"
   })
 
-  github_subjects = concat(
+  github_subjects = var.oidc_subject_wildcard ? [
+    "repo:${var.github_org}/${var.github_repo}:*",
+  ] : concat(
     [for branch in var.allowed_branches : "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/${branch}"],
     var.allow_pull_request ? ["repo:${var.github_org}/${var.github_repo}:pull_request"] : [],
   )
 
+  # SHA-1 thumbprint from GitHub OIDC TLS cert (40 hex chars, no colons).
+  github_oidc_thumbprints = [
+    replace(data.tls_certificate.github.certificates[0].sha1_fingerprint, ":", ""),
+  ]
+
   ssm_parameter_arn = var.ssm_parameter_path_prefix != "" ? (
-    "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${trim(var.ssm_parameter_path_prefix, "/")}/*"
+    "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${trim(var.ssm_parameter_path_prefix, "/")}/*"
   ) : ""
 }
 
@@ -31,9 +44,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 
   client_id_list = ["sts.amazonaws.com"]
 
-  thumbprint_list = [
-    data.tls_certificate.github.certificates[0].sha1_fingerprint,
-  ]
+  thumbprint_list = local.github_oidc_thumbprints
 
   tags = local.common_tags
 }
@@ -53,6 +64,12 @@ data "aws_iam_policy_document" "github_assume" {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:aud"
       values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:iss"
+      values   = ["https://token.actions.githubusercontent.com"]
     }
 
     condition {
@@ -204,7 +221,7 @@ data "aws_iam_policy_document" "terraform" {
     condition {
       test     = "StringEquals"
       variable = "aws:RequestedRegion"
-      values   = [data.aws_region.current.name]
+      values   = [data.aws_region.current.id]
     }
   }
 }

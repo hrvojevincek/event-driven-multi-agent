@@ -44,7 +44,8 @@ module "github_oidc" {
   github_org  = var.github_org
   github_repo = var.github_repo
 
-  create_oidc_provider = var.create_github_oidc_provider
+  create_oidc_provider  = var.create_github_oidc_provider
+  oidc_subject_wildcard = true
 
   ecr_repository_arns = compact([
     module.ecs.backend_ecr_repository_arn,

@@ -102,10 +102,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: OIDC context
+        run: |
+          echo "repository=${{ github.repository }}"
+          echo "ref=${{ github.ref }}"
+          echo "event=${{ github.event_name }}"
+          echo "role=${{ needs.changes.outputs.deploy_role_arn }}"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ needs.changes.outputs.deploy_role_arn }}
+          role-session-name: gha-${{ github.run_id }}-backend
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Resolve ECR repository
@@ -146,10 +154,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: OIDC context
+        run: |
+          echo "repository=${{ github.repository }}"
+          echo "ref=${{ github.ref }}"
+          echo "event=${{ github.event_name }}"
+          echo "role=${{ needs.changes.outputs.deploy_role_arn }}"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ needs.changes.outputs.deploy_role_arn }}
+          role-session-name: gha-${{ github.run_id }}-frontend
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Resolve ECR repository
@@ -199,10 +215,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: OIDC context
+        run: |
+          echo "repository=${{ github.repository }}"
+          echo "ref=${{ github.ref }}"
+          echo "event=${{ github.event_name }}"
+          echo "role=${{ needs.changes.outputs.deploy_role_arn }}"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ needs.changes.outputs.deploy_role_arn }}
+          role-session-name: gha-${{ github.run_id }}-terraform
           aws-region: ${{ env.AWS_REGION }}
 
       - uses: hashicorp/setup-terraform@v3
