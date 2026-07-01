@@ -6,12 +6,6 @@ Living roadmap for EventForge development. Structured for **Linear integration**
 
 **Linear (active):** [EventForge project](https://linear.app/kreativbiro/project/eventforge-f35070f0931e) — see `docs/LINEAR.md` for issue index.
 
-**How to use:**
-
-> "What's next in EventForge?" · "Implement KRE-118" · "Mark KRE-117 done"
-
-When an issue closes → check the matching box below and ensure `KRE-xxx` link is present.
-
 ---
 
 ## Phase 0: Foundation & Documentation

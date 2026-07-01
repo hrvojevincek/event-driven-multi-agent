@@ -23,7 +23,7 @@ Deep reference (read on demand): `docs/ARCHITECTURE.md`, `docs/PRD.md`, `docs/TE
 
 ## Stack
 
-Next.js 15 + FastAPI + EventBridge/SQS/Step Functions + Postgres (pgvector) + AWS Cognito + OpenTelemetry + Terraform
+Next.js 15 + FastAPI + EventBridge/SQS/Step Functions + Postgres (pgvector) + OpenTelemetry + Terraform
 
 ## Commands
 

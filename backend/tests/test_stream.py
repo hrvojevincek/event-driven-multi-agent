@@ -18,11 +18,11 @@ from eventforge.services.stage_stream import iter_job_stream_events, parse_strea
 
 
 @pytest.fixture
-async def db_session(monkeypatch: pytest.MonkeyPatch) -> AsyncSession:
-    monkeypatch.setenv("AUTH_DISABLED", "true")
+async def db_session() -> AsyncSession:
     load_settings.cache_clear()
     reset_engine()
-    engine = create_async_engine(load_settings().async_database_url, pool_pre_ping=True)
+    engine = create_async_engine(
+        load_settings().async_database_url, pool_pre_ping=True)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     async with session_factory() as session:
         yield session
@@ -49,7 +49,8 @@ async def client(db_session: AsyncSession) -> AsyncClient:
     app.dependency_overrides.clear()
 
 
-async def test_iter_job_stream_returns_snapshot(db_session: AsyncSession) -> None:
+async def test_iter_job_stream_returns_snapshot(
+        db_session: AsyncSession) -> None:
     user = await UserRepository(db_session).get_or_create_mock_user()
     mock_publisher = AsyncMock(spec=EventPublisher)
     result = await submit_query(db_session, mock_publisher, user, topic="SSE snapshot test")
@@ -69,7 +70,8 @@ async def test_iter_job_stream_returns_snapshot(db_session: AsyncSession) -> Non
     assert all(stage.status == "pending" for stage in snapshot.stages)
 
 
-async def test_iter_job_stream_emits_stage_update(db_session: AsyncSession) -> None:
+async def test_iter_job_stream_emits_stage_update(
+        db_session: AsyncSession) -> None:
     user = await UserRepository(db_session).get_or_create_mock_user()
     mock_publisher = AsyncMock(spec=EventPublisher)
     result = await submit_query(db_session, mock_publisher, user, topic="SSE update test")
@@ -92,7 +94,8 @@ async def test_iter_job_stream_emits_stage_update(db_session: AsyncSession) -> N
     assert update.status == StageStatus.RUNNING.value
 
 
-async def test_stream_route_returns_404_for_unknown_job(client: AsyncClient) -> None:
+async def test_stream_route_returns_404_for_unknown_job(
+        client: AsyncClient) -> None:
     response = await client.get(f"/api/v1/queries/{uuid.uuid4()}/stream")
     assert response.status_code == 404
 
@@ -101,8 +104,7 @@ def test_parse_stream_event_round_trip() -> None:
     raw = (
         '{"event":"stage_update","job_id":"11111111-1111-4111-8111-111111111111",'
         '"correlation_id":"abc","stage":"ingestion","status":"running",'
-        '"timestamp":"2026-06-29T12:00:00+00:00"}'
-    )
+        '"timestamp":"2026-06-29T12:00:00+00:00"}')
     parsed = parse_stream_event(raw)
     assert parsed.event == "stage_update"
     assert parsed.stage == "ingestion"

@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { isAuthEnabled } from "@/lib/auth-config";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,8 +29,7 @@ export function QuerySubmitForm() {
   const router = useRouter();
   const submit = useSubmitQuery();
   const [topic, setTopic] = useState("");
-  const [depth, setDepth] =
-    useState<SubmitQueryRequest["depth"]>("standard");
+  const [depth, setDepth] = useState<SubmitQueryRequest["depth"]>("standard");
   const [maxSources, setMaxSources] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -140,9 +137,7 @@ export function QuerySubmitForm() {
         </CardContent>
         <CardFooter className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            {isAuthEnabled()
-              ? "Queries are scoped to your signed-in account."
-              : "Local dev uses auth bypass when AUTH_DISABLED=true."}
+            Queries are scoped to the local mock user account.
           </p>
           <div className="flex gap-2">
             <Button

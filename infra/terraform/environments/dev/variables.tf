@@ -64,10 +64,10 @@ variable "cors_origins" {
   default     = "[]"
 }
 
-variable "auth_disabled" {
-  description = "Set false once Cognito is wired."
-  type        = bool
-  default     = false
+variable "app_base_url" {
+  description = "Public frontend URL (ALB DNS or custom domain). Empty uses ALB DNS in outputs."
+  type        = string
+  default     = ""
 }
 
 variable "acm_certificate_arn" {

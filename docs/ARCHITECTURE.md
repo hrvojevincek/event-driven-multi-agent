@@ -88,26 +88,26 @@ flowchart TB
 
 ### 2.1 Frontend (Next.js 15)
 
-| Component | Responsibility |
-|-----------|----------------|
-| `app/` routes | Query form, job detail, history |
-| `components/workflow/` | React Flow pipeline visualization |
-| `components/dashboard/` | Synthesis viewer, sources, cost panel |
-| `hooks/useJobStream` | SSE subscription for live updates |
-| `lib/api-client` | Typed fetch from OpenAPI-generated types |
+| Component               | Responsibility                           |
+| ----------------------- | ---------------------------------------- |
+| `app/` routes           | Query form, job detail, history          |
+| `components/workflow/`  | React Flow pipeline visualization        |
+| `components/dashboard/` | Synthesis viewer, sources, cost panel    |
+| `hooks/useJobStream`    | SSE subscription for live updates        |
+| `lib/api-client`        | Typed fetch from OpenAPI-generated types |
 
 **Realtime strategy:** Server-Sent Events from FastAPI. Each pipeline event updates React Flow node state and a timeline log.
 
 ### 2.2 Backend API (FastAPI)
 
-| Module | Responsibility |
-|--------|----------------|
-| `api/routes/queries` | CRUD for research jobs |
-| `api/routes/stream` | SSE endpoint keyed by `correlation_id` |
-| `events/publisher` | PutEvents to EventBridge |
-| `db/models` | Job, Stage, Source, LLMUsage, User |
-| `core/otel` | Tracer provider, span helpers |
-| `services/cost` | Token → USD calculation |
+| Module               | Responsibility                         |
+| -------------------- | -------------------------------------- |
+| `api/routes/queries` | CRUD for research jobs                 |
+| `api/routes/stream`  | SSE endpoint keyed by `correlation_id` |
+| `events/publisher`   | PutEvents to EventBridge               |
+| `db/models`          | Job, Stage, Source, LLMUsage, User     |
+| `core/otel`          | Tracer provider, span helpers          |
+| `services/cost`      | Token → USD calculation                |
 
 Runs as a stateless API service. No long-running agent work in request handlers.
 
@@ -122,19 +122,20 @@ Each worker is a **long-polling SQS consumer** (or Lambda for lighter stages in 
 5. Publish next-stage event to EventBridge
 6. Delete SQS message on success; leave for retry on failure
 
-| Worker | Input Event | Output Event | External Deps |
-|--------|-------------|--------------|---------------|
-| Ingestion | `query.submitted` | `ingestion.completed` | Tavily API |
-| Embedding | `ingestion.completed` | `embedding.completed` | OpenAI embeddings, pgvector |
-| Knowledge | `embedding.completed` | `knowledge.mined` | pgvector similarity search, LLM |
-| Research | `research.task.dispatched` | `research.task.completed` | LLM, web search |
-| Synthesis | all research done | `synthesis.completed` | LLM |
+| Worker    | Input Event                | Output Event              | External Deps                   |
+| --------- | -------------------------- | ------------------------- | ------------------------------- |
+| Ingestion | `query.submitted`          | `ingestion.completed`     | Tavily API                      |
+| Embedding | `ingestion.completed`      | `embedding.completed`     | OpenAI embeddings, pgvector     |
+| Knowledge | `embedding.completed`      | `knowledge.mined`         | pgvector similarity search, LLM |
+| Research  | `research.task.dispatched` | `research.task.completed` | LLM, web search                 |
+| Synthesis | all research done          | `synthesis.completed`     | LLM                             |
 
 ### 2.4 Orchestration
 
 **EventBridge** is the central nervous system. Rules route events to SQS queues by `detail-type`.
 
 **Step Functions** handles the **research fan-out**:
+
 1. Knowledge mining completes → Step Function triggered
 2. SF generates N research sub-tasks (Map state)
 3. Each sub-task message → `eventforge-research` SQS
@@ -143,10 +144,10 @@ Each worker is a **long-polling SQS consumer** (or Lambda for lighter stages in 
 
 ### 2.5 Data Stores
 
-| Store | Data |
-|-------|------|
+| Store                   | Data                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------- |
 | **Postgres + pgvector** | Users, jobs, stages, sources, llm_usage, processed_events, document chunks + embeddings |
-| **S3** | Raw fetched documents, final synthesis artifacts (optional) |
+| **S3**                  | Raw fetched documents, final synthesis artifacts (optional)                             |
 
 ---
 
@@ -248,16 +249,17 @@ Before processing, worker checks `event_id`. If exists → ack message, skip. In
 
 ### Retry Policy
 
-| Layer | Policy |
-|-------|--------|
-| SQS | `maxReceiveCount: 3`, visibility timeout ≥ p99 processing time |
-| DLQ | `eventforge-dlq` — alert on CloudWatch metric |
-| Step Functions | Retry on `States.TaskFailed` with backoff |
-| LLM calls | 3 retries, exponential backoff, circuit breaker per provider |
+| Layer          | Policy                                                         |
+| -------------- | -------------------------------------------------------------- |
+| SQS            | `maxReceiveCount: 3`, visibility timeout ≥ p99 processing time |
+| DLQ            | `eventforge-dlq` — alert on CloudWatch metric                  |
+| Step Functions | Retry on `States.TaskFailed` with backoff                      |
+| LLM calls      | 3 retries, exponential backoff, circuit breaker per provider   |
 
 ### Failure Handling
 
 On terminal failure:
+
 1. Update job stage → `failed` with error detail
 2. Emit `pipeline.failed` event
 3. Message in DLQ
@@ -267,14 +269,14 @@ On terminal failure:
 
 ## 6. Security Model
 
-| Layer | Approach |
-|-------|----------|
-| Auth | Cognito JWT → FastAPI dependency validates on every request |
-| API | Rate limiting per user (Redis or in-memory local) |
-| Data | `user_id` on all job rows; queries scoped in repository layer |
-| Secrets | AWS Secrets Manager in prod; `.env` local only |
-| Network | Private subnets for workers/RDS; ALB for API only |
-| IAM | Least-privilege per worker role (SQS consume, EB publish, S3 read/write) |
+| Layer   | Approach                                                                 |
+| ------- | ------------------------------------------------------------------------ |
+| Auth    | Mock user via `get_current_user` on every request (ADR-013)              |
+| API     | Rate limiting per user (Redis or in-memory local)                        |
+| Data    | `user_id` on all job rows; queries scoped in repository layer            |
+| Secrets | AWS Secrets Manager in prod; `.env` local only                           |
+| Network | Private subnets for workers/RDS; ALB for API only                        |
+| IAM     | Least-privilege per worker role (SQS consume, EB publish, S3 read/write) |
 
 ---
 
@@ -299,17 +301,17 @@ flowchart LR
 
 ## 8. Local vs Production
 
-| Concern | Local (Docker Compose) | Production (AWS) |
-|---------|------------------------|------------------|
-| EventBridge | LocalStack | AWS EventBridge |
-| SQS | LocalStack | AWS SQS |
-| Step Functions | LocalStack (limited) | AWS Step Functions |
-| Postgres | Docker postgres:16 | RDS PostgreSQL |
-| Postgres + pgvector | Docker `pgvector/pgvector:pg16` | RDS PostgreSQL with `vector` extension |
-| Workers | `docker compose` sidecar | ECS Fargate (auto-scaling on queue depth) |
-| API | Uvicorn hot-reload | ECS Fargate behind ALB |
-| Frontend | `next dev` | Vercel or CloudFront + S3 |
-| OTEL | Local collector container | ADOT sidecar → Grafana Cloud |
+| Concern             | Local (Docker Compose)          | Production (AWS)                          |
+| ------------------- | ------------------------------- | ----------------------------------------- |
+| EventBridge         | LocalStack                      | AWS EventBridge                           |
+| SQS                 | LocalStack                      | AWS SQS                                   |
+| Step Functions      | LocalStack (limited)            | AWS Step Functions                        |
+| Postgres            | Docker postgres:16              | RDS PostgreSQL                            |
+| Postgres + pgvector | Docker `pgvector/pgvector:pg16` | RDS PostgreSQL with `vector` extension    |
+| Workers             | `docker compose` sidecar        | ECS Fargate (auto-scaling on queue depth) |
+| API                 | Uvicorn hot-reload              | ECS Fargate behind ALB                    |
+| Frontend            | `next dev`                      | Vercel or CloudFront + S3                 |
+| OTEL                | Local collector container       | ADOT sidecar → Grafana Cloud              |
 
 ---
 

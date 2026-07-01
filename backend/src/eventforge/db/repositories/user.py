@@ -11,13 +11,14 @@ MOCK_USER_EMAIL = "mock@local.eventforge"
 
 
 class UserRepository(BaseRepository):
-    """Look up and provision users keyed by external auth subject (Cognito sub)."""
+    """Look up and provision users keyed by external auth subject."""
 
     async def get_by_id(self, user_id: uuid.UUID) -> User | None:
         result = await self.session.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
-    async def get_by_auth_subject_id(self, auth_subject_id: str) -> User | None:
+    async def get_by_auth_subject_id(
+            self, auth_subject_id: str) -> User | None:
         result = await self.session.execute(
             select(User).where(User.auth_subject_id == auth_subject_id)
         )
@@ -29,7 +30,8 @@ class UserRepository(BaseRepository):
             email=MOCK_USER_EMAIL,
         )
 
-    async def get_or_create_by_auth_subject(self, auth_subject_id: str, *, email: str) -> User:
+    async def get_or_create_by_auth_subject(
+            self, auth_subject_id: str, *, email: str) -> User:
         user = await self.get_by_auth_subject_id(auth_subject_id)
         if user is not None:
             return user

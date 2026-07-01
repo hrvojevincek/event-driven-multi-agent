@@ -4,18 +4,18 @@
 
 ## What to read
 
-| Priority | Source | When |
-|----------|--------|------|
-| 1 | `.cursor/rules/eventforge-core.mdc` | Always (auto-applied) |
-| 2 | `.cursor/rules/*.mdc` matching open files | File-specific context |
-| 3 | **Linear MCP** (`list_issues`, `get_issue`) | **Current work — prefer over TASKS.md** |
-| 4 | `docs/LINEAR.md` | Issue index, blockers, parallel tracks |
-| 5 | `docs/TASKS.md` | Phase progress mirror |
-| 6 | `docs/ARCHITECTURE.md` | Pipeline, events, data flow |
-| 7 | `docs/TECH_DECISIONS.md` | Before changing stack or patterns |
-| 8 | `docs/PRD.md` | Product scope and user stories |
-| 9 | `docs/LOCAL_DEV.md` | Local setup and troubleshooting |
-| 10 | `docs/ISSUES.md` | Past postmortems; append after hard infra/CI fixes (no secrets) |
+| Priority | Source                                      | When                                                            |
+| -------- | ------------------------------------------- | --------------------------------------------------------------- |
+| 1        | `.cursor/rules/eventforge-core.mdc`         | Always (auto-applied)                                           |
+| 2        | `.cursor/rules/*.mdc` matching open files   | File-specific context                                           |
+| 3        | **Linear MCP** (`list_issues`, `get_issue`) | **Current work — prefer over TASKS.md**                         |
+| 4        | `docs/LINEAR.md`                            | Issue index, blockers, parallel tracks                          |
+| 5        | `docs/TASKS.md`                             | Phase progress mirror                                           |
+| 6        | `docs/ARCHITECTURE.md`                      | Pipeline, events, data flow                                     |
+| 7        | `docs/TECH_DECISIONS.md`                    | Before changing stack or patterns                               |
+| 8        | `docs/PRD.md`                               | Product scope and user stories                                  |
+| 9        | `docs/LOCAL_DEV.md`                         | Local setup and troubleshooting                                 |
+| 10       | `docs/ISSUES.md`                            | Past postmortems; append after hard infra/CI fixes (no secrets) |
 
 ## Project summary
 
@@ -23,7 +23,7 @@
 
 - User submits query → EventBridge triggers agent pipeline → results in dashboard with React Flow
 - Hybrid: Next.js frontend + FastAPI backend + AWS events (EventBridge/SQS/Step Functions)
-- Data: Postgres + pgvector | Auth: AWS Cognito | Observability: OpenTelemetry
+- Data: Postgres + pgvector | Auth: mock user (open API) | Observability: OpenTelemetry
 
 ## Current status
 
@@ -47,13 +47,13 @@ make down                              # stop
 
 ## User shortcuts
 
-| Say this | Agent does |
-|----------|------------|
-| "What's next in EventForge?" | Linear MCP → suggest unblocked `KRE-xxx` |
-| "Implement KRE-118" | `get_issue` → implement acceptance criteria |
-| "Implement Phase 3" | Follow Phase 3 — real AI agents in `docs/TASKS.md` |
-| "Implement Phase 4" | Follow Phase 4 — frontend + SSE in `docs/LINEAR.md` |
-| "Mark KRE-117 done" | Close in Linear + update `docs/TASKS.md` |
+| Say this                     | Agent does                                          |
+| ---------------------------- | --------------------------------------------------- |
+| "What's next in EventForge?" | Linear MCP → suggest unblocked `KRE-xxx`            |
+| "Implement KRE-118"          | `get_issue` → implement acceptance criteria         |
+| "Implement Phase 3"          | Follow Phase 3 — real AI agents in `docs/TASKS.md`  |
+| "Implement Phase 4"          | Follow Phase 4 — frontend + SSE in `docs/LINEAR.md` |
+| "Mark KRE-117 done"          | Close in Linear + update `docs/TASKS.md`            |
 
 ## Cursor rules map
 

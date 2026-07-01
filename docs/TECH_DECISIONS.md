@@ -24,14 +24,14 @@ Need a portfolio project demonstrating both polished UX and robust backend/agent
 
 ### Rationale
 
-| Factor | Next.js | FastAPI |
-|--------|---------|---------|
-| React Flow integration | Native | N/A |
-| shadcn/ui ecosystem | Excellent | N/A |
-| LLM / ML libraries | Limited | Rich (LangChain, LlamaIndex, native SDKs) |
-| Async workers | Node can, but Python dominates AI | First-class |
-| Type safety | TypeScript | Pydantic v2 |
-| Hiring signal | Full-stack UX | Backend / ML engineering |
+| Factor                 | Next.js                           | FastAPI                                   |
+| ---------------------- | --------------------------------- | ----------------------------------------- |
+| React Flow integration | Native                            | N/A                                       |
+| shadcn/ui ecosystem    | Excellent                         | N/A                                       |
+| LLM / ML libraries     | Limited                           | Rich (LangChain, LlamaIndex, native SDKs) |
+| Async workers          | Node can, but Python dominates AI | First-class                               |
+| Type safety            | TypeScript                        | Pydantic v2                               |
+| Hiring signal          | Full-stack UX                     | Backend / ML engineering                  |
 
 ### Trade-offs
 
@@ -78,12 +78,12 @@ Pipeline has 5+ stages with parallel research fan-out. Need decoupling, retries,
 
 ### Alternatives Considered
 
-| Option | Pros | Cons | Verdict |
-|--------|------|------|---------|
-| **Temporal** | Excellent durability, code-first workflows | Extra infrastructure, steeper learning curve | Future migration path (ADR-008) |
-| **Celery + Redis** | Simple local dev | Not cloud-native, weaker portfolio signal | Rejected for prod |
-| **Pure SQS chaining** | Simpler | No native fan-out/wait | Rejected; SF needed for research |
-| **Kafka** | High throughput | Overkill for MVP, ops burden | Rejected |
+| Option                | Pros                                       | Cons                                         | Verdict                          |
+| --------------------- | ------------------------------------------ | -------------------------------------------- | -------------------------------- |
+| **Temporal**          | Excellent durability, code-first workflows | Extra infrastructure, steeper learning curve | Future migration path (ADR-008)  |
+| **Celery + Redis**    | Simple local dev                           | Not cloud-native, weaker portfolio signal    | Rejected for prod                |
+| **Pure SQS chaining** | Simpler                                    | No native fan-out/wait                       | Rejected; SF needed for research |
+| **Kafka**             | High throughput                            | Overkill for MVP, ops burden                 | Rejected                         |
 
 ---
 
@@ -114,10 +114,10 @@ Need relational metadata (users, jobs, costs) and vector similarity search for R
 
 ### Alternatives Considered
 
-| Option | Pros | Cons | Verdict |
-|--------|------|------|---------|
-| **Qdrant** | Fast ANN, payload filtering | Extra service, dual-store ops | Rejected for MVP; revisit at scale |
-| **Pinecone / managed vector DB** | Zero ops, fast search | Vendor lock-in, cost | Deferred |
+| Option                           | Pros                        | Cons                          | Verdict                            |
+| -------------------------------- | --------------------------- | ----------------------------- | ---------------------------------- |
+| **Qdrant**                       | Fast ANN, payload filtering | Extra service, dual-store ops | Rejected for MVP; revisit at scale |
+| **Pinecone / managed vector DB** | Zero ops, fast search       | Vendor lock-in, cost          | Deferred                           |
 
 ### Implementation
 
@@ -129,35 +129,20 @@ Need relational metadata (users, jobs, costs) and vector similarity search for R
 
 ## ADR-004: AWS Cognito for Authentication
 
-**Status:** Accepted (supersedes Clerk)  
-**Date:** 2025-06-20 · **Revised:** 2026-06-29
+**Status:** Superseded by [ADR-013](#adr-013-no-authentication-mvp)  
+**Date:** 2025-06-20 · **Revised:** 2026-06-29 · **Superseded:** 2026-07-01
 
 ### Context
 
 Need auth without building identity from scratch. FastAPI validates JWTs. Production deploys to AWS (EventBridge, SQS, ECS, RDS) — Cognito keeps identity in the same cloud footprint as the rest of the stack.
 
-### Decision
+### Decision (historical)
 
 Use **AWS Cognito User Pools** for authentication; FastAPI validates Cognito JWT (ID token) via JWKS. Next.js uses Cognito Hosted UI or Amplify Auth in Phase 4; Terraform `modules/cognito` in Phase 5.
 
-### Rationale
+### Superseded
 
-- Aligns with AWS-native portfolio story (same region as RDS, no third-party auth vendor)
-- JWT + JWKS works with FastAPI dependency injection (same pattern as hosted auth SaaS)
-- Predictable cost at scale (~50k MAU free tier on user pools)
-- Terraform module fits Phase 5 IaC alongside EventBridge, SQS, ECS
-
-### Local dev
-
-- **`AUTH_DISABLED=true`:** mock user for E2E scripts (LocalStack has no Cognito)
-- **Dev user pool:** optional real AWS Cognito pool for Postman/curl token testing
-
-### Alternatives
-
-- **Clerk** — faster UI polish and local dev; rejected for prod AWS alignment
-- **Better Auth** — self-hosted in Postgres; rejected; auth server would live in Next.js before backend-first Phase 3 exit
-- **Auth0** — viable hosted option; heavier than Cognito given existing AWS commitment
-- **Supabase Auth** — good if we used Supabase DB; we're on RDS
+Removed in favor of an open API with a single mock user to unblock cloud E2E and keep portfolio focus on the event pipeline. See ADR-013.
 
 ---
 
@@ -330,18 +315,18 @@ Log every LLM call to `llm_usage` table: `job_id`, `agent_name`, `model`, `input
 
 ### Context
 
-Phase 5 deploys EventForge from a **monorepo** (`backend/`, `frontend/`, `infra/`) to AWS. Frontend hosting options were Vercel (split cloud) vs all-in-AWS. The stack already targets EventBridge, SQS, RDS, and Cognito in **`eu-west-2`**.
+Phase 5 deploys EventForge from a **monorepo** (`backend/`, `frontend/`, `infra/`) to AWS. Frontend hosting options were Vercel (split cloud) vs all-in-AWS. The stack targets EventBridge, SQS, and RDS in **`eu-west-2`**.
 
 ### Decision
 
 Deploy **all runtime services on AWS ECS Fargate** in a single VPC:
 
-| Monorepo path | Artifact | ECS services |
-|---------------|----------|--------------|
-| `backend/` | One ECR image (`eventforge-backend`) | API + 6 workers (same image, different `command`) |
-| `frontend/` | One ECR image (`eventforge-frontend`) | Next.js standalone |
-| `shared/events/` | Bundled in backend image | — |
-| `infra/terraform/` | Terraform apply | VPC, ALB, RDS, queues, etc. |
+| Monorepo path      | Artifact                              | ECS services                                      |
+| ------------------ | ------------------------------------- | ------------------------------------------------- |
+| `backend/`         | One ECR image (`eventforge-backend`)  | API + 6 workers (same image, different `command`) |
+| `frontend/`        | One ECR image (`eventforge-frontend`) | Next.js standalone                                |
+| `shared/events/`   | Bundled in backend image              | —                                                 |
+| `infra/terraform/` | Terraform apply                       | VPC, ALB, RDS, queues, etc.                       |
 
 **Routing:** One ALB — `/api/*` and `/health*` → API target group; default → frontend.
 
@@ -355,7 +340,7 @@ Deploy **all runtime services on AWS ECS Fargate** in a single VPC:
 
 ### Rationale
 
-- Single cloud footprint aligns with Cognito, EventBridge, and portfolio “AWS-native” story
+- Single cloud footprint aligns with EventBridge and portfolio “AWS-native” story
 - Reuses existing Dockerfiles; local Compose topology maps 1:1 to ECS services
 - One backend image keeps worker deploys simple (shared code, per-service IAM still scoped by queue)
 - ALB idle timeout configurable for SSE (≥ 300s)
@@ -364,50 +349,86 @@ Deploy **all runtime services on AWS ECS Fargate** in a single VPC:
 
 - More ops than Vercel for frontend (ALB, TLS, scaling)
 - NAT gateway cost in dev (~$32/mo per AZ; mitigated with `single_nat_gateway = true`)
-- Build-time `NEXT_PUBLIC_*` vars require CI to pass Cognito/API URL at image build
+- Build-time `NEXT_PUBLIC_*` vars require CI to pass API URL at image build
 
 ### Alternatives Considered
 
-| Option | Pros | Cons | Verdict |
-|--------|------|------|---------|
-| **Vercel + AWS backend** | Fastest Next.js deploy | Split hosting | Rejected — user chose all-AWS |
-| **Lambda for workers** | Pay per invoke | Long-poll SQS awkward; cold starts | Rejected for MVP |
-| **EKS** | Full Kubernetes | Overkill for portfolio MVP | Rejected |
+| Option                   | Pros                   | Cons                               | Verdict                       |
+| ------------------------ | ---------------------- | ---------------------------------- | ----------------------------- |
+| **Vercel + AWS backend** | Fastest Next.js deploy | Split hosting                      | Rejected — user chose all-AWS |
+| **Lambda for workers**   | Pay per invoke         | Long-poll SQS awkward; cold starts | Rejected for MVP              |
+| **EKS**                  | Full Kubernetes        | Overkill for portfolio MVP         | Rejected                      |
 
 ### Terraform module order
 
-1. `networking` — VPC, subnets, NAT, security groups  
-2. `ecs` — cluster, ECR, ALB, task definitions, services  
-3. `rds`, `sqs`, `eventbridge`, `cognito`, `step-functions`, `observability` — subsequent PRs  
+1. `networking` — VPC, subnets, NAT, security groups
+2. `ecs` — cluster, ECR, ALB, task definitions, services
+3. `rds`, `sqs`, `eventbridge`, `step-functions`, `observability` — subsequent PRs
 4. `environments/dev` — composes modules in `eu-west-2`
 
 ### Environment matrix (local → AWS)
 
-| Variable | Local | AWS dev |
-|----------|-------|---------|
-| `AWS_ENDPOINT_URL` | `http://localstack:4566` | unset |
-| `POSTGRES_HOST` | `localhost` / `postgres` | RDS endpoint (from `modules/rds`) |
-| `AUTH_DISABLED` | `true` | `false` |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | local collector | ADOT sidecar / Grafana (Phase 5 observability module) |
-| `CORS_ORIGINS` | `http://localhost:3000` | `https://app.<domain>` |
+| Variable                      | Local                    | AWS dev                                               |
+| ----------------------------- | ------------------------ | ----------------------------------------------------- |
+| `AWS_ENDPOINT_URL`            | `http://localstack:4566` | unset                                                 |
+| `POSTGRES_HOST`               | `localhost` / `postgres` | RDS endpoint (from `modules/rds`)                     |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | local collector          | ADOT sidecar / Grafana (Phase 5 observability module) |
+| `CORS_ORIGINS`                | `http://localhost:3000`  | `https://app.<domain>`                                |
 
 See `infra/terraform/environments/dev/terraform.tfvars.example` for full ECS env wiring.
 
 ---
 
+## ADR-013: No Authentication (MVP)
+
+**Status:** Accepted (supersedes ADR-004)  
+**Date:** 2026-07-01
+
+### Context
+
+Cognito (ADR-004) added Hosted UI, Amplify, JWT validation, and Terraform complexity. Cloud E2E verification was blocked on auth wiring while local dev already ran with a mock user. The portfolio goal is the event-driven research pipeline, not identity.
+
+### Decision
+
+**No authentication** for MVP/local and AWS dev:
+
+- FastAPI `get_current_user` always resolves a single mock user (`mock-local-user`).
+- Jobs remain scoped by `user_id` in Postgres (schema unchanged).
+- Frontend calls the API with no `Authorization` header.
+- Terraform `modules/cognito` removed; no Cognito env vars in ECS or CI.
+
+### Rationale
+
+- Unblocks cloud E2E with the same code path as local Docker.
+- Removes Amplify, JWKS, OAuth redirect, and dual `AUTH_DISABLED` modes.
+- Keeps a hook for future auth via `users.auth_subject_id` without shipping identity now.
+
+### Security (explicit non-goal)
+
+The dev ALB exposes an **open API** — anyone with the URL can submit queries and read jobs for the mock user. Acceptable for portfolio/demo only; production would require auth (Cognito or alternative) before multi-tenant or public exposure.
+
+### Alternatives considered
+
+- **Keep Cognito** — rejected; cost/complexity outweighed benefit for current milestone.
+- **Lightweight ALB secret header** — rejected; still another auth layer to operate.
+- **Drop `users` table** — rejected; larger migration for little gain while single-user anyway.
+
+---
+
 ## Decision Log
 
-| ADR | Title | Status |
-|-----|-------|--------|
-| 001 | Hybrid Next.js + FastAPI | Accepted |
-| 002 | EventBridge + SQS + Step Functions | Accepted |
-| 003 | Postgres + pgvector | Accepted |
-| 004 | AWS Cognito Auth | Accepted |
-| 005 | OpenTelemetry | Accepted |
-| 006 | Terraform IaC | Accepted |
-| 007 | Docker Compose Local Dev | Accepted |
-| 008 | Temporal Migration Path | Proposed |
-| 009 | Tavily Web Search | Accepted |
-| 010 | SSE Real-Time | Accepted |
-| 011 | LLM Cost Tracking | Accepted |
-| 012 | All-in-AWS ECS Fargate | Accepted |
+| ADR | Title                              | Status               |
+| --- | ---------------------------------- | -------------------- |
+| 001 | Hybrid Next.js + FastAPI           | Accepted             |
+| 002 | EventBridge + SQS + Step Functions | Accepted             |
+| 003 | Postgres + pgvector                | Accepted             |
+| 004 | AWS Cognito Auth                   | Superseded (ADR-013) |
+| 005 | OpenTelemetry                      | Accepted             |
+| 006 | Terraform IaC                      | Accepted             |
+| 007 | Docker Compose Local Dev           | Accepted             |
+| 008 | Temporal Migration Path            | Proposed             |
+| 009 | Tavily Web Search                  | Accepted             |
+| 010 | SSE Real-Time                      | Accepted             |
+| 011 | LLM Cost Tracking                  | Accepted             |
+| 012 | All-in-AWS ECS Fargate             | Accepted             |
+| 013 | No Authentication (MVP)            | Accepted             |

@@ -33,7 +33,7 @@ locals {
   ]
 
   ssm_parameter_arn = var.ssm_parameter_path_prefix != "" ? (
-    "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${trim(var.ssm_parameter_path_prefix, "/")}/*"
+    "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${trim(var.ssm_parameter_path_prefix, "/")}/*"
   ) : ""
 }
 
@@ -215,7 +215,7 @@ data "aws_iam_policy_document" "terraform" {
     condition {
       test     = "StringEquals"
       variable = "aws:RequestedRegion"
-      values   = [data.aws_region.current.id]
+      values   = [data.aws_region.current.region]
     }
   }
 }

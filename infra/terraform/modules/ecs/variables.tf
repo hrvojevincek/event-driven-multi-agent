@@ -195,30 +195,6 @@ variable "cors_origins" {
   default     = "[]"
 }
 
-variable "cognito_user_pool_id" {
-  description = "Cognito user pool ID."
-  type        = string
-  default     = ""
-}
-
-variable "cognito_app_client_id" {
-  description = "Cognito app client ID."
-  type        = string
-  default     = ""
-}
-
-variable "cognito_region" {
-  description = "Cognito region."
-  type        = string
-  default     = "eu-west-2"
-}
-
-variable "auth_disabled" {
-  description = "Bypass JWT auth (must be false in AWS dev/prod)."
-  type        = bool
-  default     = false
-}
-
 variable "event_bus_name" {
   description = "EventBridge bus name."
   type        = string

@@ -65,88 +65,28 @@ cp .env.example .env
 
 Key local values (defaults work for Docker Compose):
 
-| Variable                | Local Value                                                     |
-| ----------------------- | --------------------------------------------------------------- |
-| `POSTGRES_HOST`         | `localhost` (or `postgres` inside Docker network)               |
-| `AWS_ENDPOINT_URL`      | `http://localhost:4566`                                         |
-| `AWS_REGION`            | `eu-west-2` (London — prod default)                             |
-| `AWS_ACCESS_KEY_ID`     | `test`                                                          |
-| `AWS_SECRET_ACCESS_KEY` | `test`                                                          |
-| `NEXT_PUBLIC_API_URL`   | `http://localhost:8000`                                         |
-| `AUTH_DISABLED`         | `true` (default — mock user for E2E; LocalStack has no Cognito) |
-| `COGNITO_USER_POOL_ID`  | Set when testing real JWTs against a dev pool                   |
-| `COGNITO_APP_CLIENT_ID` | App client ID from the same user pool                           |
+| Variable                | Local Value                                       |
+| ----------------------- | ------------------------------------------------- |
+| `POSTGRES_HOST`         | `localhost` (or `postgres` inside Docker network) |
+| `AWS_ENDPOINT_URL`      | `http://localhost:4566`                           |
+| `AWS_REGION`            | `eu-west-2` (London — prod default)               |
+| `AWS_ACCESS_KEY_ID`     | `test`                                            |
+| `AWS_SECRET_ACCESS_KEY` | `test`                                            |
+| `NEXT_PUBLIC_API_URL`   | `http://localhost:8000`                           |
 
 When running backend **inside** docker-compose, use service names (`postgres`, `localstack`) as hosts. When running **natively** on your machine, use `localhost`.
 
 ---
 
-## Authentication (Cognito)
+## Authentication
 
-LocalStack does **not** emulate Cognito. Two supported paths:
-
-### Path 1 — Auth disabled (default, E2E scripts)
-
-```bash
-# .env
-AUTH_DISABLED=true
-```
-
-`POST/GET /api/v1/queries` use a shared mock user (`mock-local-user`). No Bearer token required.
+There is **no login** (ADR-013). All API requests use a shared mock user (`mock-local-user`). No Bearer token required.
 
 ```bash
 ./scripts/verify-pipeline-e2e.sh
 ```
 
-### Path 2 — Real dev Cognito user pool
-
-1. Create a **Cognito User Pool** + app client in AWS (London: `eu-west-2`).
-2. Enable email sign-in; note **User pool ID** and **App client ID** (no secret for public SPA/client).
-3. Create a test user and sign in via Hosted UI or AWS CLI to obtain an **ID token**.
-4. Configure backend:
-
-```bash
-AUTH_DISABLED=false
-COGNITO_USER_POOL_ID=eu-west-2_XXXXXXXXX
-COGNITO_REGION=eu-west-2
-COGNITO_APP_CLIENT_ID=your-app-client-id
-```
-
-5. Call the API with the ID token:
-
-```bash
-curl -s -X POST "http://localhost:8000/api/v1/queries" \
-  -H "Authorization: Bearer ${COGNITO_ID_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{"topic":"Cognito auth test","depth":"standard"}'
-```
-
-Terraform for the user pool lands in **Phase 5** (`modules/cognito`). Phase 4 adds Hosted UI / Amplify in Next.js (see `frontend/.env.example`).
-
-### Frontend (Phase 4.4)
-
-When testing real Cognito auth end-to-end:
-
-```bash
-# backend .env
-AUTH_DISABLED=false
-COGNITO_USER_POOL_ID=eu-west-2_XXXXXXXXX
-COGNITO_REGION=eu-west-2
-COGNITO_APP_CLIENT_ID=your-app-client-id
-
-# frontend/.env.local
-NEXT_PUBLIC_AUTH_DISABLED=false
-NEXT_PUBLIC_COGNITO_USER_POOL_ID=eu-west-2_XXXXXXXXX
-NEXT_PUBLIC_COGNITO_APP_CLIENT_ID=your-app-client-id
-NEXT_PUBLIC_COGNITO_REGION=eu-west-2
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-# Optional Hosted UI:
-# NEXT_PUBLIC_COGNITO_DOMAIN=your-domain.auth.eu-west-2.amazoncognito.com
-```
-
-1. Sign in at http://localhost:3000/login (email/password or Hosted UI).
-2. The UI attaches the Cognito **ID token** to API requests and SSE streams.
-3. User-scoped query history and job access follow backend [KRE-146](https://linear.app/kreativbiro/issue/KRE-146).
+**AWS dev:** the public ALB exposes an open API — portfolio/demo only; do not treat as production-ready.
 
 ---
 
@@ -428,5 +368,5 @@ After infrastructure is verified:
 2. **Phase 4.1:** SSE live updates on `/queries/[id]` ✅ ([KRE-151](https://linear.app/kreativbiro/issue/KRE-151))
 3. **Phase 4.2:** React Flow pipeline visualization ✅ ([KRE-152](https://linear.app/kreativbiro/issue/KRE-152))
 4. **Phase 4.3:** Dashboard UI — submit, history, synthesis, sources, cost ✅ ([KRE-153](https://linear.app/kreativbiro/issue/KRE-153))
-5. **Phase 4.4:** Cognito sign-in UI ✅ ([KRE-154](https://linear.app/kreativbiro/issue/KRE-154))
+5. **Phase 4.4:** Sign-in UI removed — open API with mock user (ADR-013)
 6. **Phase 4.5:** Local OTEL — next

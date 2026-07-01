@@ -17,7 +17,6 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.50b0",
     "opentelemetry-sdk>=1.29",
     "pgvector>=0.4.2",
-    "pyjwt[crypto]>=2.10",
     "pydantic-settings>=2.0",
     "sqlalchemy[asyncio]>=2.0",
     "tiktoken>=0.9",

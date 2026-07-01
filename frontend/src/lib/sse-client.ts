@@ -1,22 +1,15 @@
 export type SseMessageHandler = (eventName: string, data: string) => void;
 
-/**
- * Connect to an SSE endpoint with optional Bearer auth (EventSource cannot set headers).
- */
+/** Connect to an SSE endpoint via fetch (EventSource cannot set custom headers). */
 export async function connectSse(
   url: string,
-  token: string | null,
   onMessage: SseMessageHandler,
   signal: AbortSignal,
 ): Promise<void> {
-  const headers: HeadersInit = {
-    Accept: "text/event-stream",
-  };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { headers, signal });
+  const response = await fetch(url, {
+    headers: { Accept: "text/event-stream" },
+    signal,
+  });
   if (!response.ok) {
     throw new Error(`SSE ${response.status}: ${response.statusText}`);
   }

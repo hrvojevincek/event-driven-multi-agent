@@ -41,7 +41,7 @@ class StageStatus(StrEnum):
 
 
 class User(Base):
-    """Authenticated user, linked to Cognito via auth_subject_id (JWT sub)."""
+    """Authenticated user keyed by external auth subject (mock user locally)."""
 
     __tablename__ = "users"
 

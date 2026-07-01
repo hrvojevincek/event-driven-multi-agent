@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getIdToken } from "@/lib/auth-token";
 import { getApiBaseUrl } from "@/lib/api-client";
 import { connectSse } from "@/lib/sse-client";
-import type { JobStageSnapshot, JobStreamEvent, StageStatus } from "@/types/job-stream";
+import type {
+  JobStageSnapshot,
+  JobStreamEvent,
+  StageStatus,
+} from "@/types/job-stream";
 import { buildStageMap } from "@/types/job-stream";
 
 const INITIAL_BACKOFF_MS = 1_000;
@@ -98,7 +101,6 @@ export function useJobStream(jobId: string): UseJobStreamState {
       }
 
       const url = `${getApiBaseUrl()}/api/v1/queries/${jobId}/stream`;
-      const token = await getIdToken();
 
       try {
         setState((previous) => ({ ...previous, connected: true, error: null }));
@@ -106,7 +108,6 @@ export function useJobStream(jobId: string): UseJobStreamState {
 
         await connectSse(
           url,
-          token,
           (_eventName, data) => {
             try {
               const parsed = JSON.parse(data) as JobStreamEvent;

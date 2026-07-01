@@ -29,11 +29,6 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default=["http://localhost:3000"])
 
-    auth_disabled: bool = True
-    cognito_user_pool_id: str = ""
-    cognito_region: str = "eu-west-2"
-    cognito_app_client_id: str = ""
-
     aws_region: str = "eu-west-2"
     aws_endpoint_url: str | None = "http://localhost:4566"
     aws_access_key_id: str = "test"
@@ -104,36 +99,11 @@ class Settings(BaseSettings):
         return value
 
     @model_validator(mode="after")
-    def _auth_settings_when_enabled(self) -> Self:
-        if self.auth_disabled:
-            return self
-        missing: list[str] = []
-        if not self.cognito_user_pool_id.strip():
-            missing.append("cognito_user_pool_id")
-        if not self.cognito_app_client_id.strip():
-            missing.append("cognito_app_client_id")
-        if missing:
-            msg = f"Required when auth_disabled=false: {', '.join(missing)}"
-            raise ValueError(msg)
-        return self
-
-    @model_validator(mode="after")
     def _retry_delays_ordered(self) -> Self:
         if self.llm_retry_base_delay_seconds > self.llm_retry_max_delay_seconds:
             msg = "llm_retry_base_delay_seconds must not exceed llm_retry_max_delay_seconds"
             raise ValueError(msg)
         return self
-
-    @property
-    def cognito_issuer(self) -> str:
-        return (
-            f"https://cognito-idp.{self.cognito_region}.amazonaws.com/"
-            f"{self.cognito_user_pool_id}"
-        )
-
-    @property
-    def cognito_jwks_url(self) -> str:
-        return f"{self.cognito_issuer}/.well-known/jwks.json"
 
     @property
     def ingestion_queue_name(self) -> str:

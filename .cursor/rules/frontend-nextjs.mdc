@@ -44,8 +44,4 @@ Update nodes from SSE events keyed by `correlation_id`. Show per-stage duration 
 
 ## Real-time
 
-Prefer SSE over WebSocket (ADR-010). `useJobStream(jobId)` hook connects to `/api/v1/queries/{id}/stream`.
-
-## Auth (Phase 4)
-
-Cognito Hosted UI or Amplify Auth for sign-in. Pass ID token to API client (`Authorization: Bearer`). Protect routes via middleware or client-side session guard.
+Prefer SSE over WebSocket (ADR-010). `useJobStream(jobId)` hook connects to `/api/v1/queries/{id}/stream`. No auth headers — API uses implicit mock user (ADR-013).

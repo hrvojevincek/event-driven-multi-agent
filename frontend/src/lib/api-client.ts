@@ -1,4 +1,3 @@
-import { getIdToken } from "@/lib/auth-token";
 import type { paths } from "@/types/api";
 
 export class ApiError extends Error {
@@ -34,13 +33,6 @@ export async function apiFetch<T>(
 
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
-  }
-
-  if (!headers.has("Authorization")) {
-    const token = await getIdToken();
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
   }
 
   const response = await fetch(url, {

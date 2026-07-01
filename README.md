@@ -37,20 +37,20 @@ Full diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 
 ## Stack
 
-| Layer                    | Tech                                                                                                                        |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| **API**                  | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy 2.0, uv                                                                      |
-| **Workers**              | Async SQS consumers, one module per pipeline stage                                                                          |
-| **Events**               | AWS EventBridge + SQS (+ Step Functions for research fan-out in prod)                                                       |
-| **Data**                 | Postgres 16 + pgvector                                                                                                      |
-| **LLM**                  | OpenAI + Anthropic client; Tavily search; OpenAI embeddings; RAG; cited synthesis                                           |
-| **Resilience**           | Exponential backoff retries, per-provider circuit breakers, optional `JOB_MAX_COST_USD`                                     |
-| **Frontend** _(Phase 4)_ | Next.js 16, shadcn/ui, TanStack Query, React Flow, SSE, Amplify Cognito UI ✅                                               |
-| **Auth** _(Phase 3–4)_   | Cognito JWT → FastAPI ✅ · Amplify sign-in + Bearer on API/SSE ✅ ([KRE-154](https://linear.app/kreativbiro/issue/KRE-154)) |
-| **Observability**        | OpenTelemetry → OTLP collector → Jaeger ✅ ([KRE-155](https://linear.app/kreativbiro/issue/KRE-155))                        |
-| **IaC** _(Phase 5)_      | Terraform — networking, rds, sqs, eventbridge, cognito, ecs, github-oidc                                                    |
-| **CI/CD** _(Phase 5)_    | GitHub Actions — lint/test on PR; OIDC deploy to ECR/ECS on `main` ([`docs/CICD.md`](./docs/CICD.md))                       |
-| **Local**                | Docker Compose + LocalStack                                                                                                 |
+| Layer                    | Tech                                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| **API**                  | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy 2.0, uv                                                |
+| **Workers**              | Async SQS consumers, one module per pipeline stage                                                    |
+| **Events**               | AWS EventBridge + SQS (+ Step Functions for research fan-out in prod)                                 |
+| **Data**                 | Postgres 16 + pgvector                                                                                |
+| **LLM**                  | OpenAI + Anthropic client; Tavily search; OpenAI embeddings; RAG; cited synthesis                     |
+| **Resilience**           | Exponential backoff retries, per-provider circuit breakers, optional `JOB_MAX_COST_USD`               |
+| **Frontend** _(Phase 4)_ | Next.js 16, shadcn/ui, TanStack Query, React Flow, SSE ✅                                             |
+| **Auth**                 | Mock user only — open API (ADR-013); no login UI                                                      |
+| **Observability**        | OpenTelemetry → OTLP collector → Jaeger ✅ ([KRE-155](https://linear.app/kreativbiro/issue/KRE-155))  |
+| **IaC** _(Phase 5)_      | Terraform — networking, rds, sqs, eventbridge, ecs, github-oidc                                       |
+| **CI/CD** _(Phase 5)_    | GitHub Actions — lint/test on PR; OIDC deploy to ECR/ECS on `main` ([`docs/CICD.md`](./docs/CICD.md)) |
+| **Local**                | Docker Compose + LocalStack                                                                           |
 
 ---
 
@@ -129,26 +129,23 @@ uv run --project backend python -m eventforge.workers.synthesis
 
 Header **API ok** badge on http://localhost:3000 confirms frontend → backend health via `lib/api-client.ts`.
 
-**Regions:** `AWS_REGION=us-east-1` for LocalStack; `COGNITO_REGION=eu-west-2` for real Cognito pool.
+**Regions:** `AWS_REGION=eu-west-2` (London — prod/dev default).
 
 **Try the API:**
 
 ```bash
-# Health (no auth)
+# Health
 curl http://localhost:8000/health
 
-# E2E script path — set AUTH_DISABLED=true in .env
+# E2E pipeline script (mock user — no auth)
 ./scripts/verify-pipeline-e2e.sh
 
-# Real Cognito auth — fetch ID token, then submit
-TOKEN=$(./scripts/get-cognito-token.sh)
 curl -X POST http://localhost:8000/api/v1/queries \
-  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"topic": "Event-driven architecture patterns", "depth": "standard"}'
 
-# Poll job detail (use job_id from response) — includes stages, synthesis, llm_usage
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/queries/{job_id}
+# Poll job detail (use job_id from response)
+curl http://localhost:8000/api/v1/queries/{job_id}
 ```
 
 OpenAPI docs: http://localhost:8000/docs
@@ -198,7 +195,7 @@ event-driven/
         ├── app/              # /, /login, /queries/new, /queries/[id]
         ├── components/       # layout, auth, dashboard, workflow (React Flow), shadcn/ui
         ├── hooks/            # useJobStream (SSE), use-queries (TanStack Query)
-        ├── lib/              # api-client, auth-config, auth-token, sse-client
+        ├── lib/              # api-client, sse-client
         └── types/api.ts      # generated from OpenAPI (npm run codegen)
 ```
 

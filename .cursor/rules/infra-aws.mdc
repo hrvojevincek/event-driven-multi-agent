@@ -8,9 +8,9 @@ alwaysApply: false
 
 ## Local (Docker Compose)
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| postgres | 5432 | Postgres 16 + pgvector |
+| Service    | Port | Purpose                              |
+| ---------- | ---- | ------------------------------------ |
+| postgres   | 5432 | Postgres 16 + pgvector               |
 | localstack | 4566 | EventBridge, SQS, Step Functions, S3 |
 
 Init script: `infra/docker/localstack/init/01-eventforge.sh` creates bus + queues.
@@ -20,7 +20,7 @@ Init script: `infra/docker/localstack/init/01-eventforge.sh` creates bus + queue
 ## Terraform (`infra/terraform/`)
 
 ```
-modules/{networking,rds,eventbridge,sqs,step-functions,ecs,cognito,observability}
+modules/{networking,rds,eventbridge,sqs,step-functions,ecs,observability}
 environments/{dev,prod}
 ```
 

@@ -43,10 +43,10 @@ create_github_oidc_provider = false
 
 GitHub → **Settings → Secrets and variables → Actions**:
 
-| Tab | Name | Value | Required |
-| --- | ---- | ----- | -------- |
+| Tab           | Name                  | Value                                   | Required              |
+| ------------- | --------------------- | --------------------------------------- | --------------------- |
 | **Variables** | `AWS_DEPLOY_ROLE_ARN` | Full IAM role ARN from Terraform output | **Yes (recommended)** |
-| Secrets | `AWS_DEPLOY_ROLE_ARN` | Same ARN | Optional fallback |
+| Secrets       | `AWS_DEPLOY_ROLE_ARN` | Same ARN                                | Optional fallback     |
 
 The deploy workflow reads **Variables first**, then Secrets. Putting the ARN only under Secrets used to work only if you also had it in Variables — both are now supported, but **Variables** is the documented path.
 
@@ -67,13 +67,13 @@ Paste with **no trailing spaces** and no shell `%` (zsh artifact). Role name mus
 
 **Optional overrides** — defaults are hardcoded in `.github/workflows/deploy.yml` (`env` block). To customize region/cluster naming, edit that file or add repository variables with a resolve step in the workflow.
 
-| Name                      | Default in workflow              |
-| ------------------------- | -------------------------------- |
-| `AWS_REGION`              | `eu-west-2`                      |
-| `ECS_CLUSTER_NAME`        | `eventforge-dev-cluster`         |
-| `ECS_NAME_PREFIX`         | `eventforge-dev`                 |
-| `FRONTEND_BUILD_SSM_PATH` | `/eventforge/dev/frontend-build` |
-| ECR repository URIs        | Auto-discovered via `aws ecr describe-repositories` (`${ECS_NAME_PREFIX}-backend` / `-frontend`) |
+| Name                      | Default in workflow                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `AWS_REGION`              | `eu-west-2`                                                                                      |
+| `ECS_CLUSTER_NAME`        | `eventforge-dev-cluster`                                                                         |
+| `ECS_NAME_PREFIX`         | `eventforge-dev`                                                                                 |
+| `FRONTEND_BUILD_SSM_PATH` | `/eventforge/dev/frontend-build`                                                                 |
+| ECR repository URIs       | Auto-discovered via `aws ecr describe-repositories` (`${ECS_NAME_PREFIX}-backend` / `-frontend`) |
 
 **Repository secret** (for Terraform plan/apply in CI):
 
@@ -118,12 +118,12 @@ ECS_CLUSTER_NAME=eventforge-dev-cluster BACKEND_IMAGE=IMAGE_URI \
 
 ## Troubleshooting
 
-| Symptom                             | Fix                                                                                                                                  |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Deploy jobs skipped                 | Set `AWS_DEPLOY_ROLE_ARN` repository variable (full IAM role ARN)                                                                    |
-| `Source Account ID is needed...`    | `AWS_DEPLOY_ROLE_ARN` must be full ARN, e.g. `arn:aws:iam::123456789012:role/eventforge-dev-github-actions` — not just the role name |
-| `AccessDenied` on ECR/ECS           | Re-apply Terraform (`github_oidc` module)                                                                                            |
-| Frontend build missing Cognito vars | `terraform apply` (writes SSM) or check `frontend_build_ssm_path` output                                                             |
-| Terraform apply fails in CI         | Add `TFVARS_DEV` secret; enable S3 remote backend                                                                                    |
-| OIDC provider already exists        | `create_github_oidc_provider = false`                                                                                                |
+| Symptom                                                   | Fix                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy jobs skipped                                       | Set `AWS_DEPLOY_ROLE_ARN` repository variable (full IAM role ARN)                                                                                                                                                                                                                                                                                                                                                |
+| `Source Account ID is needed...`                          | `AWS_DEPLOY_ROLE_ARN` must be full ARN, e.g. `arn:aws:iam::123456789012:role/eventforge-dev-github-actions` — not just the role name                                                                                                                                                                                                                                                                             |
+| `AccessDenied` on ECR/ECS                                 | Re-apply Terraform (`github_oidc` module)                                                                                                                                                                                                                                                                                                                                                                        |
+| Frontend build missing `NEXT_PUBLIC_*`                    | `terraform apply` (writes SSM) or check `frontend_build_ssm_path` output                                                                                                                                                                                                                                                                                                                                         |
+| Terraform apply fails in CI                               | Add `TFVARS_DEV` secret; enable S3 remote backend                                                                                                                                                                                                                                                                                                                                                                |
+| OIDC provider already exists                              | `create_github_oidc_provider = false`                                                                                                                                                                                                                                                                                                                                                                            |
 | `Not authorized to perform sts:AssumeRoleWithWebIdentity` | **Most common:** `github_repo` in Terraform does not match the real GitHub repo name (OIDC `sub` claim). This repo is `hrvojevincek/deep-research-event-driven-multi-agent` — set `github_repo` in tfvars, re-apply, and confirm deploy log `github_repository=` matches trust policy `repo:ORG/REPO:*`. Also: put full role ARN in **Actions → Variables** (or Secrets); PRs from forks cannot assume the role. |

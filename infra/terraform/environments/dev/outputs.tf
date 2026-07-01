@@ -32,31 +32,11 @@ output "sqs_worker_queue_arns" {
   value       = module.sqs.worker_queue_arns
 }
 
-output "cognito_user_pool_id" {
-  description = "Cognito user pool ID — NEXT_PUBLIC_COGNITO_USER_POOL_ID at frontend build."
-  value       = module.cognito.user_pool_id
-}
-
-output "cognito_app_client_id" {
-  description = "Cognito app client ID — NEXT_PUBLIC_COGNITO_APP_CLIENT_ID at frontend build."
-  value       = module.cognito.app_client_id
-}
-
-output "cognito_hosted_ui_domain" {
-  description = "Hosted UI FQDN — NEXT_PUBLIC_COGNITO_DOMAIN at frontend build."
-  value       = module.cognito.hosted_ui_domain_fqdn
-}
-
 output "frontend_build_env" {
   description = "Suggested NEXT_PUBLIC_* values for frontend Docker build after apply."
   value = {
-    NEXT_PUBLIC_API_URL               = "http://${module.ecs.alb_dns_name}"
-    NEXT_PUBLIC_APP_URL               = var.app_base_url != "" ? trim(var.app_base_url, "/") : "http://${module.ecs.alb_dns_name}"
-    NEXT_PUBLIC_AUTH_DISABLED         = var.auth_disabled ? "true" : "false"
-    NEXT_PUBLIC_COGNITO_USER_POOL_ID  = module.cognito.user_pool_id
-    NEXT_PUBLIC_COGNITO_APP_CLIENT_ID = module.cognito.app_client_id
-    NEXT_PUBLIC_COGNITO_REGION        = var.aws_region
-    NEXT_PUBLIC_COGNITO_DOMAIN        = module.cognito.hosted_ui_domain_fqdn != null ? module.cognito.hosted_ui_domain_fqdn : ""
+    NEXT_PUBLIC_API_URL = "http://${module.ecs.alb_dns_name}"
+    NEXT_PUBLIC_APP_URL = var.app_base_url != "" ? trim(var.app_base_url, "/") : "http://${module.ecs.alb_dns_name}"
   }
 }
 

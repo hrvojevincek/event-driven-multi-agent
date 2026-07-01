@@ -1,72 +1,48 @@
 # EventForge Frontend
 
-Next.js 16 App Router dashboard for the EventForge research pipeline.
+Next.js 16 App Router dashboard for the event-driven research pipeline.
 
-## Stack
+## Features
 
-- Next.js 16, TypeScript, Tailwind CSS, shadcn/ui
-- TanStack Query — query list, detail, submit
-- React Flow — live pipeline graph on `/queries/[id]`
-- SSE (`useJobStream`) — real-time stage updates (fetch + Bearer auth)
-- AWS Amplify Auth — Cognito sign-in (Phase 4.4)
-- OpenAPI codegen — `npm run codegen` → `src/types/api.ts`
+- Query submit + job list/detail
+- React Flow pipeline visualization
+- SSE (`useJobStream`) — real-time stage updates via fetch
+- shadcn/ui + Tailwind v4
 
-## Pages
+## Routes
 
-| Route | Purpose |
-| ----- | ------- |
-| `/` | Landing + recent job history |
-| `/queries/new` | Submit research query |
-| `/login` | Cognito sign-in (when auth enabled) |
-| `/auth/callback` | OAuth redirect handler |
-| `/queries/[id]` | Live pipeline, synthesis, sources, cost |
+| Path            | Purpose                    |
+| --------------- | -------------------------- |
+| `/`             | Landing + recent queries   |
+| `/queries/new`  | Submit a research query    |
+| `/queries/[id]` | Pipeline graph + synthesis |
 
 ## Local dev
 
 ```bash
-cp .env.example .env.local   # NEXT_PUBLIC_AUTH_DISABLED=true by default
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8000
 npm install
-npm run dev                  # http://localhost:3000
+npm run dev
 ```
 
-Default local dev uses `NEXT_PUBLIC_AUTH_DISABLED=true` (matches backend `AUTH_DISABLED=true`). For real Cognito, see [`docs/LOCAL_DEV.md`](../docs/LOCAL_DEV.md) § Authentication.
-
-```bash
-# repo root
-make dev               # full stack via Docker Compose
-# or hybrid: infra + backend + frontend natively (see docs/LOCAL_DEV.md)
-make workers           # required for pipeline to complete
-```
-
-## Scripts
-
-```bash
-npm run dev       # dev server
-npm run build     # production build
-npm run lint      # ESLint
-npm run codegen   # regenerate types from backend OpenAPI
-```
-
-From repo root: `make openapi` exports OpenAPI + runs codegen.
+Open http://localhost:3000 — API calls use the backend mock user (no login). See [`docs/LOCAL_DEV.md`](../docs/LOCAL_DEV.md).
 
 ## Structure
 
 ```
-src/
+frontend/src/
 ├── app/                    # App Router pages
 ├── components/
-│   ├── dashboard/          # submit form, history, synthesis, sources, cost
-│   ├── workflow/           # React Flow pipeline graph
-│   ├── layout/             # shell, sidebar, header
-│   ├── auth/               # login form, route guard
-│   └── ui/                 # shadcn/ui
-├── hooks/
-│   ├── useJobStream.ts     # SSE subscription
-│   └── use-queries.ts      # TanStack Query hooks
-└── lib/
-    ├── api-client.ts       # typed fetch wrapper
-    ├── auth-config.ts      # Amplify / Cognito config
-    └── auth-token.ts       # ID token for API + SSE
+│   ├── ui/                 # shadcn/ui
+│   ├── workflow/           # React Flow nodes/edges
+│   └── dashboard/          # Synthesis, sources, cost
+├── hooks/useJobStream.ts   # SSE subscription
+├── lib/api-client.ts       # Typed fetch (openapi-typescript)
+└── types/                  # Generated from OpenAPI
 ```
 
-Docs: [`docs/LOCAL_DEV.md`](../docs/LOCAL_DEV.md) · [KRE-154](https://linear.app/kreativbiro/issue/KRE-154) (Phase 4.4)
+Regenerate API types after backend OpenAPI changes:
+
+```bash
+npm run codegen
+```

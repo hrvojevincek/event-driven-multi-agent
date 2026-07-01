@@ -43,11 +43,11 @@ See `docs/LOCAL_DEV.md` for full stack development.
 
 ## Query API
 
-| Method | Path | Notes |
-| ------ | ---- | ----- |
-| `POST` | `/api/v1/queries` | Submit topic; returns `job_id` |
-| `GET` | `/api/v1/queries` | List jobs for current user |
-| `GET` | `/api/v1/queries/{id}` | Stages, synthesis, sources, `llm_usage` |
-| `GET` | `/api/v1/queries/{id}/stream` | SSE pipeline updates |
+| Method | Path                          | Notes                                   |
+| ------ | ----------------------------- | --------------------------------------- |
+| `POST` | `/api/v1/queries`             | Submit topic; returns `job_id`          |
+| `GET`  | `/api/v1/queries`             | List jobs for current user              |
+| `GET`  | `/api/v1/queries/{id}`        | Stages, synthesis, sources, `llm_usage` |
+| `GET`  | `/api/v1/queries/{id}/stream` | SSE pipeline updates                    |
 
-Local dev: set `AUTH_DISABLED=true` in `.env`. Regenerate OpenAPI after schema changes: `make openapi` from repo root.
+Local dev uses implicit mock user (no auth config). Regenerate OpenAPI after schema changes: `make openapi` from repo root.

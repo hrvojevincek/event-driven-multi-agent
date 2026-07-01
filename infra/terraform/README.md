@@ -16,7 +16,6 @@ terraform/
     ├── rds/                 # Postgres 16 + Secrets Manager password ✅
     ├── sqs/                 # Worker queues + DLQ + redrive ✅
     ├── eventbridge/         # Bus + stage routing rules ✅
-    ├── cognito/             # User pool, app client, Hosted UI domain ✅
     ├── ecs/                 # ECR, cluster, ALB, Fargate services ✅
     ├── github-oidc/         # GitHub Actions OIDC IAM role ✅
     ├── step-functions/      # Research fan-out Map workflow ✅
@@ -25,28 +24,23 @@ terraform/
 
 ## What exists today
 
-| Module          | Resources                                                                                              |
-| --------------- | ------------------------------------------------------------------------------------------------------ |
-| **networking**  | VPC `/16`, 2 AZs, public + private subnets, NAT (single for dev), SGs for ALB/API/frontend/workers/RDS |
-| **rds**         | Postgres 16 (gp3), subnet group, backups, password in Secrets Manager; pgvector via Alembic on migrate |
-| **sqs**         | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                         |
-| **eventbridge** | `eventforge-bus` + rules routing each `detail-type` to the next stage queue                            |
-| **cognito**     | User pool, public SPA client; OAuth + Hosted UI only when `app_base_url` is HTTPS or localhost         |
-| **ecs**         | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services; optional ADOT sidecar when observability enabled |
-| **observability** | ADOT collector config, DLQ + API task CloudWatch alarms |
-| **step-functions** | Research fan-out Map state machine (optional via `enable_step_functions_research`) |
+| Module             | Resources                                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **networking**     | VPC `/16`, 2 AZs, public + private subnets, NAT (single for dev), SGs for ALB/API/frontend/workers/RDS                                    |
+| **rds**            | Postgres 16 (gp3), subnet group, backups, password in Secrets Manager; pgvector via Alembic on migrate                                    |
+| **sqs**            | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                                                            |
+| **eventbridge**    | `eventforge-bus` + rules routing each `detail-type` to the next stage queue                                                               |
+| **ecs**            | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services; optional ADOT sidecar when observability enabled |
+| **observability**  | ADOT collector config, DLQ + API task CloudWatch alarms                                                                                   |
+| **step-functions** | Research fan-out Map state machine (optional via `enable_step_functions_research`)                                                        |
 
-`environments/dev` wires **networking → rds → sqs → eventbridge → step-functions → cognito → observability → ecs**. LLM API keys remain **manual Secrets Manager ARNs** in tfvars.
+`environments/dev` wires **networking → rds → sqs → eventbridge → step-functions → observability → ecs**. LLM API keys remain **manual Secrets Manager ARNs** in tfvars.
 
 Set `enable_observability = true` (default) to add an ADOT sidecar on API/worker tasks exporting traces to X-Ray (`OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317`).
 
-### Cognito OAuth vs HTTP ALB
-
-Cognito Hosted UI OAuth requires **HTTPS** callbacks (localhost is the only HTTP exception). With a plain `http://` ALB URL, Terraform **disables OAuth** and the app client uses **email/password (SRP)** sign-in until you add ACM + `https://` `app_base_url`. See `terraform.tfvars.example` comments.
-
 ### Frontend Docker build (prod)
 
-Use `terraform output -json frontend_build_env` for all `NEXT_PUBLIC_*` build args (API URL, Cognito pool/client/region/domain). The frontend `Dockerfile` accepts these as build args.
+Use `terraform output -json frontend_build_env` for `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_APP_URL` build args. The frontend `Dockerfile` accepts these as build args.
 
 ## Prerequisites
 
@@ -111,3 +105,5 @@ Uncomment the `backend "s3"` block in `environments/dev/main.tf` and create:
 2. Phase 6 — Playwright E2E, DLQ replay UI, demo GIF
 
 **CI/CD:** GitHub Actions deploy — see [`docs/CICD.md`](../../docs/CICD.md). Set repo variable `AWS_DEPLOY_ROLE_ARN` from `terraform output github_actions_role_arn`.
+
+**Auth:** Cognito removed per ADR-013. Dev ALB exposes an open API (mock user only).

@@ -11,16 +11,16 @@ Event-driven multi-agent research platform. Users submit queries → EventBridge
 
 ## Stack
 
-| Layer | Tech |
-|-------|------|
-| Frontend | Next.js 15 App Router, TS, Tailwind, shadcn/ui, React Flow |
-| Backend | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy 2.0 |
-| Events | AWS EventBridge + SQS + Step Functions |
-| Data | Postgres 16 + pgvector |
-| Auth | Cognito JWT → FastAPI validation |
-| Observability | OpenTelemetry → OTLP |
-| IaC | Terraform (`infra/terraform/`) |
-| Local | Docker Compose + LocalStack |
+| Layer         | Tech                                                       |
+| ------------- | ---------------------------------------------------------- |
+| Frontend      | Next.js 15 App Router, TS, Tailwind, shadcn/ui, React Flow |
+| Backend       | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy 2.0         |
+| Events        | AWS EventBridge + SQS + Step Functions                     |
+| Data          | Postgres 16 + pgvector                                     |
+| Auth          | Mock user (no login)                                       |
+| Observability | OpenTelemetry → OTLP                                       |
+| IaC           | Terraform (`infra/terraform/`)                             |
+| Local         | Docker Compose + LocalStack                                |
 
 ## Layout
 
