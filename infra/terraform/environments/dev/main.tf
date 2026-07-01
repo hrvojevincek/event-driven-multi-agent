@@ -80,4 +80,6 @@ module "ecs" {
 
   create_ecr_repositories = var.create_ecr_repositories
   tags                    = var.tags
+
+  step_functions_research_enabled = var.enable_step_functions_research
 }

@@ -86,6 +86,12 @@ variable "create_ecr_repositories" {
   default = true
 }
 
+variable "enable_step_functions_research" {
+  description = "Use Step Functions for research fan-out in AWS dev."
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

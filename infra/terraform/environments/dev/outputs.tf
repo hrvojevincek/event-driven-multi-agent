@@ -101,3 +101,8 @@ output "frontend_build_ssm_path" {
   description = "SSM path prefix for frontend Docker build args in CI."
   value       = local.frontend_build_ssm_path
 }
+
+output "research_fanout_state_machine_arn" {
+  description = "Step Functions state machine ARN for research fan-out (null when disabled)."
+  value       = var.enable_step_functions_research ? module.step_functions[0].state_machine_arn : null
+}
