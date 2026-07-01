@@ -100,6 +100,28 @@ resource "aws_iam_role_policy" "worker_task" {
   policy = data.aws_iam_policy_document.worker_task.json
 }
 
+data "aws_iam_policy_document" "worker_step_functions" {
+  count = var.step_functions_research_enabled ? 1 : 0
+
+  statement {
+    sid    = "CompleteStepFunctionsTasks"
+    effect = "Allow"
+    actions = [
+      "states:SendTaskSuccess",
+      "states:SendTaskFailure",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "worker_step_functions" {
+  count = var.step_functions_research_enabled ? 1 : 0
+
+  name   = "${local.name_prefix}-worker-step-functions"
+  role   = aws_iam_role.worker_task.id
+  policy = data.aws_iam_policy_document.worker_step_functions[0].json
+}
+
 resource "aws_iam_role" "frontend_task" {
   name               = "${local.name_prefix}-frontend-task"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json

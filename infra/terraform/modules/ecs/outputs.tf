@@ -77,3 +77,18 @@ output "ecs_pass_role_arns" {
     aws_iam_role.frontend_task.arn,
   ]
 }
+
+output "execution_role_arn" {
+  description = "ECS task execution role ARN."
+  value       = aws_iam_role.execution.arn
+}
+
+output "worker_task_role_arn" {
+  description = "ECS worker task role ARN."
+  value       = aws_iam_role.worker_task.arn
+}
+
+output "research_task_definition_arn" {
+  description = "Research worker ECS task definition ARN."
+  value       = aws_ecs_task_definition.worker["research"].arn
+}

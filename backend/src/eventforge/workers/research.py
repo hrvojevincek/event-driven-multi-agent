@@ -9,7 +9,7 @@ from eventforge.agents.research import (
 )
 from eventforge.core.config import get_settings
 from eventforge.db.session import get_session_factory
-from eventforge.events.parser import parse_eventbridge_sqs_body
+from eventforge.events.parser import parse_research_queue_message
 from eventforge.events.publisher import EventPublisher
 from eventforge.events.schemas.constants import (
     DETAIL_TYPE_KNOWLEDGE_MINED,
@@ -32,15 +32,24 @@ class ResearchWorker(SqsConsumer):
         self._session_factory = get_session_factory(settings)
 
     async def handle_message(self, message: dict[str, Any]) -> None:
-        detail = parse_eventbridge_sqs_body(message["Body"])
+        detail, task_token = parse_research_queue_message(message["Body"])
         detail_type = detail.get("detail_type")
 
         if detail_type == DETAIL_TYPE_KNOWLEDGE_MINED:
+            if self._settings.research_orchestration_mode == "step_functions":
+                logger.info(
+                    "Skipping knowledge.mined; Step Functions handles fan-out",
+                    extra={
+                        "event_id": detail.get("event_id"),
+                        "job_id": detail.get("job_id"),
+                    },
+                )
+                return
             await self._handle_knowledge_mined(detail)
             return
 
         if detail_type == DETAIL_TYPE_RESEARCH_TASK_DISPATCHED:
-            await self._handle_research_task_dispatched(detail)
+            await self._handle_research_task_dispatched(detail, task_token)
             return
 
         msg = f"Unexpected detail_type for research worker: {detail_type}"
@@ -82,12 +91,18 @@ class ResearchWorker(SqsConsumer):
         )
 
     async def _handle_research_task_dispatched(
-            self, detail: dict[str, Any]) -> None:
+        self, detail: dict[str, Any], task_token: str | None = None
+    ) -> None:
         event = parse_research_task_dispatched_event(detail)
 
         async def _process():
             async with self._session_factory() as session:
-                return await process_research_task_dispatched(session, self._publisher, event)
+                return await process_research_task_dispatched(
+                    session,
+                    self._publisher,
+                    event,
+                    step_functions_task_token=task_token,
+                )
 
         result = await run_with_cost_cap_handling(
             self._session_factory,
@@ -97,6 +112,17 @@ class ResearchWorker(SqsConsumer):
         )
 
         if result is None:
+            if task_token:
+                from eventforge.services.step_functions import send_task_success
+
+                send_task_success(
+                    task_token,
+                    {
+                        "skipped": True,
+                        "task_id": str(event.payload.task_id),
+                        "task_index": event.payload.task_index,
+                    },
+                )
             logger.info(
                 "Skipped duplicate research.task.dispatched",
                 extra={

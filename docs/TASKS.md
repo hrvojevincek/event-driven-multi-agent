@@ -216,7 +216,7 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 - [x] `modules/rds` — Postgres with backups → [KRE-158](https://linear.app/kreativbiro/issue/KRE-158)
 - [x] `modules/eventbridge` — event bus + rules → [KRE-160](https://linear.app/kreativbiro/issue/KRE-160)
 - [x] `modules/sqs` — queues + DLQ + redrive → [KRE-159](https://linear.app/kreativbiro/issue/KRE-159)
-- [ ] `modules/step-functions` — research fan-out workflow
+- [x] `modules/step-functions` — research fan-out workflow
 - [ ] `modules/observability` — CloudWatch, ADOT
 - [x] `modules/cognito` — user pool, app client, callback URLs → [KRE-161](https://linear.app/kreativbiro/issue/KRE-161)
 - [x] `environments/dev` — compose modules (networking → cognito → ecs) → [KRE-157](https://linear.app/kreativbiro/issue/KRE-157)
@@ -245,9 +245,9 @@ When an issue closes → check the matching box below and ensure `KRE-xxx` link 
 
 ### 5.3 Step Functions
 
-- [ ] Research fan-out Map state
-- [ ] Wait for all research completions
-- [ ] Trigger synthesis on completion
+- [x] Research fan-out Map state
+- [x] Wait for all research completions
+- [x] Trigger synthesis on completion
 
 **Phase 5 exit criteria:** Deployed to AWS dev; end-to-end query works in cloud.
 

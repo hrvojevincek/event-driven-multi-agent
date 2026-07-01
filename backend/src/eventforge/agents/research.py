@@ -110,14 +110,13 @@ async def _load_or_create_note(
 
 
 @traced_agent(WORKER_NAME_RESEARCH_ORCHESTRATOR)
-async def process_knowledge_mined(
+async def prepare_research_fanout(
     session: AsyncSession,
-    publisher: EventPublisher,
     event: KnowledgeMinedEvent,
     *,
     llm_client: LLMClient | None = None,
 ) -> list[ResearchTaskDispatchedEvent] | None:
-    """Fan out research sub-tasks from knowledge.mined. Returns None if already processed."""
+    """Build research sub-tasks from knowledge.mined without publishing events."""
     processed_repo = ProcessedEventRepository(session)
     event_id = str(event.event_id)
 
@@ -148,8 +147,25 @@ async def process_knowledge_mined(
     dispatched_events = await _build_dispatched_events(
         event, job, entities, llm_client=llm_client
     )
-
     await session.commit()
+    return dispatched_events
+
+
+@traced_agent(WORKER_NAME_RESEARCH_ORCHESTRATOR)
+async def process_knowledge_mined(
+    session: AsyncSession,
+    publisher: EventPublisher,
+    event: KnowledgeMinedEvent,
+    *,
+    llm_client: LLMClient | None = None,
+) -> list[ResearchTaskDispatchedEvent] | None:
+    """Fan out research sub-tasks from knowledge.mined. Returns None if already processed."""
+    processed_repo = ProcessedEventRepository(session)
+    event_id = str(event.event_id)
+
+    dispatched_events = await prepare_research_fanout(session, event, llm_client=llm_client)
+    if dispatched_events is None:
+        return None
 
     try:
         for dispatched in dispatched_events:
@@ -171,6 +187,7 @@ async def process_research_task_dispatched(
     llm_client: LLMClient | None = None,
     embed_client: EmbeddingClient | None = None,
     search_client: TavilyClient | None = None,
+    step_functions_task_token: str | None = None,
 ) -> ResearchTaskCompletedEvent | None:
     """Run one research sub-task. Returns None if already processed."""
     processed_repo = ProcessedEventRepository(session)
@@ -232,6 +249,14 @@ async def process_research_task_dispatched(
         await processed_repo.release_claim(event_id, WORKER_NAME_RESEARCH)
         await session.commit()
         raise
+
+    if step_functions_task_token:
+        from eventforge.services.step_functions import send_task_success
+
+        send_task_success(
+            step_functions_task_token,
+            completed_event.model_dump(mode="json"),
+        )
 
     return completed_event
 

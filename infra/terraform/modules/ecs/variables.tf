@@ -249,6 +249,12 @@ variable "create_ecr_repositories" {
   default     = true
 }
 
+variable "step_functions_research_enabled" {
+  description = "Enable Step Functions research fan-out (sets RESEARCH_ORCHESTRATION_MODE on workers)."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags applied to ECS resources."
   type        = map(string)

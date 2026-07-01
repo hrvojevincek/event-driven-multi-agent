@@ -25,14 +25,14 @@ terraform/
 
 ## What exists today
 
-| Module         | Resources                                                                                              |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| **networking** | VPC `/16`, 2 AZs, public + private subnets, NAT (single for dev), SGs for ALB/API/frontend/workers/RDS |
-| **rds**        | Postgres 16 (gp3), subnet group, backups, password in Secrets Manager; pgvector via Alembic on migrate |
-| **sqs**        | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                          |
-| **eventbridge**| `eventforge-bus` + rules routing each `detail-type` to the next stage queue                                 |
-| **cognito**    | User pool, public SPA client; OAuth + Hosted UI only when `app_base_url` is HTTPS or localhost |
-| **ecs**        | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services                |
+| Module          | Resources                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------ |
+| **networking**  | VPC `/16`, 2 AZs, public + private subnets, NAT (single for dev), SGs for ALB/API/frontend/workers/RDS |
+| **rds**         | Postgres 16 (gp3), subnet group, backups, password in Secrets Manager; pgvector via Alembic on migrate |
+| **sqs**         | `eventforge-*` worker queues + DLQ, redrive policies (mirrors LocalStack init)                         |
+| **eventbridge** | `eventforge-bus` + rules routing each `detail-type` to the next stage queue                            |
+| **cognito**     | User pool, public SPA client; OAuth + Hosted UI only when `app_base_url` is HTTPS or localhost         |
+| **ecs**         | ECR repos, ECS cluster, ALB (SSE idle timeout 300s), API + frontend + 6 worker services                |
 
 `environments/dev` wires **networking → rds → sqs → eventbridge → cognito → ecs**. LLM API keys remain **manual Secrets Manager ARNs** in tfvars.
 
@@ -104,7 +104,6 @@ Uncomment the `backend "s3"` block in `environments/dev/main.tf` and create:
 ## Next modules
 
 1. Secrets module for OpenAI/Tavily keys (optional; manual SM secrets work for dev)
-2. `step-functions` — research Map state
-3. `observability` — ADOT, CloudWatch alarms
+2. `observability` — ADOT, CloudWatch alarms
 
 **CI/CD:** GitHub Actions deploy — see [`docs/CICD.md`](../../docs/CICD.md). Set repo variable `AWS_DEPLOY_ROLE_ARN` from `terraform output github_actions_role_arn`.

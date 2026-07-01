@@ -9,8 +9,8 @@ locals {
     can(regex("^http://127\\.0\\.0\\.1(:[0-9]+)?$", local.oauth_base))
   )
 
-  callback_urls = local.oauth_enabled ? ["${local.oauth_base}/auth/callback"] : ["http://localhost:3000/auth/callback"]
-  logout_urls   = local.oauth_enabled ? ["${local.oauth_base}/"] : ["http://localhost:3000/"]
+  callback_urls           = local.oauth_enabled ? ["${local.oauth_base}/auth/callback"] : ["http://localhost:3000/auth/callback"]
+  logout_urls             = local.oauth_enabled ? ["${local.oauth_base}/"] : ["http://localhost:3000/"]
   create_hosted_ui_domain = var.create_domain && local.oauth_enabled
 
   common_tags = merge(var.tags, {

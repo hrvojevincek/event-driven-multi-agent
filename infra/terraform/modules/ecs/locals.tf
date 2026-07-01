@@ -62,8 +62,14 @@ locals {
     var.tavily_api_key_secret_arn != "" ? [{ name = "TAVILY_API_KEY", valueFrom = var.tavily_api_key_secret_arn }] : [],
   )
 
-  worker_environment_base = [
-    for item in local.api_environment : item
-    if !contains(["CORS_ORIGINS", "OTEL_SERVICE_NAME"], item.name)
-  ]
+  worker_environment_base = concat(
+    [
+      for item in local.api_environment : item
+      if !contains(["CORS_ORIGINS", "OTEL_SERVICE_NAME"], item.name)
+    ],
+    [{
+      name  = "RESEARCH_ORCHESTRATION_MODE"
+      value = var.step_functions_research_enabled ? "step_functions" : "local"
+    }],
+  )
 }

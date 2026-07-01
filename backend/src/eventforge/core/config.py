@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     otel_exporter_otlp_endpoint: str = "http://localhost:4317"
     otel_service_name: str = "eventforge-api"
 
+    research_orchestration_mode: Literal["local", "step_functions"] = "local"
+
     @field_validator(
         "llm_max_retries",
         "circuit_breaker_failure_threshold",

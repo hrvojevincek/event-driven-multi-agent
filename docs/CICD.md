@@ -105,10 +105,11 @@ ECS_CLUSTER_NAME=eventforge-dev-cluster BACKEND_IMAGE=IMAGE_URI \
 
 ## Troubleshooting
 
-| Symptom                             | Fix                                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------ |
-| Deploy jobs skipped                 | Set `AWS_DEPLOY_ROLE_ARN` repository variable                            |
-| `AccessDenied` on ECR/ECS           | Re-apply Terraform (`github_oidc` module)                                |
-| Frontend build missing Cognito vars | `terraform apply` (writes SSM) or check `frontend_build_ssm_path` output |
-| Terraform apply fails in CI         | Add `TFVARS_DEV` secret; enable S3 remote backend                        |
-| OIDC provider already exists        | `create_github_oidc_provider = false`                                    |
+| Symptom                             | Fix                                                                                                                                  |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Deploy jobs skipped                 | Set `AWS_DEPLOY_ROLE_ARN` repository variable (full IAM role ARN)                                                                    |
+| `Source Account ID is needed...`    | `AWS_DEPLOY_ROLE_ARN` must be full ARN, e.g. `arn:aws:iam::123456789012:role/eventforge-dev-github-actions` — not just the role name |
+| `AccessDenied` on ECR/ECS           | Re-apply Terraform (`github_oidc` module)                                                                                            |
+| Frontend build missing Cognito vars | `terraform apply` (writes SSM) or check `frontend_build_ssm_path` output                                                             |
+| Terraform apply fails in CI         | Add `TFVARS_DEV` secret; enable S3 remote backend                                                                                    |
+| OIDC provider already exists        | `create_github_oidc_provider = false`                                                                                                |

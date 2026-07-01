@@ -41,8 +41,24 @@ jobs:
       backend: ${{ steps.result.outputs.backend }}
       frontend: ${{ steps.result.outputs.frontend }}
       terraform: ${{ steps.result.outputs.terraform }}
+      deploy_configured: ${{ steps.deploy_config.outputs.configured }}
+      deploy_role_arn: ${{ steps.deploy_config.outputs.role_arn }}
     steps:
       - uses: actions/checkout@v4
+
+      - id: deploy_config
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          if [[ "$AWS_DEPLOY_ROLE_ARN" =~ ^arn:aws:iam::[0-9]{12}:role/ ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "role_arn=$AWS_DEPLOY_ROLE_ARN" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            if [ -n "$AWS_DEPLOY_ROLE_ARN" ]; then
+              echo "::warning::AWS_DEPLOY_ROLE_ARN must be a full IAM role ARN (arn:aws:iam::ACCOUNT:role/NAME), not a role name."
+            fi
+          fi
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -81,7 +97,7 @@ jobs:
     if: |
       needs.changes.outputs.backend == 'true' &&
       github.event_name != 'pull_request' &&
-      vars.AWS_DEPLOY_ROLE_ARN != ''
+      needs.changes.outputs.deploy_configured == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -89,7 +105,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ needs.changes.outputs.deploy_role_arn }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Resolve ECR repository
@@ -125,7 +141,7 @@ jobs:
     if: |
       needs.changes.outputs.frontend == 'true' &&
       github.event_name != 'pull_request' &&
-      vars.AWS_DEPLOY_ROLE_ARN != ''
+      needs.changes.outputs.deploy_configured == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -133,7 +149,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ needs.changes.outputs.deploy_role_arn }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Resolve ECR repository
@@ -175,7 +191,7 @@ jobs:
     needs: changes
     if: |
       needs.changes.outputs.terraform == 'true' &&
-      vars.AWS_DEPLOY_ROLE_ARN != ''
+      needs.changes.outputs.deploy_configured == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -186,7 +202,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ needs.changes.outputs.deploy_role_arn }}
           aws-region: ${{ env.AWS_REGION }}
 
       - uses: hashicorp/setup-terraform@v3

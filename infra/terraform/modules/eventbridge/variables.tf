@@ -30,3 +30,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_step_functions_research" {
+  description = "When true, route research.all_completed to synthesis and defer research queue policy to the environment root."
+  type        = bool
+  default     = false
+}
