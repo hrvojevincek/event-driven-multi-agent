@@ -87,15 +87,15 @@ module "ecs" {
   anthropic_api_key_secret_arn = var.anthropic_api_key_secret_arn
   tavily_api_key_secret_arn    = var.tavily_api_key_secret_arn
 
-  cors_origins                = var.cors_origins
-  cognito_user_pool_id        = module.cognito.user_pool_id
-  cognito_app_client_id       = module.cognito.app_client_id
-  cognito_region              = var.aws_region
-  auth_disabled               = var.auth_disabled
-  acm_certificate_arn  = var.acm_certificate_arn
-  otel_enabled         = var.enable_observability
-  adot_collector_image = module.observability.adot_collector_image
-  adot_config_content  = var.enable_observability ? module.observability.adot_config_content : ""
+  cors_origins          = var.cors_origins
+  cognito_user_pool_id  = module.cognito.user_pool_id
+  cognito_app_client_id = module.cognito.app_client_id
+  cognito_region        = var.aws_region
+  auth_disabled         = var.auth_disabled
+  acm_certificate_arn   = var.acm_certificate_arn
+  otel_enabled          = var.enable_observability
+  adot_collector_image  = module.observability.adot_collector_image
+  adot_config_content   = var.enable_observability ? module.observability.adot_config_content : ""
 
   create_ecr_repositories = var.create_ecr_repositories
   tags                    = var.tags

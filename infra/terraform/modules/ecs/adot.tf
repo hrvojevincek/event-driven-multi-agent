@@ -14,7 +14,7 @@ variable "adot_config_content" {
 locals {
   otlp_endpoint_effective = var.otel_enabled ? "http://127.0.0.1:4317" : var.otel_exporter_otlp_endpoint
 
-  api_memory_effective = var.otel_enabled ? max(var.api_memory, 2048) : var.api_memory
+  api_memory_effective    = var.otel_enabled ? max(var.api_memory, 2048) : var.api_memory
   worker_memory_effective = var.otel_enabled ? max(var.worker_memory, 2048) : var.worker_memory
 
   adot_sidecar_enabled = var.otel_enabled && trimspace(var.adot_config_content) != ""

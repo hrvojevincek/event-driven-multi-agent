@@ -22,7 +22,7 @@ locals {
 
   github_subjects = var.oidc_subject_wildcard ? [
     "repo:${var.github_org}/${var.github_repo}:*",
-  ] : concat(
+    ] : concat(
     [for branch in var.allowed_branches : "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/${branch}"],
     var.allow_pull_request ? ["repo:${var.github_org}/${var.github_repo}:pull_request"] : [],
   )
