@@ -2,86 +2,9 @@
 
 **Event-driven multi-agent research platform** — submit a topic, watch a pipeline of specialized agents investigate it in parallel, and get a structured synthesis with sources.
 
-Built as a **portfolio-grade** full-stack project: production patterns (idempotency, DLQ, correlation IDs, cost tracking) over a real AWS event architecture — not a single-shot ChatGPT wrapper.
+Built as full-stack project: production patterns (idempotency, DLQ, correlation IDs, cost tracking) over a real AWS event architecture - practicing AWS and event distributed systems.
 
----
-
-## End goal
-
-Turn open-ended research questions into **cited, multi-source syntheses** you can trust — and show _how_ the answer was built, not just the answer.
-
-| For                 | EventForge delivers                                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Researchers**     | Deep investigation across web sources, chunked + embedded for RAG, parallel sub-queries, merged report      |
-| **Hiring managers** | Evidence of distributed systems, event-driven design, observability, and cloud-native ops                   |
-| **Developers (me)** | A demo-ready piece spanning FastAPI, EventBridge/SQS, pgvector, LLM agents, and a live React Flow dashboard |
-
-**MVP done when:** A user submits a query → real agents run end-to-end → synthesis lands in the DB with citations → UI shows live pipeline progress and cost.
-
-**Backend MVP (Phase 3):** Real cited synthesis + Cognito JWT auth ✅ — Phase 3 exit complete.
-
----
-
-## Where things stand
-
-**Strategy:** Phases 0–4 complete. **Phase 5 in progress** — AWS dev live ✅ · CI/CD via GitHub Actions ✅ ([KRE-163](https://linear.app/kreativbiro/issue/KRE-163)). **Next:** Step Functions, observability.
-
-| Phase | Focus                                                                         | Status                                                                                                                                                                                                                                                                                                                                                           |
-| ----- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0** | Docs, Docker, LocalStack, Postgres + pgvector                                 | ✅ Done                                                                                                                                                                                                                                                                                                                                                          |
-| **1** | FastAPI backend, health checks, SQLAlchemy, Alembic                           | ✅ Done                                                                                                                                                                                                                                                                                                                                                          |
-| **2** | Event pipeline with **stub agents** (ingestion → synthesis), DLQ, idempotency | ✅ Done                                                                                                                                                                                                                                                                                                                                                          |
-| **3** | **Real AI** — full agent pipeline, cost API, resilience, Cognito auth         | ✅ **Complete**                                                                                                                                                                                                                                                                                                                                                  |
-| **4** | Next.js UI, SSE, React Flow, dashboard, Cognito UI, OTEL                      | ✅ **Complete** — [KRE-151](https://linear.app/kreativbiro/issue/KRE-151) SSE · [KRE-152](https://linear.app/kreativbiro/issue/KRE-152) React Flow · [KRE-153](https://linear.app/kreativbiro/issue/KRE-153) dashboard · [KRE-154](https://linear.app/kreativbiro/issue/KRE-154) Cognito UI · [KRE-155](https://linear.app/kreativbiro/issue/KRE-155) OTEL local |
-| **5** | AWS deploy (Terraform, ECS, CI/CD, Step Functions)                            | **In progress** — IaC + AWS dev + CI/CD done (KRE-156–163); Step Functions + observability next                                                                                                                                                                                                                                                                  |
-| **6** | Polish — demo GIF, E2E tests, RAG eval, cost dashboard                        | Planned                                                                                                                                                                                                                                                                                                                                                          |
-
-Detail: [`docs/TASKS.md`](./docs/TASKS.md) · Linear: [`docs/LINEAR.md`](./docs/LINEAR.md)
-
----
-
-## What works today
-
-The **full event pipeline runs locally** with **real AI** end-to-end (ingestion → synthesis).
-
-```
-POST /api/v1/queries  →  EventBridge  →  SQS workers  →  Postgres  →  GET /api/v1/queries/{id}
-```
-
-| Capability                                                           | Status                                                                                                                                    |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Submit query, list jobs, job detail + stages                         | ✅ REST API                                                                                                                               |
-| EventBridge → SQS → 5 stage workers + DLQ handler                    | ✅ LocalStack                                                                                                                             |
-| Idempotent processing (`processed_events`)                           | ✅                                                                                                                                        |
-| SQS redrive → DLQ after 3 failures                                   | ✅                                                                                                                                        |
-| `pipeline.failed` terminal failure events                            | ✅                                                                                                                                        |
-| LLM client (OpenAI + Anthropic, config-driven pricing)               | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139)                                                                                |
-| Per-call cost logging (`llm_usage` table)                            | ✅ [KRE-139](https://linear.app/kreativbiro/issue/KRE-139)                                                                                |
-| Tavily web search ingestion                                          | ✅ [KRE-140](https://linear.app/kreativbiro/issue/KRE-140)                                                                                |
-| Real chunking + OpenAI `text-embedding-3-small` → pgvector           | ✅ [KRE-141](https://linear.app/kreativbiro/issue/KRE-141)                                                                                |
-| RAG knowledge mining (vector retrieval + LLM entity extraction)      | ✅ [KRE-143](https://linear.app/kreativbiro/issue/KRE-143)                                                                                |
-| Real LLM research notes + cited synthesis                            | ✅ [KRE-142](https://linear.app/kreativbiro/issue/KRE-142) / ✅ [KRE-144](https://linear.app/kreativbiro/issue/KRE-144)                   |
-| LLM cost summary on `GET /api/v1/queries/{id}`                       | ✅ [KRE-145](https://linear.app/kreativbiro/issue/KRE-145)                                                                                |
-| LLM resilience (retry, circuit breaker, per-job cost cap)            | ✅ [KRE-147](https://linear.app/kreativbiro/issue/KRE-147)                                                                                |
-| Backend JWT auth (Cognito)                                           | ✅ [KRE-146](https://linear.app/kreativbiro/issue/KRE-146) — `AUTH_DISABLED=true` for E2E; real pool via `./scripts/get-cognito-token.sh` |
-| Next.js scaffold (App Router, Tailwind, shadcn/ui)                   | ✅ [KRE-119](https://linear.app/kreativbiro/issue/KRE-119)                                                                                |
-| App shell + placeholder pages (`/`, `/queries/new`, `/queries/[id]`) | ✅ [KRE-121](https://linear.app/kreativbiro/issue/KRE-121)                                                                                |
-| API client + Docker Compose frontend service                         | ✅ [KRE-124](https://linear.app/kreativbiro/issue/KRE-124)                                                                                |
-| Full-stack smoke test (`verify-fullstack.sh`)                        | ✅ [KRE-128](https://linear.app/kreativbiro/issue/KRE-128)                                                                                |
-| SSE live pipeline updates (`useJobStream` + `/queries/{id}/stream`)  | ✅ [KRE-151](https://linear.app/kreativbiro/issue/KRE-151)                                                                                |
-| Live React Flow dashboard                                            | ✅ [KRE-152](https://linear.app/kreativbiro/issue/KRE-152)                                                                                |
-| Dashboard UI — submit query, job history, synthesis, sources, cost   | ✅ [KRE-153](https://linear.app/kreativbiro/issue/KRE-153)                                                                                |
-| Cognito sign-in UI — Amplify Auth, Bearer token, route guard         | ✅ [KRE-154](https://linear.app/kreativbiro/issue/KRE-154)                                                                                |
-| Local OTEL — FastAPI + worker spans, collector, Jaeger UI            | ✅ [KRE-155](https://linear.app/kreativbiro/issue/KRE-155)                                                                                |
-| AWS deploy hardening — IAM creds, SSE keepalives, Cognito OAuth gate | ✅ [KRE-162](https://linear.app/kreativbiro/issue/KRE-162)                                                                                |
-| AWS dev deploy — ECS Fargate, ALB, RDS, EventBridge, Cognito         | ✅ Terraform apply + ECR                                                                                                                  |
-| GitHub Actions CI/CD — OIDC, ECR push, ECS rollout                   | ✅ [KRE-163](https://linear.app/kreativbiro/issue/KRE-163) · [`docs/CICD.md`](./docs/CICD.md)                                             |
-
-**Smoke test:** `./scripts/verify-pipeline-e2e.sh` or `make verify-e2e` (API + all workers; real LLM run ~2–3 min with one research worker)
-
-**Full-stack scaffold:** `./scripts/verify-fullstack.sh` or `make verify-fullstack` (compose stack + frontend UI; no workers required)
-
----
+Using only agents might be a over-stretch, but mainly for learning and experimenting with production AWS setup.
 
 ## Architecture (at a glance)
 
