@@ -34,6 +34,18 @@ class JobRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
+    async def delete_for_user(self, job_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+        """Delete a job owned by the user. Returns False if not found or not owned."""
+        result = await self.session.execute(
+            select(Job).where(Job.id == job_id, Job.user_id == user_id)
+        )
+        job = result.scalar_one_or_none()
+        if job is None:
+            return False
+        await self.session.delete(job)
+        await self.session.flush()
+        return True
+
 
 class JobStageRepository(BaseRepository):
     """Track and update per-stage execution status on a job."""

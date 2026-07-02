@@ -186,6 +186,19 @@ async def list_queries(session: AsyncSession, user: User) -> list[QuerySummaryRe
     return [_job_to_summary_response(job) for job in jobs]
 
 
+async def delete_query(
+    session: AsyncSession,
+    job_id: uuid.UUID,
+    user: User,
+) -> bool:
+    """Delete a job and its related records for the current user."""
+    deleted = await JobRepository(session).delete_for_user(job_id, user.id)
+    if not deleted:
+        return False
+    await session.commit()
+    return True
+
+
 async def get_query_detail(
     session: AsyncSession,
     job_id: uuid.UUID,

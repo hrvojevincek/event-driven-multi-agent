@@ -15,3 +15,8 @@ def test_api_keys_strip_trailing_newlines_and_spaces() -> None:
 def test_postgres_password_strips_whitespace() -> None:
     settings = Settings(postgres_password=" changeme\n")
     assert settings.postgres_password == "changeme"
+
+
+def test_mock_external_apis_auto_enabled_for_local_environment() -> None:
+    settings = Settings(environment="local")
+    assert settings.use_mock_external_apis is True

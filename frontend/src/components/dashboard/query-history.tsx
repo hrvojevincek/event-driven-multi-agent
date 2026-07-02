@@ -1,9 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Trash2 } from "lucide-react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,7 +24,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useQueryList } from "@/hooks/use-queries";
+import { useDeleteQuery, useQueryList } from "@/hooks/use-queries";
+
+type PendingDelete = {
+  jobId: string;
+  topic: string;
+};
 
 function statusVariant(
   status: string,
@@ -47,6 +65,18 @@ function formatRelativeTime(iso: string): string {
 
 export function QueryHistory() {
   const { data, isLoading, error } = useQueryList();
+  const deleteQuery = useDeleteQuery();
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
+    null,
+  );
+
+  async function confirmDelete() {
+    if (!pendingDelete) {
+      return;
+    }
+    await deleteQuery.mutateAsync(pendingDelete.jobId);
+    setPendingDelete(null);
+  }
 
   return (
     <section className="space-y-4">
@@ -84,7 +114,10 @@ export function QueryHistory() {
           {!isLoading && !error && (data?.length ?? 0) === 0 ? (
             <p className="text-sm text-muted-foreground">
               No queries yet.{" "}
-              <Link href="/queries/new" className="text-primary hover:underline">
+              <Link
+                href="/queries/new"
+                className="text-primary hover:underline"
+              >
                 Submit your first topic
               </Link>
               .
@@ -94,31 +127,97 @@ export function QueryHistory() {
             <ul className="divide-y divide-border">
               {data.map((job) => (
                 <li key={job.job_id}>
-                  <Link
-                    href={`/queries/${job.job_id}`}
-                    className="group flex items-center justify-between gap-4 py-3 transition-colors hover:bg-muted/30 -mx-2 px-2 rounded-lg"
-                  >
-                    <div className="min-w-0 space-y-1">
-                      <p className="truncate text-sm font-medium">{job.topic}</p>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <Badge
-                          variant={statusVariant(job.status)}
-                          className="font-mono text-[10px] uppercase"
-                        >
-                          {job.status.replaceAll("_", " ")}
-                        </Badge>
-                        <span>{job.depth}</span>
-                        <span>{formatRelativeTime(job.created_at)}</span>
+                  <div className="group flex items-center justify-between gap-2 py-3 -mx-2 px-2 rounded-lg hover:bg-muted/30">
+                    <Link
+                      href={`/queries/${job.job_id}`}
+                      className="flex min-w-0 flex-1 items-center justify-between gap-4"
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <p className="truncate text-sm font-medium">
+                          {job.topic}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <Badge
+                            variant={statusVariant(job.status)}
+                            className="font-mono text-[10px] uppercase"
+                          >
+                            {job.status.replaceAll("_", " ")}
+                          </Badge>
+                          <span>{job.depth}</span>
+                          <span>{formatRelativeTime(job.created_at)}</span>
+                        </div>
                       </div>
-                    </div>
-                    <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                  </Link>
+                      <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                    </Link>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Delete ${job.topic}`}
+                      disabled={
+                        deleteQuery.isPending &&
+                        deleteQuery.variables === job.job_id
+                      }
+                      onClick={() => {
+                        setPendingDelete({
+                          jobId: job.job_id,
+                          topic: job.topic,
+                        });
+                      }}
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : null}
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleteQuery.isPending) {
+            setPendingDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent size="default">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <Trash2 />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete ? (
+                <>
+                  <span className="font-medium text-foreground">
+                    {pendingDelete.topic}
+                  </span>{" "}
+                  will be permanently removed, including pipeline history and
+                  results. This cannot be undone.
+                </>
+              ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteQuery.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteQuery.isPending}
+              onClick={() => {
+                void confirmDelete();
+              }}
+            >
+              {deleteQuery.isPending ? "Deleting…" : "Delete job"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

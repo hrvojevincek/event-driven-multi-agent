@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     environment: str = "local"
     log_level: str = "INFO"
+    mock_external_apis: bool | None = None
 
     postgres_host: str = "localhost"
     postgres_port: int = 5432
@@ -66,6 +67,13 @@ class Settings(BaseSettings):
     otel_service_name: str = "eventforge-api"
 
     research_orchestration_mode: Literal["local", "step_functions"] = "local"
+
+    @field_validator("mock_external_apis", mode="before")
+    @classmethod
+    def _empty_mock_flag(cls, value: object) -> object:
+        if value == "":
+            return None
+        return value
 
     @field_validator(
         "openai_api_key",
@@ -118,6 +126,13 @@ class Settings(BaseSettings):
             msg = "llm_retry_base_delay_seconds must not exceed llm_retry_max_delay_seconds"
             raise ValueError(msg)
         return self
+
+    @property
+    def use_mock_external_apis(self) -> bool:
+        """Use fixture Tavily/LLM/embeddings instead of paid external APIs."""
+        if self.mock_external_apis is not None:
+            return self.mock_external_apis
+        return self.environment == "local"
 
     @property
     def ingestion_queue_name(self) -> str:

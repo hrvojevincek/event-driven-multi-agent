@@ -21,7 +21,11 @@ function stageStatus(
   return stages[stageId]?.status ?? "pending";
 }
 
-function isEdgeActive(
+function isEdgeCompleted(sourceStatus: StageStatus): boolean {
+  return sourceStatus === "completed";
+}
+
+function isEdgeAnimated(
   sourceStatus: StageStatus,
   targetStatus: StageStatus,
 ): boolean {
@@ -55,7 +59,8 @@ export function buildPipelineGraph(
         target: targetStage.id,
         type: "pipeline",
         data: {
-          active: isEdgeActive(sourceStatus, targetStatus),
+          active: isEdgeCompleted(sourceStatus),
+          animated: isEdgeAnimated(sourceStatus, targetStatus),
         },
       };
     },

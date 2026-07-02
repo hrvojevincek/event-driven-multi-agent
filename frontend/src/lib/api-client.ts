@@ -92,3 +92,9 @@ export async function submitQuery(
     body: JSON.stringify(body),
   });
 }
+
+export async function deleteQuery(jobId: string): Promise<void> {
+  await apiFetch<void>(`/api/v1/queries/${jobId}`, {
+    method: "DELETE",
+  });
+}

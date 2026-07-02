@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  deleteQuery,
   getQueryDetail,
   listQueries,
   submitQuery,
@@ -37,6 +38,18 @@ export function useSubmitQuery() {
     mutationFn: (body: SubmitQueryRequest) => submitQuery(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.queries.all });
+    },
+  });
+}
+
+export function useDeleteQuery() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (jobId: string) => deleteQuery(jobId),
+    onSuccess: (_data, jobId) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.queries.all });
+      void queryClient.removeQueries({ queryKey: queryKeys.queries.detail(jobId) });
     },
   });
 }

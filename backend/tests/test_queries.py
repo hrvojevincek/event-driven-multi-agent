@@ -248,6 +248,31 @@ async def test_get_query_returns_404_for_unknown_job(client: AsyncClient) -> Non
     assert response.json()["detail"] == "Job not found"
 
 
+async def test_delete_query_removes_job(client: AsyncClient) -> None:
+    create_response = await client.post(
+        "/api/v1/queries",
+        json={"topic": "Delete me", "depth": "standard"},
+    )
+    assert create_response.status_code == 201
+    job_id = create_response.json()["job_id"]
+
+    delete_response = await client.delete(f"/api/v1/queries/{job_id}")
+    assert delete_response.status_code == 204
+
+    get_response = await client.get(f"/api/v1/queries/{job_id}")
+    assert get_response.status_code == 404
+
+    list_response = await client.get("/api/v1/queries")
+    assert list_response.status_code == 200
+    assert job_id not in {item["job_id"] for item in list_response.json()}
+
+
+async def test_delete_query_returns_404_for_unknown_job(client: AsyncClient) -> None:
+    response = await client.delete(f"/api/v1/queries/{uuid.uuid4()}")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Job not found"
+
+
 async def test_list_queries_returns_mock_user_jobs(client: AsyncClient) -> None:
     first = await client.post(
         "/api/v1/queries",

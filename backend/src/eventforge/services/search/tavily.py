@@ -110,4 +110,9 @@ class TavilyClient:
 
 def get_tavily_client(settings: Settings | None = None) -> TavilyClient:
     """Build a Tavily search client from application settings."""
-    return TavilyClient(settings=settings)
+    resolved = settings or get_settings()
+    if resolved.use_mock_external_apis:
+        from eventforge.services.mock.tavily import MockTavilyClient
+
+        return MockTavilyClient(resolved)  # type: ignore[return-value]
+    return TavilyClient(resolved)

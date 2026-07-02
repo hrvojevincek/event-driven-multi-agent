@@ -1,13 +1,12 @@
 "use client";
 
-import {
-  BaseEdge,
-  getBezierPath,
-  type EdgeProps,
-} from "@xyflow/react";
+import { BaseEdge, getBezierPath, type EdgeProps } from "@xyflow/react";
 
 export type PipelineEdgeData = {
+  /** Source stage finished — keep the connector lit. */
   active?: boolean;
+  /** Handoff into the currently running stage — show moving dot. */
+  animated?: boolean;
 };
 
 export function PipelineEdge({
@@ -40,7 +39,7 @@ export function PipelineEdge({
           strokeWidth: edgeData.active ? 2.5 : 1.5,
         }}
       />
-      {edgeData.active ? (
+      {edgeData.animated ? (
         <circle r="4" fill="var(--primary)">
           <animateMotion dur="1.2s" repeatCount="indefinite" path={edgePath} />
         </circle>

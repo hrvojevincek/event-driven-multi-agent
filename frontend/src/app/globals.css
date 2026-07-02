@@ -147,6 +147,26 @@
   --xy-node-background-color-default: var(--card);
 }
 
+@keyframes pipeline-node-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px color-mix(in oklch, var(--primary) 20%, transparent),
+      0 0 12px color-mix(in oklch, var(--primary) 10%, transparent);
+    background-color: var(--card);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in oklch, var(--primary) 45%, transparent),
+      0 0 20px color-mix(in oklch, var(--primary) 25%, transparent);
+    background-color: color-mix(in oklch, var(--primary) 8%, var(--card));
+  }
+}
+
+.pipeline-node-running {
+  animation: pipeline-node-glow 1.5s ease-in-out infinite;
+}
+
 .markdown-body {
   @apply space-y-3 leading-relaxed text-foreground;
 }

@@ -58,7 +58,8 @@ class EmbeddingClient:
 
         for vector in embeddings:
             if len(vector) != EMBEDDING_DIMENSION:
-                msg = f"Expected {EMBEDDING_DIMENSION}-dim embedding, got {len(vector)}"
+                msg = f"Expected {EMBEDDING_DIMENSION} -dim embedding, got {
+                    len(vector)} "
                 raise ValueError(msg)
 
         total_tokens = response.usage.total_tokens if response.usage else 0
@@ -104,6 +105,13 @@ class EmbeddingClient:
         return embeddings
 
 
-def get_embedding_client(session: AsyncSession | None = None) -> EmbeddingClient:
+def get_embedding_client(
+        session: AsyncSession | None = None) -> EmbeddingClient:
     """Build an embedding client, optionally bound to a DB session for usage logging."""
-    return EmbeddingClient(session=session)
+    settings = get_settings()
+    if settings.use_mock_external_apis:
+        from eventforge.services.mock.embedding import MockEmbeddingClient
+
+        # type: ignore[return-value]
+        return MockEmbeddingClient(settings, session=session)
+    return EmbeddingClient(settings=settings, session=session)

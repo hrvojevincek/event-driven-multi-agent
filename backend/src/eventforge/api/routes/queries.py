@@ -13,7 +13,7 @@ from eventforge.api.schemas.queries import (
 from eventforge.core.config import Settings
 from eventforge.db.models import User
 from eventforge.events.publisher import EventPublisher, EventPublishError
-from eventforge.services.query import get_query_detail, list_queries, submit_query
+from eventforge.services.query import delete_query, get_query_detail, list_queries, submit_query
 
 router = APIRouter()
 
@@ -79,3 +79,18 @@ async def get_query(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
     return detail
+
+
+@router.delete(
+    "/queries/{job_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_query(
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    deleted = await delete_query(db, job_id, current_user)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")

@@ -29,7 +29,7 @@ function StatusIcon({ status }: { status: StageStatus }) {
 
 const statusRing: Record<StageStatus, string> = {
   pending: "ring-border",
-  running: "ring-primary shadow-[0_0_0_3px] shadow-primary/20",
+  running: "ring-primary",
   completed: "ring-secondary/40",
   failed: "ring-destructive/50",
 };
@@ -47,8 +47,9 @@ export function PipelineNode({ data, selected }: NodeProps) {
       />
       <div
         className={cn(
-          "min-w-[180px] h-[130px] rounded-lg border bg-card px-3 py-2.5 ring-2 transition-shadow gap-4 flex flex-col",
+          "min-w-[180px] h-[130px] rounded-lg border bg-card px-3 py-2.5 ring-2 gap-4 flex flex-col",
           statusRing[status],
+          status === "running" && "pipeline-node-running",
           selected && "border-primary",
         )}
       >

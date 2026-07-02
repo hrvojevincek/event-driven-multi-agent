@@ -50,8 +50,6 @@ paths:
                   $ref: '#/components/schemas/QuerySummaryResponse'
                 type: array
                 title: Response List User Queries Api V1 Queries Get
-      security:
-      - HTTPBearer: []
     post:
       tags:
       - api
@@ -76,16 +74,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-      security:
-      - HTTPBearer: []
   /api/v1/queries/{job_id}:
     get:
       tags:
       - api
       summary: Get Query
       operationId: get_query_api_v1_queries__job_id__get
-      security:
-      - HTTPBearer: []
       parameters:
       - name: job_id
         in: path
@@ -107,6 +101,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - api
+      summary: Remove Query
+      operationId: remove_query_api_v1_queries__job_id__delete
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Job Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/queries/{job_id}/stream:
     get:
       tags:
@@ -114,8 +130,6 @@ paths:
       summary: Stream Query Events
       description: Stream pipeline stage updates for a job via Server-Sent Events.
       operationId: stream_query_events_api_v1_queries__job_id__stream_get
-      security:
-      - HTTPBearer: []
       parameters:
       - name: job_id
         in: path
@@ -477,7 +491,3 @@ components:
       - msg
       - type
       title: ValidationError
-  securitySchemes:
-    HTTPBearer:
-      type: http
-      scheme: bearer

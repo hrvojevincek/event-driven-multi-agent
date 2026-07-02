@@ -23,8 +23,7 @@ _RESEARCH_NOTE_SYSTEM = (
     "You are a research analyst synthesizing findings for one focused sub-query. "
     "Write clear markdown with sections: Key findings, Evidence summary, Open questions. "
     "Cite ingested context inline as [RAG-n] and web follow-up as [WEB-n]. "
-    "Stay grounded in the provided sources; do not invent citations."
-)
+    "Stay grounded in the provided sources; do not invent citations.")
 
 
 def _build_note_prompt(
@@ -40,7 +39,8 @@ def _build_note_prompt(
         f"Sub-query: {sub_query}",
     ]
     if focus_entity is not None:
-        lines.append(f"Focus entity: {focus_entity.name} ({focus_entity.entity_type})")
+        lines.append(
+            f"Focus entity: {focus_entity.name} ({focus_entity.entity_type})")
     lines.extend(["", "Ingested context (cite as [RAG-n]):"])
 
     if rag_chunks:
@@ -106,7 +106,7 @@ async def _optional_web_follow_up(
     job: Job,
     sub_query: str,
 ) -> list[WebSearchResult]:
-    if not settings.tavily_api_key:
+    if not settings.use_mock_external_apis and not settings.tavily_api_key:
         return []
 
     try:

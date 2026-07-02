@@ -50,7 +50,8 @@ class LLMClient:
             "complete",
             job_id=str(job_id),
         ) as span:
-            set_event_attributes(span, model=resolved_model, agent_name=agent_name)
+            set_event_attributes(
+                span, model=resolved_model, agent_name=agent_name)
 
             if self._session is not None:
                 await assert_job_under_cost_cap(self._session, job_id, self._settings)
@@ -110,10 +111,17 @@ class LLMClient:
             if provider_name == "openai":
                 self._providers[provider_name] = OpenAIProvider(self._settings)
             else:
-                self._providers[provider_name] = AnthropicProvider(self._settings)
+                self._providers[provider_name] = AnthropicProvider(
+                    self._settings)
         return self._providers[provider_name]
 
 
 def get_llm_client(session: AsyncSession | None = None) -> LLMClient:
     """Build an LLM client, optionally bound to a DB session for usage logging."""
-    return LLMClient(session=session)
+    settings = get_settings()
+    if settings.use_mock_external_apis:
+        from eventforge.services.mock.llm import MockLLMClient
+
+        # type: ignore[return-value]
+        return MockLLMClient(settings, session=session)
+    return LLMClient(settings=settings, session=session)
