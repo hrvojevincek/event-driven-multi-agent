@@ -68,6 +68,20 @@ class Settings(BaseSettings):
     research_orchestration_mode: Literal["local", "step_functions"] = "local"
 
     @field_validator(
+        "openai_api_key",
+        "anthropic_api_key",
+        "tavily_api_key",
+        "postgres_password",
+        mode="before",
+    )
+    @classmethod
+    def _strip_secret_whitespace(cls, value: object) -> object:
+        """Strip trailing newlines/spaces from Secrets Manager and .env values."""
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator(
         "llm_max_retries",
         "circuit_breaker_failure_threshold",
     )
